@@ -171,3 +171,25 @@ cell 7, and it is exactly the failure ROADMAP section 11 has a fallback for: if 
 will not load or evaluate after M0 plus 4 hours, switch the reference to
 `ibm-nasa-geospatial/Prithvi-EO-1.0-100M-sen1floods11`. **Not a kill.** Expect cell 7 to be where
 problems appear, and do not read "all acceptance checks pass" as coverage of it.
+
+---
+
+## 2026-09-08 — Push to origin (approval item 1 resolved)
+
+**Goal.** Push `main` to `origin`, as explicitly approved by Ameya in chat.
+
+**What changed.** `e6b4d46..ba5f699 main -> main`. Nine commits now on `origin/main`. No code
+changed; working tree was clean before and after.
+
+**Verified.** The commit the Colab notebook pins (`00b1e75`) is contained in `origin/main`, so
+cell 3 (`git clone` + `git checkout $COMMIT`) resolves. This was the hard prerequisite blocking the
+entire M0 run.
+
+**Approval status carried forward.** Item 1 (push) is resolved. Items 2–5 remain open and are
+unchanged: reproduction tolerance, disk location, the coremltools shim, and Xcode/device
+availability. All five are described in the previous entry; the tolerance is the only one that
+blocks the next step, because pre-registration requires it to be set *before* the Colab run rather
+than after.
+
+**Next step.** Unchanged: set the tolerance in `minispatial/bench/thresholds.yaml`, then run
+`colab/bootstrap.ipynb`.
