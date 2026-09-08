@@ -1,0 +1,56 @@
+[project]
+name = "minispatial"
+version = "0.1.0"
+description = "Geospatial foundation models compressed and measured on Apple silicon."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Ameya Kiwalkar" }]
+dependencies = [
+    # numpy>=2.2 is forced by terratorch>=1.2 (it uses numpy.long, absent in 1.x).
+    # coremltools 9.0 has a numpy-2 bug when converting aten::Int on a size-1
+    # const array; minispatial.export.coreml installs a 5-line shim for it.
+    # Verified 2026-09-07. See context/DECISIONS.md.
+    "numpy>=2.2",
+    "pyyaml>=6.0",
+    "psutil>=5.9",
+]
+
+[project.optional-dependencies]
+train = [
+    "torch>=2.4",
+    "terratorch>=1.2",
+    "lightning>=2.3",
+    "huggingface-hub>=0.25",
+    "rasterio>=1.3",
+]
+export = [
+    "torch>=2.4",
+    "coremltools>=9.0",
+    "mlx>=0.32",
+    "safetensors>=0.4",
+]
+bench = [
+    "psutil>=5.9",
+    "matplotlib>=3.8",
+    "pandas>=2.2",
+]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["minispatial"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
