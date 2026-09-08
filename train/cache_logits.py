@@ -47,7 +47,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="destination for the .npy shards and manifest.json")
     parser.add_argument("--checkpoint", default=DEFAULT_CHECKPOINT)
     parser.add_argument("--split", default="test", choices=["train", "val", "test"])
-    parser.add_argument("--inference", default="resize", choices=["resize", "tile"])
+    parser.add_argument("--inference", default="resize",
+                        choices=["resize", "native", "tile"])
     parser.add_argument("--dry-run", action="store_true", help="print the plan; write nothing")
     args = parser.parse_args(argv)
 
@@ -73,7 +74,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--data-root and --out-dir are required unless --dry-run")
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
-    datamodule = build_datamodule(args.data_root)
+    datamodule = build_datamodule(args.data_root, args.inference)
     datamodule.setup("test" if args.split == "test" else "fit")
     loader = {
         "test": datamodule.test_dataloader,

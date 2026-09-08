@@ -107,18 +107,38 @@ def build(commit: str, repo_url: str) -> dict:
             "print('constant_scale:', spec.constant_scale, 'ignore_index:', spec.ignore_index)\n"
             "print('normalization from:', spec.normalization_source)\n"
         ),
-        _md("## 6. Get Sen1Floods11\n\nHand-labeled subset only (~1.02 GB). Resolved bucket "
-            "and paths are in `DATA.md`."),
+        _md("## 6. Get Sen1Floods11\n\n"
+            "Hand-labeled subset only: 446 chips, 1.02 GB. Resolved bucket and paths are in "
+            "`DATA.md`. `/content` is ephemeral Colab scratch — it is wiped with the runtime, "
+            "so nothing here touches the disk-location question for the Mac.\n\n"
+            "Re-running is safe: files already present at the right size are skipped, so a "
+            "disconnect resumes rather than restarting."),
         _code(
             "DATA_ROOT = '/content/sen1floods11'\n"
-            "!python scripts/download_sen1floods11.py --dry-run\n"
-            "# Downloading is a separate, approved step -- see DATA.md before enabling it.\n"
+            "!python scripts/download_sen1floods11.py --dest $DATA_ROOT \\\n"
+            "    --json-out results/runs/sen1floods11_download.json\n"
+        ),
+        _code(
+            "from pathlib import Path\n"
+            "tifs = list(Path(DATA_ROOT).rglob('*.tif'))\n"
+            "csvs = list(Path(DATA_ROOT).rglob('*.csv'))\n"
+            "print(len(tifs), 'tif files,', len(csvs), 'split csvs')\n"
+            "assert len(tifs) == 892, f'expected 892 tifs (446 S2Hand + 446 LabelHand), got {len(tifs)}'\n"
+            "assert len(csvs) == 4, f'expected 4 split csvs, got {len(csvs)}'\n"
+            "print('dataset matches the survey in DATA.md')\n"
         ),
         _md("## 7. Evaluate the 300M teacher — **the M0 gate**\n\n"
-            "This produces the number the whole project is gated on. Compare it against the "
-            "published figure *read at the source*, using the tolerance already written in "
-            "`minispatial/bench/thresholds.yaml`. Do not adjust the tolerance after seeing "
-            "this number."),
+            "This produces the number the whole project is gated on.\n\n"
+            "`--inference resize` mirrors the official recipe: the datamodule's own "
+            "`albumentations.Resize(224,224)` is applied to image **and** mask, so metrics are "
+            "computed at 224 against a downsampled mask. That is what the published recipe did, "
+            "which is why it is the right mode for *reproducing* a published number.\n\n"
+            "**Before comparing:** read the published figure at its source and record *which "
+            "mIoU definition the source states* alongside the number. Macro mIoU, IoU_water "
+            "alone, and micro-averaged IoU differ by more than the proposed tolerance on a "
+            "2-class problem with this much class imbalance. A tolerance applied across two "
+            "different definitions is not a gate.\n\n"
+            "Do not adjust the tolerance after seeing this number."),
         _code(
             "!python train/eval.py --data-root $DATA_ROOT --split test \\\n"
             "    --inference resize --out results/runs/teacher_eval.json\n"

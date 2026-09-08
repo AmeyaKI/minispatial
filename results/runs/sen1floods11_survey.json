@@ -1,0 +1,40 @@
+{
+  "bucket": "sen1floods11",
+  "prefixes": {
+    "S2Hand": {
+      "prefix": "v1.1/data/flood_events/HandLabeled/S2Hand/",
+      "object_count": 446,
+      "total_bytes": 1018607837,
+      "total_MB": 1018.6
+    },
+    "LabelHand": {
+      "prefix": "v1.1/data/flood_events/HandLabeled/LabelHand/",
+      "object_count": 446,
+      "total_bytes": 2553880,
+      "total_MB": 2.6
+    },
+    "splits": {
+      "prefix": "v1.1/splits/flood_handlabeled/",
+      "object_count": 4,
+      "total_bytes": 24070,
+      "total_MB": 0.0,
+      "files": [
+        "flood_bolivia_data.csv",
+        "flood_test_data.csv",
+        "flood_train_data.csv",
+        "flood_valid_data.csv"
+      ],
+      "bolivia_csv_present": true,
+      "md5_by_file": {
+        "flood_bolivia_data.csv": "XsAnM1l3NsfrwLCgocLjRQ==",
+        "flood_test_data.csv": "6bLjqClk1I3fHkUO2dR0Nw==",
+        "flood_train_data.csv": "LlaQkQPhCA4jkpVnOF6icQ==",
+        "flood_valid_data.csv": "Ncty4Axvu6bWSxQtr27XOw=="
+      }
+    }
+  },
+  "total_bytes": 1021185787,
+  "total_GB": 1.02,
+  "date_checked": "2026-09-07",
+  "license": "unstated by publisher; treat as research use"
+}
