@@ -1,0 +1,30 @@
+# Data and large artifacts — paths documented in DATA.md, never committed (>10 MB rule)
+# Anchored with a leading slash: a bare "data/" would also match
+# minispatial/data/, silently excluding source files (caught 2026-09-07).
+/data/
+/artifacts/
+/results/runs/
+
+# Model artifacts
+*.mlpackage
+*.mlmodel
+*.mlmodelc
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+
+# Environment
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# OS
+.DS_Store
+
+# NOTE: do NOT add "*.md" here. Every context/, agents/, and root doc is Markdown
+# and is a tracked deliverable. See context/DECISIONS.md (2026-09-07).
