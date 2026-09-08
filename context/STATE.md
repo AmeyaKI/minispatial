@@ -85,14 +85,18 @@ fallback: if the teacher will not load or evaluate after M0 + 4 h, switch the re
 
 ## Next concrete step
 
-**Push `main` to `origin` first — the Colab notebook clones a pinned commit, so it cannot run until
-the commit exists on GitHub.** Then run the notebook to produce `results/runs/teacher_eval.json`,
-the M0 gate. Nothing downstream of M0 should start before it lands.
+~~Push `main` to `origin` first~~ — **done 2026-09-08**, approved by Ameya. All 9 commits are on
+`origin/main`, and the notebook's pinned commit `00b1e75` is contained in it, so cell 3 clones and
+checks out cleanly.
+
+**Set the reproduction tolerance in `minispatial/bench/thresholds.yaml` (still `null`), then run the
+notebook** to produce `results/runs/teacher_eval.json`, the M0 gate. Nothing downstream of M0 should
+start before it lands.
 
 ## Ameya runs next — Colab
 
-0. **Push first.** `git push origin main`. The notebook clones a pinned commit; until it is on
-   GitHub, cell 3 fails and nothing after it runs.
+0. ~~Push first.~~ Done 2026-09-08 — `origin/main` is at `ba5f699` and contains the pinned commit.
+   If you commit anything further, push again *and* regenerate the notebook so the pin matches.
 1. Open `colab/bootstrap.ipynb` in Colab. If you commit anything further, regenerate it with
    `.venv/bin/python scripts/make_bootstrap_notebook.py` so the pin matches, and re-upload.
 2. Run cells 1–5 (runtime check, Drive mount, clone, install, band-contract sanity check). Stop if
