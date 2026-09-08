@@ -4,6 +4,13 @@
 /data/
 /artifacts/
 /results/runs/
+# ...but keep the read-only provenance records: DATA.md and FACTS.md cite these
+# for every dataset number, so rule 1's audit trail must survive a fresh clone.
+# They are a few KB of metadata, not data or artifacts.
+!/results/runs/
+/results/runs/*
+!/results/runs/sen1floods11_survey.json
+!/results/runs/split_csv_checksums.json
 
 # Model artifacts
 *.mlpackage

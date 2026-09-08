@@ -178,3 +178,68 @@ the versions of `torch`, `coremltools`, `mlx`, `terratorch`, `numpy` — the one
 per measurement rather than compared, since they change legitimately.
 
 **Consequence.** A stop from `--check` always means something that invalidates measurements.
+
+---
+
+## 2026-09-07 — D010: `eval.py` does no resampling of its own; the datamodule owns it
+
+**Context.** The first draft of `predict_logits` resized 512→224 with
+`torch.nn.functional.interpolate(mode="bilinear")`, ran the model, then interpolated the logits
+back to 512. Three things were wrong with that, none visible without running it:
+
+1. The official recipe resizes with `albumentations.Resize`, which is cv2 `INTER_LINEAR`.
+   `F.interpolate` is a different resampler. Reproducing a published number to ±1 pp while using a
+   different resampling kernel is not reproduction.
+2. `rescale: True` in the official config means the model **already** returns logits at input
+   resolution — verified on this machine: 224 in → `(1,2,224,224)`, 512 in → `(1,2,512,512)`. The
+   manual upsample was a second resize on top of the model's own.
+3. The official transform resizes the **mask** too, so the published metric is computed at 224
+   against a downsampled mask, not at 512.
+
+**Decision.** `eval.py` resamples nothing. `build_datamodule` installs the official
+`test_transform`, built by parsing the vendored config rather than retyped. Three modes:
+`resize` (official; metrics at 224), `native` (full 512 chip straight through, no resampling
+anywhere), `tile` (9 windows via `minispatial.data.tiling`). Each records its metric resolution in
+the output JSON.
+
+**Consequence.** `resize` is the mode for reproducing a published figure, because it is what the
+published recipe did. `native` exists because the model turns out to accept 512 directly, which was
+not obvious and makes a resampling-free evaluation available.
+
+---
+
+## 2026-09-07 — D011: The official config predates the installed terratorch
+
+**Context.** Building the reference model with the vendored config's `model_args` fails:
+`UperNetDecoder.__init__() got an unexpected keyword argument 'scale_modules'`. The installed
+signature is `(embed_dim, pool_scales=(1,2,3,6), channels=256, align_corners=True)` — no
+`scale_modules`.
+
+**Decision.** Recorded, not worked around. `decoder_scale_modules: true` from the official config
+cannot be passed to terratorch 1.2.13 and is dropped.
+
+**Consequence.** This is a real difference between our M1 training configs and the published
+recipe, and rule 1 of the trainer brief requires every such diff to be logged. Two things are still
+unknown and must be resolved in M1, not assumed: whether the behaviour `scale_modules` used to
+control is now default-on, default-off, or renamed; and whether the published 300M checkpoint was
+trained with it. If it materially changes the decoder, the M0 comparison inherits the difference.
+Flagged in `STATE.md`.
+
+---
+
+## 2026-09-07 — D012: Two provenance JSONs are committed despite `/results/runs/` being ignored
+
+**Context.** `DATA.md` and `FACTS.md` cite `results/runs/sen1floods11_survey.json` and
+`results/runs/split_csv_checksums.json` for every dataset number — object counts, byte totals,
+split row counts, SHA-256 digests. `/results/runs/` is gitignored, so from a fresh clone every one
+of those numbers would be unmatchable and rule 1's audit trail would not exist.
+
+**Decision.** Negative patterns in `.gitignore` exempt exactly those two files. They are a few KB of
+read-only provenance metadata, not data and not artifacts, so the >10 MB rule is not in tension.
+
+**Alternatives rejected.** Inlining the full digests and byte totals into `DATA.md` — workable, but
+it makes the document the primary record, and a machine-readable record is more useful to
+`/audit-numbers`. Committing all of `results/runs/` — that would sweep in smoke-test output, which
+must stay out of the tracked record precisely so it cannot be quoted as a result.
+
+**Consequence.** `results/runs/phase0_smoke.json` remains ignored, by design.

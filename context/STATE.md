@@ -13,7 +13,8 @@ export path end to end without starting training or quantization work.
 
 - Repository scaffold matching the planned layout; `uv` project on a managed CPython 3.12.12;
   `uv.lock` and `.python-version` committed.
-- **51 tests pass, all hermetic** — no network, no downloads, no Hugging Face access.
+- **51 tests pass, all hermetic** — no network, no downloads, no Hugging Face access. Under the
+  narrower acceptance sync (`--extra export --extra bench`, no terratorch): 44 pass, 1 skips.
 - Context system complete: `CLAUDE.md`, `context/` (8 files), `agents/` (6 briefs),
   `.claude/commands/` (3 commands).
 - `results/env.json` and `context/ENV.md` written; `capture_env.py --check` exercised and passing.
@@ -22,6 +23,8 @@ export path end to end without starting training or quantization work.
 - Official `sen1floods11.yaml` vendored; `bands.py` reads band order from it and normalization from
   terratorch.
 - Phase 0 smoke test passed end to end → `results/runs/phase0_smoke.json`.
+- Download implemented and verified against a single 1015-byte object, including the skip-existing
+  resume path; the Colab notebook now fetches the dataset rather than only surveying it.
 - `train/eval.py`, `train/cache_logits.py`, and the generated `colab/bootstrap.ipynb` (pinned).
 - `thresholds.yaml` created with **all values null**, pending approval (rule 2).
 
@@ -41,6 +44,12 @@ export path end to end without starting training or quantization work.
 - `minispatial.metrics` agrees with `torchmetrics.JaccardIndex` to 1e-6, including the absent-class
   case — so the M0 gate compares like with like.
 - **The official config resizes 512→224; it does not tile.** See open question 1.
+- **`rescale: True` means the model returns logits at input resolution** — 224 in → 224 out,
+  512 in → 512 out. `eval.py` therefore resamples nothing itself; the datamodule applies the
+  official `albumentations.Resize` to image and mask, so the `resize` mode computes metrics at 224
+  against a downsampled mask (D010).
+- The test suite is green under the acceptance sync (`--extra export --extra bench`): 44 passed,
+  1 skipped, verified by simulating terratorch's absence.
 - terratorch requires numpy ≥2.2; coremltools 9.0 has a numpy-2 conversion bug. Both reproduced
   directly. Resolved with a guarded shim (D004).
 
@@ -65,19 +74,24 @@ export path end to end without starting training or quantization work.
 
 ## Next concrete step
 
-Run the Colab notebook (below) to produce `results/runs/teacher_eval.json` — the M0 gate. Nothing
-downstream of M0 should start before it lands.
+**Push `main` to `origin` first — the Colab notebook clones a pinned commit, so it cannot run until
+the commit exists on GitHub.** Then run the notebook to produce `results/runs/teacher_eval.json`,
+the M0 gate. Nothing downstream of M0 should start before it lands.
 
 ## Ameya runs next — Colab
 
-1. Open `colab/bootstrap.ipynb` in Colab. It is pinned to a specific commit; if you have pulled
-   since, regenerate it with `.venv/bin/python scripts/make_bootstrap_notebook.py` and re-upload.
+0. **Push first.** `git push origin main`. The notebook clones a pinned commit; until it is on
+   GitHub, cell 3 fails and nothing after it runs.
+1. Open `colab/bootstrap.ipynb` in Colab. If you commit anything further, regenerate it with
+   `.venv/bin/python scripts/make_bootstrap_notebook.py` so the pin matches, and re-upload.
 2. Run cells 1–5 (runtime check, Drive mount, clone, install, band-contract sanity check). Stop if
    cell 5 fails — a wrong band contract makes every downstream number wrong.
-3. Cell 6 surveys the dataset. **Downloading is deliberately not wired up**, pending the disk-
-   location approval below.
-4. Cell 7 is the M0 gate: it evaluates the 300M-TL checkpoint on the test split and writes
-   `results/runs/teacher_eval.json`.
+3. Cell 6 downloads the 1.02 GB hand-labeled subset to `/content` — ephemeral Colab scratch, wiped
+   with the runtime, so it does not touch the disk-location question for the Mac. Re-running is
+   safe: existing files of the right size are skipped, so a disconnect resumes. The cell after it
+   asserts 892 tif files and 4 CSVs against the survey in `DATA.md`.
+4. Cell 7 is the M0 gate: it evaluates the 300M-TL checkpoint on the test split with
+   `--inference resize` (the official recipe) and writes `results/runs/teacher_eval.json`.
 5. Cell 8 caches the teacher's test logits as fp16 with a per-file SHA-256 manifest.
 6. Bring `teacher_eval.json` back and we record the comparison in `RESULTS.md`.
 
@@ -86,6 +100,12 @@ downstream of M0 should start before it lands.
 `https://huggingface.co/ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL-Sen1Floods11`. Read the number
 at one of those sources when you do the comparison. **This session did not read either, so no
 figure is recorded anywhere in this repository** — and none should be written down from memory.
+
+**Record which mIoU definition the source states, alongside the number.** On a 2-class problem with
+this much class imbalance, macro mIoU, IoU_water alone and micro-averaged IoU differ by well more
+than the proposed ±1.0 pp. Our metric is macro mean over present classes (verified equal to
+`torchmetrics.MulticlassJaccardIndex(average="macro")`). A tolerance applied across two different
+definitions is not a gate.
 
 Before that comparison is made, the tolerance in `minispatial/bench/thresholds.yaml` must be set
 (see approval item 2). Setting it afterwards is not pre-registration.
@@ -103,6 +123,8 @@ Before that comparison is made, the tolerance in `minispatial/bench/thresholds.y
 2. **Does the 300M checkpoint load the way `train/eval.py` assumes?** Only Colab can answer; it is
    the first thing cell 7 will reveal. ROADMAP section 11 has a fallback (switch the reference to
    Prithvi-EO-1.0-100M) that is explicitly not a kill.
-3. **Is the tiling implementation used at all in M0?** If question 1 resolves to `resize`, then
-   `minispatial/data/tiling.py` is unused until the frontier work, and the "one shared tiling
-   implementation" requirement applies to whichever path is actually chosen.
+3. **What did `decoder_scale_modules` do, and was the published checkpoint trained with it?** The
+   official config sets `decoder_scale_modules: true`, which terratorch 1.2.13's `UperNetDecoder`
+   does not accept (D011). Whether the behaviour is now default, renamed, or gone is unknown. If it
+   materially changes the decoder, our M1 configs differ from the published recipe and the M0
+   comparison inherits that difference. **Resolve in M1, before training — do not assume.**

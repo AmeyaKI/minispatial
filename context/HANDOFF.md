@@ -89,3 +89,50 @@ Set the reproduction tolerance in `minispatial/bench/thresholds.yaml` (approval 
 `colab/bootstrap.ipynb` cells 1–8 to produce `results/runs/teacher_eval.json` — the M0 gate.
 Instructions and the URLs of the published figure are in `context/STATE.md` under "Ameya runs
 next". Nothing downstream of M0 should start before that lands.
+
+---
+
+## 2026-09-07 (same session, post-review) — corrections before handoff
+
+A review pass caught four things the acceptance checks did not reach. All are fixed; recorded here
+because the *reasons* matter more than the diffs.
+
+1. **The handoff's own "next step" was impossible.** The Colab notebook clones a pinned commit that
+   exists only on this machine, and cell 6 only surveyed the dataset — it never downloaded it, so
+   cell 7 would have evaluated against an empty directory. The download is now implemented and
+   verified against a single 1015-byte object (including the skip-existing resume path, which
+   matters on Colab), the notebook fetches to `/content`, and a following cell asserts 892 tifs and
+   4 CSVs against the survey. **Pushing to `origin` moved from a recommendation to a hard
+   prerequisite** — it is step 0 of the Colab instructions.
+
+2. **`predict_logits` would have produced a quietly wrong gate number.** It had only ever been
+   dry-run. Probing the real model on this machine showed `rescale: True` makes it return logits at
+   input resolution, so the manual upsample was a second resize on top of the model's own — and the
+   input resize used `F.interpolate` where the official recipe uses `albumentations.Resize` (cv2
+   `INTER_LINEAR`), a different resampler. `eval.py` now resamples nothing; the datamodule applies
+   the official transform, built by parsing the vendored config. See D010.
+
+3. **Every dataset number in the committed docs traced to an ignored file.** From a fresh clone,
+   446, 1018.6 MB, 1.02 GB and the SHA-256 digests were unmatchable. The two provenance JSONs are
+   now exempted from `.gitignore`; `phase0_smoke.json` deliberately stays ignored. See D012.
+
+4. **The suite was not green under the acceptance sync the brief names.** `uv sync --extra export
+   --extra bench` omits terratorch, and `test_bands.py` errored on collection. It now uses
+   `pytest.importorskip`, matching what `test_metrics_vs_torchmetrics.py` already did. Verified by
+   simulating terratorch's absence: 44 passed, 1 skipped.
+
+### New finding, carried into M1
+
+`decoder_scale_modules: true` in the official config is **rejected** by terratorch 1.2.13's
+`UperNetDecoder`. Whether that behaviour is now default, renamed, or gone is unknown, and whether
+the published 300M checkpoint was trained with it is unknown. If it materially changes the decoder,
+our M1 configs differ from the published recipe and the M0 comparison inherits the difference.
+Recorded as D011 and as open question 3 — **resolve before training, do not assume.**
+
+### Sharpened approval item
+
+Approval item 2 (reproduction tolerance) now carries a second half: when reading the published
+figure, **record which mIoU definition the source states**. Ours is macro mean over present classes.
+Macro mIoU, IoU_water alone and micro-averaged IoU differ by more than ±1.0 pp on a 2-class problem
+with this imbalance, so a tolerance applied across two definitions is not a gate. Both the notebook
+and `STATE.md` now say this at the point of use.

@@ -3,8 +3,14 @@
 
 ``--dry-run`` resolves the bucket, enumerates the hand-labeled imagery, labels
 and split CSVs, and reports exact object counts and byte totals without
-downloading anything. This is the only mode Phase 0 runs: the actual download
-waits on an explicit decision about disk location (CLAUDE.md rule 5).
+downloading anything.
+
+``--dest DIR`` performs the download. It requires an explicit destination and
+never invents one. On the Mac, that destination is a decision for Ameya
+(CLAUDE.md rule 5); in Colab, ``/content`` is ephemeral scratch that is wiped
+with the runtime, so no approval question arises there. Existing files of the
+correct size are skipped, so the download resumes safely after a disconnect --
+which matters on Colab.
 
 Bucket resolution. The Sen1Floods11 README names two bucket spellings; this
 script tries both over anonymous HTTPS and reports which one answers, then
@@ -129,6 +135,60 @@ def survey(bucket: str) -> dict[str, Any]:
     return out
 
 
+def download(
+    bucket: str,
+    report: dict[str, Any],
+    dest: Path,
+    skip_existing: bool = True,
+) -> dict[str, Any]:
+    """Fetch the surveyed objects into ``dest``, preserving the bucket layout.
+
+    Files already present at the expected size are skipped, so an interrupted
+    Colab session resumes rather than restarting a gigabyte.
+    """
+    downloaded = skipped = failed = 0
+    total_bytes = 0
+    for label, entry in report["prefixes"].items():
+        prefix = entry["prefix"]
+        items = list_prefix(bucket, prefix)
+        print(f"\n{label}: {len(items)} objects -> {dest / prefix}")
+        for n, item in enumerate(items, start=1):
+            name = item["name"]
+            if name.endswith("/"):
+                continue
+            target = dest / name
+            expected = int(item.get("size", 0))
+            if skip_existing and target.exists() and target.stat().st_size == expected:
+                skipped += 1
+                continue
+            target.parent.mkdir(parents=True, exist_ok=True)
+            url = f"https://storage.googleapis.com/{bucket}/{urllib.parse.quote(name)}"
+            try:
+                with urllib.request.urlopen(url, timeout=300) as resp:
+                    payload = resp.read()
+            except (urllib.error.URLError, TimeoutError) as exc:
+                print(f"  FAILED {name}: {exc}")
+                failed += 1
+                continue
+            if expected and len(payload) != expected:
+                print(f"  SIZE MISMATCH {name}: got {len(payload)}, expected {expected}")
+                failed += 1
+                continue
+            target.write_bytes(payload)
+            downloaded += 1
+            total_bytes += len(payload)
+            if n % 50 == 0 or n == len(items):
+                print(f"  {n}/{len(items)}")
+
+    return {
+        "downloaded": downloaded,
+        "skipped_existing": skipped,
+        "failed": failed,
+        "bytes_downloaded": total_bytes,
+        "dest": str(dest),
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -136,7 +196,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--dry-run", action="store_true",
                         help="resolve and report only; download nothing (Phase 0 default)")
     parser.add_argument("--dest", type=Path, default=None,
-                        help="download destination; required for a real download")
+                        help="download destination; required for a real download. "
+                             "On the Mac this needs Ameya's approval (rule 5); in Colab "
+                             "/content is ephemeral scratch.")
+    parser.add_argument("--force", action="store_true",
+                        help="re-download files that already exist at the expected size")
     parser.add_argument("--json-out", type=Path, default=None,
                         help="write the survey to this path as JSON")
     args = parser.parse_args(argv)
@@ -168,15 +232,24 @@ def main(argv: list[str] | None = None) -> int:
         args.json_out.write_text(json.dumps(report, indent=2) + "\n")
         print(f"\nwrote {args.json_out}")
 
-    if not args.dry_run:
-        if args.dest is None:
-            print("\nRefusing to download without --dest. Rerun with --dry-run, or pass an "
-                  "approved destination (CLAUDE.md rule 5).", file=sys.stderr)
-            return 2
-        print(f"\nDownload to {args.dest} is not implemented in Phase 0 by design: the "
-              "destination requires explicit approval first.", file=sys.stderr)
+    if args.dry_run:
+        return 0
+
+    if args.dest is None:
+        print("\nRefusing to download without an explicit --dest. Rerun with --dry-run, or "
+              "pass a destination (CLAUDE.md rule 5).", file=sys.stderr)
         return 2
-    return 0
+
+    print(f"\nDownloading {report['total_GB']} GB to {args.dest} ...")
+    result = download(bucket, report, args.dest, skip_existing=not args.force)
+    print(f"\ndownloaded {result['downloaded']}, skipped {result['skipped_existing']}, "
+          f"failed {result['failed']} ({result['bytes_downloaded'] / 1e6:.1f} MB written)")
+
+    if args.json_out:
+        report["download"] = result
+        args.json_out.write_text(json.dumps(report, indent=2) + "\n")
+
+    return 1 if result["failed"] else 0
 
 
 if __name__ == "__main__":
