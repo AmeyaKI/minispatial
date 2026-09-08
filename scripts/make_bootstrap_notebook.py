@@ -9,6 +9,13 @@ cannot live in a script (Drive mount, runtime check).
 The generated notebook clones a PINNED commit. An unpinned clone would make a
 Colab result unattributable to a repository state, which breaks the rule that
 every number traces to something reproducible.
+
+A note on the pin, so nobody chases it in circles: regenerating writes a new
+notebook, and committing that notebook creates a commit *after* the one it pins.
+The notebook therefore names the commit just before its own. That is correct and
+harmless — the pinned commit contains all the code Colab runs, and the only later
+change is the notebook file itself, which Colab does not execute from the clone.
+Regenerate when the *code* changes, not to chase your own tail.
 """
 
 from __future__ import annotations
