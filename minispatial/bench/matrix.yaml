@@ -1,0 +1,64 @@
+# Measurement matrix consumed by minispatial/bench/run.py.
+#
+# SCAFFOLD ONLY -- no cell here has been measured. Phase 0 does not run the
+# bench. Cells are enumerated so the schema and the runner can be developed
+# against a realistic shape, and so that the size of the M4 matrix is visible
+# early enough to cut it deliberately (ROADMAP section 11 cut order:
+# burn scars -> MLX quantized rows for 100M -> QAT -> 100M entirely).
+
+models:
+  - id: prithvi_tiny_tl_sen1floods11
+    short: tiny
+    status: not_trained          # M1
+  - id: prithvi_100m_tl_sen1floods11
+    short: 100m
+    status: not_trained          # M1, should-have
+  - id: prithvi_300m_tl_sen1floods11
+    short: 300m
+    status: published            # practitioner baseline, torch_mps fp16
+  - id: unet_small
+    short: unet
+    status: not_trained          # non-foundation control
+
+task: flood
+
+runtimes:
+  - runtime: coreml
+    compute_units: [CPU_AND_NE, CPU_AND_GPU, CPU_ONLY]
+  - runtime: mlx
+    compute_units: [n/a]
+  - runtime: torch_mps
+    compute_units: [n/a]
+
+precisions:
+  - weight_precision: fp32
+    quant_method: none
+    role: parity_reference
+  - weight_precision: fp16
+    quant_method: none
+  - weight_precision: int8
+    quant_method: coreml_linear_pc
+  - weight_precision: int4
+    quant_method: coreml_linear_pb32
+  - weight_precision: int4
+    quant_method: coreml_palettize_4b_g16
+  - weight_precision: int8
+    quant_method: recon_int8       # M3, ours
+  - weight_precision: int4
+    quant_method: recon_int4       # M3, ours
+  - weight_precision: int4
+    quant_method: qat_int4         # M4, ours, tiny only
+  - weight_precision: int8
+    quant_method: mlx_affine_g64
+  - weight_precision: int4
+    quant_method: mlx_affine_g64
+
+protocol:
+  batch_size: 1
+  warmup_iters: 10
+  timed_iters: 100
+  sustained_seconds: 60
+  sustained_window_seconds: 20
+  fresh_process_runs: 3
+  rss_sample_ms: 5
+  inference_mode: null    # 'resize' or 'tile' -- OPEN QUESTION, see context/STATE.md

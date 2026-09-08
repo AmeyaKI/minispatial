@@ -1,0 +1,91 @@
+# ============================================================================
+#  VALUES NOT SET — REQUIRES AMEYA'S APPROVAL PER RULE 2
+#
+#  Rule 2: parity tolerance and run-to-run spread tolerance are pre-registered,
+#  with a one-paragraph justification each, and COMMITTED BEFORE the first
+#  quantized measurement. Ameya approves them.
+#
+#  This file is the structure only. Every threshold below is `null`. Filling one
+#  in AFTER seeing a measurement it would judge destroys the pre-registration —
+#  that is the entire point of the rule. If you are here because a number failed,
+#  you are in the wrong file: flag the row (`unstable=1` / `parity_fail=1`), keep
+#  it, and exclude it from the frontier plot.
+# ============================================================================
+
+meta:
+  status: awaiting_approval
+  set_by: null
+  set_on: null
+  # Must be a commit that precedes every quantized measurement in results/.
+  committed_before_first_quantized_measurement: true
+
+# --------------------------------------------------------------------------
+# Reproduction gate (M0). How close our 300M teacher evaluation must land to
+# the published Prithvi-EO-2.0 Sen1Floods11 figure to count as "reproduced".
+# --------------------------------------------------------------------------
+reproduction:
+  miou_abs_pp: null
+  iou_water_abs_pp: null
+  justification: |
+    PROPOSED, NOT SET: +/- 1.0 percentage points absolute on both mIoU and
+    IoU_water. Anchored to the only quantitative statement available about
+    run-to-run variation in this pipeline -- the Prithvi-EO-2.0 repository
+    author's note of roughly 1% Lightning non-determinism (context/FACTS.md,
+    currently tagged `unverified`). A tolerance below that would fail on noise;
+    one far above it would let a genuinely different model pass. Two caveats
+    Ameya should weigh: the 1% figure is unverified, and it describes training
+    non-determinism rather than evaluation variance, which is smaller. If the
+    figure is verified and refers to training only, a tighter bound is
+    defensible. Ameya sets the final value.
+
+# --------------------------------------------------------------------------
+# Parity: agreement between a deployed artifact and its fp32 PyTorch reference.
+# Exceeding any of these sets parity_fail=1. See context/SCHEMA.md.
+# --------------------------------------------------------------------------
+parity:
+  fp16:
+    pixel_disagreement_pct: null
+    max_abs_logit_diff: null
+    delta_miou_pp: null
+    justification: |
+      NOT SET. fp16 is a precision change with no quantization; a large
+      disagreement here means the export is wrong, not that compression cost
+      something. ROADMAP section 11 makes this a KILL condition: if no tiny
+      artifact meets the fp16 parity threshold after 8 hours, the project stops
+      and reports. That makes this the single most consequential number in the
+      file and it must be set deliberately, before any artifact is measured.
+  int8:
+    pixel_disagreement_pct: null
+    max_abs_logit_diff: null
+    delta_miou_pp: null
+    justification: |
+      NOT SET. Unlike fp16, some disagreement here is the phenomenon under
+      study rather than a defect. The threshold marks where an artifact stops
+      being a faithful deployment of the model and becomes a different model.
+  int4:
+    pixel_disagreement_pct: null
+    max_abs_logit_diff: null
+    delta_miou_pp: null
+    justification: |
+      NOT SET. Expected to be the loosest tier. A row that exceeds it is still
+      kept and reported -- "int4 breaks this model" is a result, and per
+      ROADMAP section 11 reconstruction PTQ failing to beat vendor PTQ is a
+      null result, not a kill.
+
+# --------------------------------------------------------------------------
+# Run-to-run stability. Exceeding this sets unstable=1: the row is kept and
+# excluded from the frontier line, never deleted or re-run until it passes.
+# --------------------------------------------------------------------------
+stability:
+  run_spread_pct: null
+  justification: |
+    NOT SET. Computed across 3 fresh-process runs as
+    (max - min) / median * 100 of per-run median latency. ROADMAP section 11
+    makes this a conditional kill: if spread cannot be brought under threshold
+    after controlling power and thermal state, cut to the stable subset, and
+    kill if fewer than two runtimes remain. Setting it requires knowing this
+    machine's baseline variance, which is not yet measured -- an argument for
+    measuring an fp16 cell's spread first and setting the threshold from the
+    *reference* row before any quantized cell is measured.
+  min_runs: 3
+  power_state_required: null   # e.g. "ac" -- decide before measuring, not after

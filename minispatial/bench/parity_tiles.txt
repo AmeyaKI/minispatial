@@ -1,0 +1,9 @@
+# Fixed tile set for parity measurement.
+#
+# EMPTY UNTIL THE DATASET IS DOWNLOADED. These identifiers pin the exact tiles on
+# which pixel_disagreement_pct and max_abs_logit_diff are computed for every
+# artifact. They must be chosen ONCE and never changed: comparing parity across
+# artifacts measured on different tiles compares the tiles, not the artifacts.
+#
+# Format: one "<chip_id>:<tile_index>" per line, tile_index 0-8 in row-major
+# order over the 3x3 grid defined by minispatial/data/tiling.py.
