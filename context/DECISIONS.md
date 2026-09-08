@@ -243,3 +243,47 @@ it makes the document the primary record, and a machine-readable record is more 
 must stay out of the tracked record precisely so it cannot be quoted as a result.
 
 **Consequence.** `results/runs/phase0_smoke.json` remains ignored, by design.
+
+---
+
+## 2026-09-07 — D013: The download derives the `.txt` split files terratorch actually reads
+
+**Context.** The bucket ships `flood_{split}_data.csv`. `Sen1Floods11NonGeo.__init__` in terratorch
+1.2.13 opens `flood_{split}_data.**txt**` and raises `FileNotFoundError` otherwise — which is
+precisely where a Colab run would have died, after downloading a gigabyte.
+
+Renaming the file does not work either. Each line is matched as a *substring* of the S2Hand and
+LabelHand filenames (`allow_substring=True, ignore_extensions=True`). A whole CSV row,
+`Bolivia_103757_S1Hand.tif,Bolivia_103757_LabelHand.tif`, is not a substring of
+`Bolivia_103757_S2Hand.tif`. The chip id `Bolivia_103757` is the substring common to both.
+
+**Decision.** `scripts/download_sen1floods11.py` derives the `.txt` files after downloading,
+stripping the `_S1Hand`/`_S2Hand`/`_LabelHand` suffix and the extension from the CSV's first
+column. Verified against terratorch's own `filter_valid_files`: 90/90 test-split files matched for
+both S2Hand and LabelHand, with counts 252/89/90/15 preserved.
+
+**Alternatives rejected.** Patching terratorch to read the CSV — it would have to be re-applied on
+every upgrade, and the dataset-side fix is the one that matches what the library expects.
+
+**Consequence.** The derived `.txt` files are generated, not downloaded; they are not part of the
+published dataset and their provenance is this script. The Colab notebook asserts all four exist.
+
+---
+
+## 2026-09-07 — D014: `build_datamodule` is deterministic on all three splits
+
+**Context.** The datamodule's default train transform applies `HorizontalFlip` and `VerticalFlip`
+at p=0.5. `cache_logits.py --split train` would therefore have cached teacher logits under random
+augmentation — logits corresponding to flips the student never sees, silently corrupting the M2
+distillation targets. Nothing would have surfaced this: the cache would be the right size, the
+manifest would checksum cleanly, and distillation would just work slightly worse.
+
+**Decision.** `build_datamodule` installs the deterministic transform on `train_transform` as well
+as val and test, and its docstring states it is for evaluation and caching only — training must
+build its own datamodule with the augmenting transform. Separately, `cache_logits.py` now refuses
+any split but `test` with an explicit message, because only that path has been exercised end to
+end.
+
+**Consequence.** M2 must lift that guard deliberately, after confirming the train loader yields
+`image` batches and the deterministic transform is in effect. A guard that has to be removed on
+purpose is the point.

@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 import warnings
 from datetime import datetime, timezone
 from importlib.metadata import version
@@ -26,8 +27,17 @@ warnings.filterwarnings("ignore")
 import numpy as np
 import torch
 
-from minispatial.data.bands import load_band_spec
-from train.eval import DEFAULT_CHECKPOINT, build_datamodule, load_model, predict_logits
+# Run as a script (`python train/cache_logits.py`), sys.path[0] is train/, so the
+# repository root must be added before `train.eval` resolves as a package.
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from minispatial.data.bands import load_band_spec  # noqa: E402
+from train.eval import (  # noqa: E402
+    DEFAULT_CHECKPOINT,
+    build_datamodule,
+    load_model,
+    predict_logits,
+)
 
 
 def _sha256(path: Path) -> str:
@@ -72,6 +82,17 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.data_root is None or args.out_dir is None:
         parser.error("--data-root and --out-dir are required unless --dry-run")
+
+    if args.split != "test":
+        # Only the test path has been exercised end to end. The train split is what
+        # M2 distillation needs; before enabling it, confirm the loader yields
+        # `image` batches and that build_datamodule's deterministic train_transform
+        # is actually in effect -- teacher logits cached under random flips would
+        # silently corrupt the distillation targets.
+        parser.error(
+            f"--split {args.split} is not wired up yet. Only 'test' has been verified "
+            "end to end. See train/eval.py build_datamodule and context/STATE.md."
+        )
 
     args.out_dir.mkdir(parents=True, exist_ok=True)
     datamodule = build_datamodule(args.data_root, args.inference)

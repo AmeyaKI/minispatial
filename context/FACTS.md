@@ -33,6 +33,11 @@ Re-check anything time-sensitive (tool versions, bucket contents, model cards).
 | **The official config RESIZES 512→224 (`albumentations.Resize`) for train/val/test; it does not tile.** `rescale: True` on the model. | `verified` | the vendored config | 2026-09-07 |
 | Normalization constants are NOT in the config; only `constant_scale: 0.0001`. Per-band means/stds come from `terratorch.datamodules.sen1floods11.MEANS`/`STDS`. | `verified` | read from installed terratorch 1.2.13 | 2026-09-07 |
 | Neck config selects encoder indices 2, 5, 8, 11 for the 100M-class backbone (300M uses 5/11/17/23; 600M uses 7/15/23/31) | `verified` | the vendored config | 2026-09-07 |
+| **`decoder_scale_modules: true` in the official config is REJECTED by terratorch 1.2.13.** `UperNetDecoder.__init__` is `(embed_dim, pool_scales=(1,2,3,6), channels=256, align_corners=True)` — no `scale_modules`. The config predates the installed terratorch. | `verified` | `TypeError` from `EncoderDecoderFactory.build_model`; signature read via `inspect` | 2026-09-07 |
+| Whether that behaviour is now default-on, default-off or renamed, and whether the published 300M checkpoint used it | `unverified` | — must be resolved before M1 training | — |
+| **`rescale: True` means the model returns logits at input resolution**: 224 in → `(1,2,224,224)`, 512 in → `(1,2,512,512)`. The 512 chip goes through the model directly. | `verified` | probed a randomly-initialised tiny-TL + UperNetDecoder built through `EncoderDecoderFactory` | 2026-09-07 |
+| The official `test_transform` resizes image **and** mask to 224, so the published metric is computed at 224 against a downsampled mask | `verified` | the vendored config + terratorch datamodule behaviour | 2026-09-07 |
+| `albumentations.Resize` defaults (albumentations 2.0.8): image `interpolation=1` (`cv2.INTER_LINEAR`), mask `mask_interpolation=0` (`cv2.INTER_NEAREST`). These are library defaults, not a choice made here — the resampling kernel is part of the reproduction protocol, so a change to these defaults would move the gate number. | `verified` | instantiated `albumentations.Resize(224,224)` and read the attributes; compared against `cv2` constants | 2026-09-07 |
 | Lightning non-determinism is roughly 1% per the repo author | `unverified` | ROADMAP §14; original statement not located this session | — |
 
 ## Dataset — Sen1Floods11
@@ -48,6 +53,7 @@ Re-check anything time-sensitive (tool versions, bucket contents, model cards).
 | Split sizes: train 252, valid 89, test 90, Bolivia 15 → 446 total | `verified` | row counts of the four CSVs | 2026-09-07 |
 | Split CSV SHA-256: train `57be4dc440bf8a52…`, valid `04999b82b93e393c…`, test `8b598c9438042f3e…`, Bolivia `4775d100fae1f1ca…` | `verified` | `results/runs/split_csv_checksums.json` (full digests there) | 2026-09-07 |
 | Split CSVs list `*_S1Hand.tif` filenames; the S2 counterpart is resolved by name substitution | `verified` | first row of `flood_train_data.csv` | 2026-09-07 |
+| **terratorch reads `flood_{split}_data.txt`, NOT the `.csv` the bucket ships.** Each line is matched as a *substring* of the S2Hand/LabelHand filenames (`allow_substring=True, ignore_extensions=True`), so a whole CSV row does not match and the file cannot simply be renamed — each line must be the bare chip id (e.g. `Ghana_313799`). `scripts/download_sen1floods11.py` derives these after download. | `verified` | source of `Sen1Floods11NonGeo.__init__` in terratorch 1.2.13; derivation tested, 90/90 test-split files matched for both S2Hand and LabelHand | 2026-09-07 |
 | **Dataset license is not stated by the publisher.** Treat as research use; record unchanged in DATA.md and every model card. | `unverified` | ROADMAP §14; no license file found in the bucket survey, but absence was not exhaustively checked | 2026-09-07 |
 | 4,831 chips at 512×512, 10 m, 11 events (the full weakly+hand labeled set) | `unverified` | ROADMAP §14; only the hand-labeled subset was surveyed | — |
 

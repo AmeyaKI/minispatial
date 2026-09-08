@@ -25,6 +25,8 @@ export path end to end without starting training or quantization work.
 - Phase 0 smoke test passed end to end → `results/runs/phase0_smoke.json`.
 - Download implemented and verified against a single 1015-byte object, including the skip-existing
   resume path; the Colab notebook now fetches the dataset rather than only surveying it.
+- The `.txt` split files terratorch actually reads are derived after download (the bucket ships
+  `.csv`, and renaming does not work) — verified against terratorch's own matcher, 90/90 (D013).
 - `train/eval.py`, `train/cache_logits.py`, and the generated `colab/bootstrap.ipynb` (pinned).
 - `thresholds.yaml` created with **all values null**, pending approval (rule 2).
 
@@ -66,6 +68,15 @@ export path end to end without starting training or quantization work.
 - That the dataset has no license file anywhere in the bucket — only three prefixes were surveyed.
 - MLX quantization coverage, PyTorch MPS quantized-backend absence, mlx-image ViT blocks, TorchGeo.
   All still `unverified` in `FACTS.md`; none is needed before M3.
+
+## KNOWN UNTESTED (largest risk in the next step)
+
+`load_model` (`SemanticSegmentationTask.load_from_checkpoint` on the published 300M checkpoint)
+**has never executed**, and `predict_logits` has never run against real data in any mode. The local
+probe validated the `EncoderDecoderFactory` path — architecture, output shapes, `rescale` behaviour
+— not checkpoint loading. Cell 7 is where problems should be expected. ROADMAP section 11 has the
+fallback: if the teacher will not load or evaluate after M0 + 4 h, switch the reference to
+`ibm-nasa-geospatial/Prithvi-EO-1.0-100M-sen1floods11`. Not a kill.
 
 ## BLOCKED
 

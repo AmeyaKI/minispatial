@@ -23,6 +23,10 @@ train = [
     "lightning>=2.3",
     "huggingface-hub>=0.25",
     "rasterio>=1.3",
+    # Pinned: albumentations.Resize supplies the resampling kernel for the M0
+    # reproduction (image INTER_LINEAR, mask INTER_NEAREST as of 2.0.8). A change
+    # to those defaults would move the gate number with nothing to flag it.
+    "albumentations>=2.0,<3.0",
 ]
 export = [
     "torch>=2.4",

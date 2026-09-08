@@ -189,6 +189,43 @@ def download(
     }
 
 
+def write_split_txt_files(dest: Path, bucket_prefix: str) -> list[str]:
+    """Derive the ``flood_*_data.txt`` files terratorch expects from the shipped CSVs.
+
+    VERIFIED 2026-09-07 by reading ``Sen1Floods11NonGeo.__init__`` in terratorch
+    1.2.13: it opens ``flood_{split}_data.txt`` -- **.txt, not the .csv the bucket
+    ships** -- and treats each line as a substring matched against the S2Hand and
+    LabelHand filenames (``allow_substring=True, ignore_extensions=True``).
+
+    A whole CSV row ("Bolivia_103757_S1Hand.tif,Bolivia_103757_LabelHand.tif") is
+    not a substring of "Bolivia_103757_S2Hand.tif", so the CSV cannot be renamed.
+    The chip id ("Bolivia_103757") is the substring common to both, and is what
+    each line must contain.
+
+    Without this step the datamodule raises FileNotFoundError on the .txt, which
+    is exactly where a Colab run would die.
+    """
+    split_dir = dest / bucket_prefix
+    written: list[str] = []
+    for csv_path in sorted(split_dir.glob("flood_*_data.csv")):
+        chip_ids: list[str] = []
+        for line in csv_path.read_text().splitlines():
+            first = line.split(",")[0].strip()
+            if not first:
+                continue
+            # "Bolivia_103757_S1Hand.tif" -> "Bolivia_103757"
+            stem = first.rsplit(".", 1)[0]
+            for suffix in ("_S1Hand", "_S2Hand", "_LabelHand"):
+                if stem.endswith(suffix):
+                    stem = stem[: -len(suffix)]
+                    break
+            chip_ids.append(stem)
+        txt_path = csv_path.with_suffix(".txt")
+        txt_path.write_text("\n".join(chip_ids) + "\n")
+        written.append(f"{txt_path.name} ({len(chip_ids)} ids)")
+    return written
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -244,6 +281,12 @@ def main(argv: list[str] | None = None) -> int:
     result = download(bucket, report, args.dest, skip_existing=not args.force)
     print(f"\ndownloaded {result['downloaded']}, skipped {result['skipped_existing']}, "
           f"failed {result['failed']} ({result['bytes_downloaded'] / 1e6:.1f} MB written)")
+
+    written = write_split_txt_files(args.dest, PREFIXES["splits"])
+    result["split_txt_written"] = written
+    print("\nderived the .txt split files terratorch expects (it does not read the .csv):")
+    for line in written:
+        print(f"  {line}")
 
     if args.json_out:
         report["download"] = result

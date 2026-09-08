@@ -136,3 +136,38 @@ figure, **record which mIoU definition the source states**. Ours is macro mean o
 Macro mIoU, IoU_water alone and micro-averaged IoU differ by more than ±1.0 pp on a 2-class problem
 with this imbalance, so a tolerance applied across two definitions is not a gate. Both the notebook
 and `STATE.md` now say this at the point of use.
+
+---
+
+## 2026-09-07 (same session, second review pass)
+
+Three more defects, all in the path Ameya runs next. Recorded because each was invisible to the
+acceptance checks and each would have failed *after* doing real work.
+
+1. **Cell 7 would have died on `FileNotFoundError` after a 1.02 GB download.** terratorch reads
+   `flood_{split}_data.txt`; the bucket ships `.csv`. Renaming does not work — lines are matched as
+   substrings of the image filenames, so each must be a bare chip id. The download now derives the
+   `.txt` files, verified against terratorch's own matcher (90/90 files matched, counts preserved).
+   See D013.
+
+2. **`cache_logits.py --split train` would have silently corrupted the M2 distillation targets** by
+   caching teacher logits under random flips, and could not even be imported when run as a script
+   (`train.eval` did not resolve). `build_datamodule` is now deterministic on all three splits, the
+   script adds the repository root to `sys.path`, and non-`test` splits are refused outright until
+   M2 wires them up deliberately. See D014.
+
+3. **The resampling kernel was an unrecorded library default.** `albumentations.Resize` supplies
+   `INTER_LINEAR` for images and `INTER_NEAREST` for masks in 2.0.8. That kernel is part of the
+   reproduction protocol, so it is now pinned in `pyproject.toml` and recorded in `FACTS.md` with
+   the observed values.
+
+### Known gap in what runs next — stated plainly
+
+`load_model` — the `SemanticSegmentationTask.load_from_checkpoint` call that pulls the published
+300M checkpoint — **has never executed.** The local probe validated the `EncoderDecoderFactory`
+path (architecture, output shapes, `rescale` behaviour), not the checkpoint-loading path. Nor has
+`predict_logits` ever run against real data in any mode. That is the largest untested surface in
+cell 7, and it is exactly the failure ROADMAP section 11 has a fallback for: if the 300M teacher
+will not load or evaluate after M0 plus 4 hours, switch the reference to
+`ibm-nasa-geospatial/Prithvi-EO-1.0-100M-sen1floods11`. **Not a kill.** Expect cell 7 to be where
+problems appear, and do not read "all acceptance checks pass" as coverage of it.

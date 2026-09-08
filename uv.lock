@@ -1671,6 +1671,7 @@ export = [
     { name = "torch" },
 ]
 train = [
+    { name = "albumentations" },
     { name = "huggingface-hub" },
     { name = "lightning" },
     { name = "rasterio", version = "1.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
@@ -1682,6 +1683,7 @@ train = [
 
 [package.metadata]
 requires-dist = [
+    { name = "albumentations", marker = "extra == 'train'", specifier = ">=2.0,<3.0" },
     { name = "coremltools", marker = "extra == 'export'", specifier = ">=9.0" },
     { name = "huggingface-hub", marker = "extra == 'train'", specifier = ">=0.25" },
     { name = "lightning", marker = "extra == 'train'", specifier = ">=2.3" },

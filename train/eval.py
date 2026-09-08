@@ -98,6 +98,14 @@ def build_datamodule(
     ``resize`` installs the official transform so the datamodule does the
     resampling exactly as the published recipe did. ``native`` and ``tile``
     deliberately install no resize: they operate on the full 512 chip.
+
+    The transform is installed on the train split too, deliberately. The
+    datamodule's default train transform applies `HorizontalFlip` and
+    `VerticalFlip` at p=0.5; caching teacher logits under random augmentation
+    would silently corrupt the distillation targets, since the cached logits
+    would correspond to flips the student never sees. This function is for
+    *evaluation and caching only* -- training must build its own datamodule with
+    the augmenting transform.
     """
     from albumentations.pytorch import ToTensorV2
     from terratorch.datamodules import Sen1Floods11NonGeoDataModule
@@ -115,6 +123,7 @@ def build_datamodule(
         use_metadata=False,
         test_transform=transform,
         val_transform=transform,
+        train_transform=transform,  # deterministic on purpose -- see docstring
     )
 
 
