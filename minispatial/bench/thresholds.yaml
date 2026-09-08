@@ -13,9 +13,15 @@
 # ============================================================================
 
 meta:
-  status: awaiting_approval
-  set_by: null
-  set_on: null
+  # PARTIAL approval. The reproduction gate below is SET and APPROVED. The parity
+  # and stability thresholds are still null: they judge quantized measurements,
+  # none of which exist yet, and rule 2 requires them to be set before the first
+  # one is taken -- not now, and not after.
+  status: reproduction_approved__parity_and_stability_pending
+  reproduction_set_by: Ameya Kiwalkar
+  reproduction_set_on: 2026-09-08
+  parity_set_by: null
+  parity_set_on: null
   # Must be a commit that precedes every quantized measurement in results/.
   committed_before_first_quantized_measurement: true
 
@@ -24,19 +30,41 @@ meta:
 # the published Prithvi-EO-2.0 Sen1Floods11 figure to count as "reproduced".
 # --------------------------------------------------------------------------
 reproduction:
-  miou_abs_pp: null
-  iou_water_abs_pp: null
+  miou_abs_pp: 1.0
+  iou_water_abs_pp: 1.0
   justification: |
-    PROPOSED, NOT SET: +/- 1.0 percentage points absolute on both mIoU and
-    IoU_water. Anchored to the only quantitative statement available about
-    run-to-run variation in this pipeline -- the Prithvi-EO-2.0 repository
-    author's note of roughly 1% Lightning non-determinism (context/FACTS.md,
-    currently tagged `unverified`). A tolerance below that would fail on noise;
-    one far above it would let a genuinely different model pass. Two caveats
-    Ameya should weigh: the 1% figure is unverified, and it describes training
-    non-determinism rather than evaluation variance, which is smaller. If the
-    figure is verified and refers to training only, a tighter bound is
-    defensible. Ameya sets the final value.
+    SET AND APPROVED by Ameya on 2026-09-08, BEFORE any evaluation was run.
+    +/- 1.0 percentage points absolute on both mIoU and IoU_water.
+
+    Anchored to the only quantitative statement available about run-to-run
+    variation in this pipeline: the Prithvi-EO-2.0 repository author's note of
+    roughly 1% Lightning non-determinism (context/FACTS.md, tagged `unverified`
+    -- the original statement was not located, which is itself a reason not to
+    treat this bound as precise).
+
+    What this bound is actually absorbing. We are not retraining; we are
+    evaluating a fixed published checkpoint, where run-to-run noise should be
+    far smaller than training non-determinism. So 1.0 pp is not a noise budget,
+    it is a budget for SYSTEMATIC difference, and three sources are already
+    known: (a) terratorch 1.2.13 rejects the official config's
+    `decoder_scale_modules`, and whether that changes the decoder is unknown
+    (DECISIONS D011); (b) the resampling kernel is albumentations' default,
+    pinned but not verified against what the publisher used; (c) the published
+    figure's mIoU definition is not yet known.
+
+    Consequence of a miss. Exceeding this bound is a signal to investigate one
+    of those three, NOT an automatic kill. ROADMAP section 11's kill condition
+    is the teacher failing to load or evaluate at all, not missing tolerance.
+    Whatever happens, the measured number is recorded and reported as measured
+    (rule 10) -- the tolerance decides what we call it, not what we publish.
+
+    Definition dependency. Our mIoU is the macro mean of per-class IoU over
+    classes present, verified equal to
+    torchmetrics.MulticlassJaccardIndex(average="macro"). On a 2-class problem
+    with this class imbalance, macro mIoU, IoU_water alone and micro-averaged
+    IoU differ by more than 1.0 pp. THE PUBLISHED FIGURE'S DEFINITION MUST BE
+    RECORDED ALONGSIDE ITS VALUE before this tolerance is applied; a bound
+    applied across two different definitions is not a gate.
 
 # --------------------------------------------------------------------------
 # Parity: agreement between a deployed artifact and its fp32 PyTorch reference.
