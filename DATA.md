@@ -3,9 +3,10 @@
 Facts live in [`context/FACTS.md`](context/FACTS.md) with their tags and dates; this file records
 paths, sizes and provenance, and links there rather than restating counts.
 
-**Nothing has been downloaded yet.** Everything below comes from a read-only survey
-(`scripts/download_sen1floods11.py --dry-run`, 2026-09-07), whose raw output is at
-`results/runs/sen1floods11_survey.json`. The download waits on an approved disk location.
+The figures below come from a read-only survey (`scripts/download_sen1floods11.py --dry-run`,
+2026-09-07), whose raw output is at `results/runs/sen1floods11_survey.json`. The hand-labeled
+subset was downloaded to `data/` on 2026-09-08 with Ameya's approval (DECISIONS D016); the download
+record is at `results/runs/sen1floods11_download.json`.
 
 ## Sen1Floods11 — hand-labeled subset
 
@@ -47,10 +48,29 @@ only the three prefixes above and is not proof of absence.
 
 ### Destination
 
-`[unapproved]` — pending a decision on disk location. The recommendation is `data/` inside the
-repository (gitignored via the anchored `/data/` pattern); 6.6 TiB free on the volume, so 1.02 GB
-is not a constraint. Only the hand-labeled subset is planned; the full 4,831-chip weakly-labeled
-set is not needed for any milestone.
+`data/` inside the repository, gitignored via the **anchored** `/data/` pattern — anchored because
+a bare `data/` would also match `minispatial/data/` and silently hide source files, which happened
+once already (DECISIONS D002). Approved by Ameya 2026-09-08 (D016). 6.6 TiB free on the volume, so
+1.02 GB is not a constraint.
+
+Only the hand-labeled subset is downloaded; the full 4,831-chip weakly-labeled set is not needed
+for any milestone. The directory is never committed.
+
+Layout under `data/` mirrors the bucket exactly:
+
+```
+data/v1.1/data/flood_events/HandLabeled/S2Hand/*_S2Hand.tif
+data/v1.1/data/flood_events/HandLabeled/LabelHand/*_LabelHand.tif
+data/v1.1/splits/flood_handlabeled/flood_{train,valid,test,bolivia}_data.{csv,txt}
+```
+
+### The `.txt` split files are generated, not downloaded
+
+The bucket ships `.csv`. terratorch 1.2.13 reads `flood_{split}_data.**txt**` and matches each line
+as a *substring* of the image filenames, so a whole CSV row does not match and the file cannot be
+renamed. `scripts/download_sen1floods11.py` derives the `.txt` files after downloading, one bare
+chip id per line (e.g. `Ghana_313799`). Their provenance is that script, not the publisher. See
+DECISIONS D013.
 
 ## Band order and normalization
 

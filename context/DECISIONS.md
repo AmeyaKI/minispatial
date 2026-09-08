@@ -287,3 +287,89 @@ end.
 **Consequence.** M2 must lift that guard deliberately, after confirming the train loader yields
 `image` batches and the deterministic transform is in effect. A guard that has to be removed on
 purpose is the point.
+
+---
+
+## 2026-09-08 — D015: M0 reproduction tolerance set at ±1.0 pp (Ameya)
+
+**Context.** Rule 2 requires the reproduction tolerance to be written down and approved before the
+evaluation that it judges. `thresholds.yaml` shipped with every value `null` for exactly this
+reason.
+
+**Decision.** ±1.0 percentage points absolute on both mIoU and IoU_water. Approved by Ameya on
+2026-09-08 and committed in `5015e66`, before any evaluation was run.
+
+**Alternatives rejected.** ±0.5 pp — defensible if evaluation of a fixed checkpoint were the only
+source of variance, but three known systematic differences (D011's rejected
+`decoder_scale_modules`, the unverified resampling kernel, the unknown published metric definition)
+could each exceed that on their own, and a bound that fails for a reason we already know about
+tells us nothing new. A two-band scheme ("reproduced" / "consistent with known delta") — rejected as
+premature complexity before a single number exists.
+
+**Consequence.** The bound is a budget for *systematic* difference, not noise. Exceeding it is a
+signal to investigate one of the three known sources, **not** a kill: ROADMAP section 11's kill
+condition is the teacher failing to load or evaluate at all. Whatever the number turns out to be, it
+is recorded and reported as measured (rule 10); the tolerance decides what we *call* it, not what we
+publish.
+
+**Precondition on use.** The published figure's mIoU definition must be recorded alongside its
+value before this bound is applied. Ours is the macro mean over present classes. A ±1.0 pp bound
+applied across two different definitions is not a gate.
+
+**Still null, deliberately.** The parity and stability thresholds judge quantized measurements that
+do not exist yet. Rule 2 requires them set before the first such measurement — that is an M2
+decision, not this one.
+
+---
+
+## 2026-09-08 — D016: Sen1Floods11 stored at `data/` inside the repository
+
+**Context.** Rule 5 required approval for a download destination on the Mac. Colab's `/content` is
+ephemeral and needed no decision, but rule 3 makes local data necessary from M2 onward: Core ML and
+MLX accuracy must come from the deployed artifact's own outputs, and those artifacts run here.
+
+**Decision.** Ameya approved `data/` inside the repository, gitignored. 1.02 GB against 6.6 TiB
+free.
+
+**Alternatives rejected.** A location outside the repository (`~/datasets/…`) — equivalent in cost,
+since `--data-root` is explicit in every script and nothing defaults to a path; declined in favour
+of keeping the project self-contained.
+
+**Consequence.** The ignore pattern is `/data/`, anchored — an unanchored `data/` would also match
+`minispatial/data/` and silently hide source files, which happened once already (D002). The
+directory must never be committed; `DATA.md` records what lives there.
+
+---
+
+## 2026-09-08 — D017: Keep the coremltools shim; do not split into two environments
+
+**Context.** D004 introduced a five-line patch to coremltools' `_cast` because coremltools 9.0
+cannot convert any traced ViT graph under numpy ≥ 2, and terratorch ≥ 1.2 requires numpy ≥ 2.2. The
+question put to Ameya was whether patching a vendor library is acceptable given that the project's
+credibility rests on measuring "vendor PTQ as the vendor ships it".
+
+**Decision.** Ameya chose the patch over the two-venv alternative, 2026-09-08.
+
+**Alternatives rejected.** Two environments with a safetensors boundary — would require
+reimplementing the Prithvi model definition on the export side, which is substantial work and
+creates a second place for the architecture to drift out of sync.
+
+**Consequence.** The shim stays, guarded by `assert_shim_installed()` so a coremltools upgrade that
+renames or repairs `_cast` fails loudly rather than silently reverting. It rewrites one line of
+graph *construction* — the compile-time constant being cast — and touches no weights, activations
+or quantization code, so the vendor-PTQ claim is unaffected. It remains disclosed in the README
+limitations, and the auditor brief lists that disclosure as a check before publishing.
+
+---
+
+## 2026-09-08 — D018: On-device row deferred to M4
+
+**Context.** `xcrun xctrace list devices` aborts on this machine (B001), so device availability
+cannot be determined programmatically. The iPhone/iPad row is an M4 stretch item.
+
+**Decision.** Defer. No investigation now.
+
+**Consequence.** `results/env.json` records `xctrace_status: "error"`, deliberately distinct from
+"no devices" — nothing here establishes that no device is connected, only that we cannot ask. A
+later session must not read the empty device list as evidence of absence. Repairing Instruments is
+machine maintenance and stays in `FUTURE_WORK.md`.
