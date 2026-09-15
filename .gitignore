@@ -11,6 +11,10 @@
 /results/runs/*
 !/results/runs/sen1floods11_survey.json
 !/results/runs/split_csv_checksums.json
+!/results/runs/sen1floods11_download.json
+!/results/runs/teacher_eval.json
+!/results/runs/teacher_eval_resize448.json
+!/results/runs/teacher_eval_native.json
 
 # Model artifacts
 *.mlpackage

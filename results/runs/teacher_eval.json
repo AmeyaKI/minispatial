@@ -1,0 +1,60 @@
+{
+  "kind": "teacher_eval",
+  "checkpoint": "ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL-Sen1Floods11",
+  "split": "test",
+  "inference_mode": "resize",
+  "bands": [
+    "BLUE",
+    "GREEN",
+    "RED",
+    "NIR_NARROW",
+    "SWIR_1",
+    "SWIR_2"
+  ],
+  "constant_scale": 0.0001,
+  "ignore_index": -1,
+  "metrics_source": "minispatial.metrics (cross-checked against torchmetrics)",
+  "metric_resolution": 224,
+  "metric_definition": "mIoU = macro mean of per-class IoU over classes present; IoU_water = class 1. RECORD WHICH DEFINITION THE PUBLISHED SOURCE USES before comparing -- macro mIoU, IoU_water alone and micro-averaged IoU differ by more than the proposed tolerance on a 2-class problem with this much class imbalance.",
+  "num_classes": 2,
+  "water_class_index": 1,
+  "checkpoint_provenance": {
+    "hub_repo": "ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL-Sen1Floods11",
+    "hub_revision": "91ce9d38086a80b078a192b374df758b8855b732",
+    "weights_file": "Prithvi-EO-V2-300M-TL-Sen1Floods11.pt",
+    "config_file": "config.yaml",
+    "checkpoint_epoch": 41,
+    "checkpoint_global_step": 630,
+    "necks": [
+      "SelectIndices",
+      "ReshapeTokensToImage",
+      "LearnedInterpolateToPyramidal"
+    ]
+  },
+  "device": "cpu",
+  "timestamp_utc": "2026-09-13T20:06:06+00:00",
+  "chips_evaluated": 90,
+  "confusion_matrix": [
+    [
+      3382097,
+      54326
+    ],
+    [
+      72002,
+      418973
+    ]
+  ],
+  "miou": 0.8661632061687278,
+  "iou_per_class": [
+    0.9639929598039007,
+    0.7683334525335549
+  ],
+  "iou_water": 0.7683334525335549,
+  "f1_water": 0.8689915936756565,
+  "versions": {
+    "torch": "2.14.0",
+    "terratorch": "1.2.13",
+    "numpy": "2.5.3"
+  },
+  "published_comparison": "Compare against the Prithvi-EO-2.0 paper (arXiv 2412.02732) and the model card for this checkpoint. Read the figure at the source; do not transcribe it from memory. Tolerance: minispatial/bench/thresholds.yaml."
+}
