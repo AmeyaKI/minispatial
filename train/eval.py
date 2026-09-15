@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """Evaluate a Prithvi Sen1Floods11 checkpoint and write the M0 gate numbers.
 
-Intended host: Google Colab (the 300M teacher does not need to run on the Mac).
+Intended host: a Linux GPU box (Lightning AI studio) or Colab; runs on CPU too.
 Writes ``results/runs/teacher_eval.json`` with test-split mIoU, IoU_water and
 F1_water computed by ``minispatial.metrics`` -- not by TerraTorch's own metric
 objects, so the number that gates the project is produced by code this
@@ -64,12 +64,17 @@ NUM_CLASSES = 2
 WATER_CLASS = 1
 
 
-def official_test_transform():
+def official_test_transform(size: int | None = None):
     """The official config's test transform: ``albumentations.Resize(224, 224)``.
 
     Built from the vendored config rather than retyped, so a change upstream
     shows up as a change here. Applied by the datamodule to image *and* mask,
-    which is why the ``resize`` mode computes metrics at 224.
+    which is why the ``resize`` mode computes metrics at the resize size.
+
+    ``size`` overrides the Resize height/width while keeping the same
+    resampler. The Prithvi-EO-2.0 paper (arXiv 2412.02732, Table IV note, read
+    2026-09-13) states the Sen1Floods11 chips were resized 512 -> 448 for the
+    published numbers, which is neither the vendored config's 224 nor native.
     """
     import albumentations
     from albumentations.pytorch import ToTensorV2
@@ -79,10 +84,12 @@ def official_test_transform():
     built = []
     for step in steps:
         name = step["class_path"].split(".")[-1]
-        args = step.get("init_args", {})
+        args = dict(step.get("init_args", {}))
         if name == "ToTensorV2":
             built.append(ToTensorV2())
         else:
+            if name == "Resize" and size is not None:
+                args["height"] = args["width"] = size
             built.append(getattr(albumentations, name)(**args))
     return built
 
@@ -92,6 +99,7 @@ def build_datamodule(
     inference: str,
     batch_size: int = 1,
     num_workers: int = 2,
+    resize: int | None = None,
 ):
     """Sen1Floods11 datamodule, configured from the vendored official config.
 
@@ -111,7 +119,7 @@ def build_datamodule(
     from terratorch.datamodules import Sen1Floods11NonGeoDataModule
 
     spec = load_band_spec()
-    transform = official_test_transform() if inference == "resize" else [ToTensorV2()]
+    transform = official_test_transform(resize) if inference == "resize" else [ToTensorV2()]
     return Sen1Floods11NonGeoDataModule(
         data_root=str(data_root),
         batch_size=batch_size,
@@ -127,11 +135,66 @@ def build_datamodule(
     )
 
 
-def load_model(checkpoint: str):
-    """Load the published fine-tuned segmentation model from Hugging Face."""
+CHECKPOINT_FILE = "Prithvi-EO-V2-300M-TL-Sen1Floods11.pt"
+CHECKPOINT_CONFIG = "config.yaml"
+
+
+def load_model(checkpoint: str, device: str = "cpu"):
+    """Load the published fine-tuned segmentation model from Hugging Face.
+
+    Verified 2026-09-13 on Linux / terratorch 1.2.13 (see DECISIONS D019):
+
+    * ``SemanticSegmentationTask.load_from_checkpoint`` on the ``.pt`` FAILS --
+      the checkpoint's saved hyper-parameters carry ``decoder_scale_modules:
+      True``, which the installed ``UperNetDecoder`` rejects (D011).
+    * The ``config.yaml`` shipped *next to the checkpoint on the Hub* expresses
+      the same model with a ``LearnedInterpolateToPyramidal`` neck instead.
+      Building from those ``model_args`` and loading the state dict strictly
+      gives 0 missing / 0 unexpected keys and a working forward pass.
+
+    So the model is built from the Hub config, not from the vendored GitHub
+    config, and the weights are loaded strictly so any drift is an error.
+    Returns ``(task, provenance)``; provenance records the Hub revision.
+    """
+    import yaml as _yaml
+    from huggingface_hub import hf_hub_download
     from terratorch.tasks import SemanticSegmentationTask
 
-    return SemanticSegmentationTask.load_from_checkpoint(checkpoint, map_location="cpu")
+    weights = hf_hub_download(checkpoint, CHECKPOINT_FILE)
+    config = hf_hub_download(checkpoint, CHECKPOINT_CONFIG)
+    revision = Path(weights).parent.name  # snapshots/<commit-sha>/...
+
+    model_args = dict(_yaml.safe_load(Path(config).read_text())["model"]["init_args"]["model_args"])
+    model_args["backbone_pretrained"] = False  # weights come from the checkpoint, not the Hub backbone
+    task = SemanticSegmentationTask(
+        model_args=model_args, model_factory="EncoderDecoderFactory", loss="ce", ignore_index=-1
+    )
+    state = torch.load(weights, map_location="cpu", weights_only=False)
+    task.load_state_dict(state["state_dict"], strict=True)
+    provenance = {
+        "hub_repo": checkpoint,
+        "hub_revision": revision,
+        "weights_file": CHECKPOINT_FILE,
+        "config_file": CHECKPOINT_CONFIG,
+        "checkpoint_epoch": state.get("epoch"),
+        "checkpoint_global_step": state.get("global_step"),
+        "necks": [n["name"] for n in model_args.get("necks", [])],
+    }
+    return task.to(device), provenance
+
+
+def standardize(datamodule, images: torch.Tensor) -> torch.Tensor:
+    """Apply the datamodule's per-band standardization to a batch of images.
+
+    terratorch keeps the ``Normalize(means, stds)`` step in ``datamodule.aug``
+    and runs it from Lightning's ``on_after_batch_transfer`` hook -- which a
+    plain ``for batch in loader`` loop never triggers. Verified 2026-09-13 on
+    the studio: without this call the 300M teacher predicts no water on any
+    chip (IoU_water 0.0); with it, the wettest test chip scores 0.995. The
+    publisher's own ``inference.py`` calls ``datamodule.aug`` explicitly in the
+    same way. See DECISIONS D020.
+    """
+    return datamodule.aug({"image": images})["image"]
 
 
 @torch.no_grad()
@@ -143,14 +206,18 @@ def predict_logits(model, chip: torch.Tensor, mode: str) -> torch.Tensor:
     input resolution (verified: 224 in -> 224 out, 512 in -> 512 out). Nothing
     in this function resamples; the datamodule owns that.
     """
+    device = next(model.parameters()).device
     if mode in ("resize", "native"):
         # `resize` already arrived at 224 via the datamodule's own transform;
         # `native` arrives at 512. Either way the model matches its input size.
-        return model(chip.unsqueeze(0)).output[0]
+        return model(chip.unsqueeze(0).to(device)).output[0].cpu()
 
     if mode == "tile":
         tiles = extract_tiles(chip.numpy())
-        outs = [model(torch.from_numpy(t).unsqueeze(0)).output[0].numpy() for t in tiles]
+        outs = [
+            model(torch.from_numpy(t).unsqueeze(0).to(device)).output[0].cpu().numpy()
+            for t in tiles
+        ]
         return torch.from_numpy(stitch_tiles(np.stack(outs, axis=0), chip=chip.shape[-1]))
 
     raise ValueError(f"unknown inference mode {mode!r}")
@@ -168,6 +235,9 @@ def main(argv: list[str] | None = None) -> int:
                         choices=["resize", "native", "tile"],
                         help="512 chip handling; 'resize' mirrors the official config "
                              "(metrics computed at 224 against a downsampled mask)")
+    parser.add_argument("--resize", type=int, default=None,
+                        help="override the Resize size in 'resize' mode (config default 224; "
+                             "the paper's Table IV note says 448)")
     parser.add_argument("--limit", type=int, default=None, help="evaluate only N chips (debug)")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--dry-run", action="store_true",
@@ -184,7 +254,7 @@ def main(argv: list[str] | None = None) -> int:
         "constant_scale": spec.constant_scale,
         "ignore_index": spec.ignore_index,
         "metrics_source": "minispatial.metrics (cross-checked against torchmetrics)",
-        "metric_resolution": {"resize": 224, "native": 512, "tile": 512}[args.inference],
+        "metric_resolution": {"resize": args.resize or 224, "native": 512, "tile": 512}[args.inference],
         "metric_definition": (
             "mIoU = macro mean of per-class IoU over classes present; IoU_water = class 1. "
             "RECORD WHICH DEFINITION THE PUBLISHED SOURCE USES before comparing -- macro mIoU, "
@@ -203,15 +273,21 @@ def main(argv: list[str] | None = None) -> int:
     if args.data_root is None:
         parser.error("--data-root is required unless --dry-run")
 
-    datamodule = build_datamodule(args.data_root, args.inference)
+    datamodule = build_datamodule(args.data_root, args.inference, resize=args.resize)
     datamodule.setup("test")
     loader = datamodule.test_dataloader()
-    model = load_model(args.checkpoint).eval()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, provenance = load_model(args.checkpoint, device)
+    model.eval()
+    plan["checkpoint_provenance"] = provenance
+    plan["device"] = device
+    if device == "cuda":
+        plan["gpu"] = torch.cuda.get_device_name(0)
 
     accumulator = np.zeros((NUM_CLASSES, NUM_CLASSES), dtype=np.int64)
     chips = 0
     for batch in loader:
-        images, masks = batch["image"], batch["mask"]
+        images, masks = standardize(datamodule, batch["image"]), batch["mask"]
         for i in range(images.shape[0]):
             logits = predict_logits(model, images[i], args.inference)
             prediction = logits.argmax(0).numpy()
