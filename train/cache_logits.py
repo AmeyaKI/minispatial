@@ -37,6 +37,7 @@ from train.eval import (  # noqa: E402
     build_datamodule,
     load_model,
     predict_logits,
+    standardize,
 )
 
 
@@ -102,12 +103,16 @@ def main(argv: list[str] | None = None) -> int:
         "val": datamodule.val_dataloader,
         "train": datamodule.train_dataloader,
     }[args.split]()
-    model = load_model(args.checkpoint).eval()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    model, provenance = load_model(args.checkpoint, device)
+    model.eval()
+    manifest["checkpoint_provenance"] = provenance
+    manifest["device"] = device
 
     entries: list[dict[str, Any]] = []
     index = 0
     for batch in loader:
-        images = batch["image"]
+        images = standardize(datamodule, batch["image"])
         for i in range(images.shape[0]):
             logits = predict_logits(model, images[i], args.inference).numpy().astype(np.float16)
             path = args.out_dir / f"{args.split}_{index:05d}.npy"
