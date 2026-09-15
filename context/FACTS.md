@@ -19,8 +19,11 @@ Re-check anything time-sensitive (tool versions, bucket contents, model cards).
 | Registry name `prithvi_eo_v2_tiny_tl` exists in terratorch 1.2.13 | `verified` | enumerated `terratorch.registry.BACKBONE_REGISTRY` (1433 entries, 10 prithvi) | 2026-09-07 |
 | **100M-TL registry name is `prithvi_eo_v2_100_tl`** (was listed "verify" in ROADMAP §14) | `verified` | same enumeration | 2026-09-07 |
 | 300M-TL registry name is `prithvi_eo_v2_300_tl` | `verified` | same enumeration | 2026-09-07 |
-| The published flood checkpoint is `ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL-Sen1Floods11` | `unverified` | ROADMAP §4; not loaded yet | — |
-| The published 300M-TL Sen1Floods11 mIoU / IoU_water figures | `unverified` | Prithvi-EO-2.0 paper, arXiv 2412.02732, and the model card. **Not read this session; no number recorded.** | — |
+| The published flood checkpoint is `ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL-Sen1Floods11`; Hub revision `91ce9d38086a80b078a192b374df758b8855b732`; file `Prithvi-EO-V2-300M-TL-Sen1Floods11.pt`, Lightning ckpt, epoch 41, step 630 | `verified` | downloaded and strict-loaded on the Lightning studio (D019) | 2026-09-13 |
+| Published 300M-TL Sen1Floods11 test figures: **mIoU 90.0 (std 0.2), mF1 97.7 (0.1), IoU water 82.6 (0.3)** | `verified` | Prithvi-EO-2.0 paper, Table IV, https://arxiv.org/html/2412.02732 (raw HTML text, not a summary) | 2026-09-13 |
+| The paper defines mIoU as the plain mean over classes, `(1/C) Σ_c IoU_c` — i.e. macro, same as `minispatial.metrics` | `verified` | same paper, Section IV metric definition | 2026-09-13 |
+| The paper evaluates Sen1Floods11 at **448 × 448** (Table III: "446 (448 × 448)"; text: 512 resized to 448 because 512 is not divisible by the 600M's 14-px patch) | `verified` | same paper, Table III and Section IV-B | 2026-09-13 |
+| The Hub-shipped `config.yaml` for the checkpoint uses `RandomCrop(224)` for training and **no resize** at val/test; the publisher's `inference.py` runs 512 windows | `verified` | files in the Hub repo at the revision above | 2026-09-13 |
 | IBM tiny-TL model card claims phone/satellite suitability without measurement | `unverified` | ROADMAP §1 | — |
 
 ## Training configuration
@@ -34,9 +37,9 @@ Re-check anything time-sensitive (tool versions, bucket contents, model cards).
 | Normalization constants are NOT in the config; only `constant_scale: 0.0001`. Per-band means/stds come from `terratorch.datamodules.sen1floods11.MEANS`/`STDS`. | `verified` | read from installed terratorch 1.2.13 | 2026-09-07 |
 | Neck config selects encoder indices 2, 5, 8, 11 for the 100M-class backbone (300M uses 5/11/17/23; 600M uses 7/15/23/31) | `verified` | the vendored config | 2026-09-07 |
 | **`decoder_scale_modules: true` in the official config is REJECTED by terratorch 1.2.13.** `UperNetDecoder.__init__` is `(embed_dim, pool_scales=(1,2,3,6), channels=256, align_corners=True)` — no `scale_modules`. The config predates the installed terratorch. | `verified` | `TypeError` from `EncoderDecoderFactory.build_model`; signature read via `inspect` | 2026-09-07 |
-| Whether that behaviour is now default-on, default-off or renamed, and whether the published 300M checkpoint used it | `unverified` | — must be resolved before M1 training | — |
+| `decoder_scale_modules` was replaced by the `LearnedInterpolateToPyramidal` neck; the published checkpoint carries its weights (`model.neck.2.fpn1.*`, `fpn2.*`) and strict-loads into a model built from the Hub `config.yaml` (0 missing / 0 unexpected) | `verified` | D019; Hub `config.yaml` + state-dict inspection on the studio | 2026-09-13 |
 | **`rescale: True` means the model returns logits at input resolution**: 224 in → `(1,2,224,224)`, 512 in → `(1,2,512,512)`. The 512 chip goes through the model directly. | `verified` | probed a randomly-initialised tiny-TL + UperNetDecoder built through `EncoderDecoderFactory` | 2026-09-07 |
-| The official `test_transform` resizes image **and** mask to 224, so the published metric is computed at 224 against a downsampled mask | `verified` | the vendored config + terratorch datamodule behaviour | 2026-09-07 |
+| The **vendored GitHub** `test_transform` resizes image **and** mask to 224. This is *not* the paper's protocol (448, see below) nor the Hub config's (no resize). | `verified` | the vendored config + terratorch datamodule behaviour; superseded for M0 by D022 | 2026-09-13 |
 | `albumentations.Resize` defaults (albumentations 2.0.8): image `interpolation=1` (`cv2.INTER_LINEAR`), mask `mask_interpolation=0` (`cv2.INTER_NEAREST`). These are library defaults, not a choice made here — the resampling kernel is part of the reproduction protocol, so a change to these defaults would move the gate number. | `verified` | instantiated `albumentations.Resize(224,224)` and read the attributes; compared against `cv2` constants | 2026-09-07 |
 | Lightning non-determinism is roughly 1% per the repo author | `unverified` | ROADMAP §14; original statement not located this session | — |
 

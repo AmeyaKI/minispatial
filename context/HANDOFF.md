@@ -193,3 +193,57 @@ than after.
 
 **Next step.** Unchanged: set the tolerance in `minispatial/bench/thresholds.yaml`, then run
 `colab/bootstrap.ipynb`.
+
+---
+
+## 2026-09-13 — Lightning AI studio stood up; M0 gate run; verdict: miss at 448, pass at native
+
+Ameya switched execution from Colab to a Lightning AI free-tier studio so jobs run with the laptop
+closed. I drove the studio over SSH from the Mac session: clone, `uv sync`, dataset download,
+tests (47 pass; one Mac-only test fails to import coremltools on Linux), then the teacher eval on
+CPU. No GPU credit was spent. **Ameya asked that nothing be committed or pushed; the working tree
+holds every change listed in `STATE.md`.**
+
+### What the checkpoint taught us before any number existed
+
+1. `load_from_checkpoint` on the published `.pt` fails exactly as D011 predicted. The Hub-shipped
+   `config.yaml` replaces `decoder_scale_modules` with a `LearnedInterpolateToPyramidal` neck, and
+   the state dict carries that neck's weights. Building from the Hub config and strict-loading
+   gives 0 missing / 0 unexpected. **Open question 3 is closed; it is not a systematic difference.**
+2. The first probes returned `IoU_water = 0.0`. Cause: terratorch's `Normalize` sits in
+   `datamodule.aug` and only runs from Lightning's `on_after_batch_transfer`; a plain loader loop
+   never calls it. Applying it explicitly (as the publisher's `inference.py` does) took the wettest
+   chip from 0.0 to 0.995 IoU_water. Fixed in `eval.py` and `cache_logits.py` (D020). **Every
+   future loop outside a Trainer — including the Core ML and MLX parity paths — must do this.**
+3. The vendored GitHub config's 224 resize is *not* what the paper measured. The paper (Table III,
+   §IV-B) resizes to 448; the Hub config does not resize at all. I added `--resize N`, pre-registered
+   448 as the comparison protocol (D022, written before the 448 number existed), and ran all three.
+
+### The numbers (test split, 90 chips, CPU)
+
+| Protocol | mIoU | IoU_water |
+| --- | --- | --- |
+| 224 (vendored config) | 86.62 | 76.83 |
+| 448 (paper; pre-registered comparison) | 88.96 | 80.82 |
+| native 512 (Hub config) | 89.46 | 81.68 |
+| published, Table IV | 90.0 (0.2) | 82.6 (0.3) |
+
+At 448: −1.04 / −1.78 pp → **outside** the ±1.0 pp tolerance on both. At native 512: −0.54 /
+−0.92 pp → inside on both, but not the pre-registered protocol. Reported as such in `RESULTS.md`.
+No run was repeated. The three-chip probe numbers that exposed the normalization bug were not
+recorded anywhere.
+
+### Needs approval
+
+1. **M0 verdict.** The gate as pre-registered is a miss by 0.04 pp on mIoU and 1.78 pp on
+   IoU_water. *Recommend:* accept as "teacher loads and evaluates; reproduction within tolerance
+   at native 512, just outside at the paper's 448"; proceed to M1; do not re-run.
+2. **Frontier protocol** (open question 1). *Recommend:* native 512 everywhere.
+3. **Push the working tree to origin.** *Recommend:* yes after reviewing the diff; the studio
+   then pulls instead of receiving scp'd files. No secrets are present.
+4. **Commit `HANDOFF_CONTEXT.md`.** *Recommend:* yes.
+
+### Exact next step
+
+Cache the teacher's test logits on the studio under the chosen protocol, then start M1 config
+drafting from the Hub `config.yaml`, not the vendored GitHub one.
