@@ -373,3 +373,79 @@ cannot be determined programmatically. The iPhone/iPad row is an M4 stretch item
 "no devices" — nothing here establishes that no device is connected, only that we cannot ask. A
 later session must not read the empty device list as evidence of absence. Repairing Instruments is
 machine maintenance and stays in `FUTURE_WORK.md`.
+
+---
+
+## 2026-09-13 — D019: Build the 300M teacher from the Hub-shipped `config.yaml`; resolves open question 3
+
+**Context.** `SemanticSegmentationTask.load_from_checkpoint` on the published `.pt` fails under
+terratorch 1.2.13 with `UperNetDecoder.__init__() got an unexpected keyword argument
+'scale_modules'` — the checkpoint's saved hyper-parameters carry `decoder_scale_modules: True`
+(D011). Inspecting the checkpoint on the Lightning studio showed the state dict contains
+`model.neck.2.fpn1.*` / `model.neck.2.fpn2.*` weights, and the `config.yaml` shipped *next to the
+checkpoint* on the Hub (revision `91ce9d38086a80b078a192b374df758b8855b732`) lists a third neck,
+`LearnedInterpolateToPyramidal`, in place of the decoder option.
+
+**Decision.** `train/eval.py::load_model` downloads both files, builds the task from the Hub
+config's `model_args` with `backbone_pretrained=False`, and loads the state dict with
+`strict=True`. Result: 0 missing, 0 unexpected keys, forward pass `(1,2,224,224)`. The Hub config is
+the checkpoint's provenance; the GitHub config the repo vendored is a generic template (backbone
+placeholder, neck indices for the 100M).
+
+**Consequence.** Open question 3 is closed by evidence: `decoder_scale_modules` became the
+`LearnedInterpolateToPyramidal` neck, and the published checkpoint carries those weights. It is
+**not** a systematic difference for M0. M1 configs for tiny/100M must use the neck form, with
+`SelectIndices` chosen for each backbone's depth.
+
+---
+
+## 2026-09-13 — D020: Standardization must be applied explicitly outside a Lightning trainer
+
+**Context.** First full-split probes returned `IoU_water = 0.0`: the teacher predicted no water on
+any chip. terratorch's `Sen1Floods11NonGeoDataModule` keeps `Normalize(means, stds)` in
+`datamodule.aug` and runs it from Lightning's `on_after_batch_transfer` hook, which a plain
+`for batch in loader` loop never triggers. Verified on the wettest test chip (98% water): without
+standardization, predicted water fraction 0.0; with `datamodule.aug` applied, IoU_water 0.995.
+The publisher's own `inference.py` calls `datamodule.aug` explicitly in the same way.
+
+**Decision.** `train/eval.py::standardize` applies `datamodule.aug` to every batch; `eval.py` and
+`cache_logits.py` both call it. The three-chip probe numbers that exposed this are not results and
+were not written anywhere.
+
+**Consequence.** Any future loop over a terratorch dataloader outside a Trainer must do the same
+or it silently evaluates an unstandardized model. This applies to the Core ML and MLX parity paths.
+
+---
+
+## 2026-09-13 — D021: Execution host is a Lightning AI studio over SSH, not Colab
+
+**Context.** Colab Pro cannot run unattended with the laptop closed. Ameya chose Lightning AI's
+free tier (CPU studio free; 5 credits ≈ 27 T4 hours as displayed on 2026-09-10). The studio is
+Ubuntu 24.04, 4 cores, 14 GB RAM; the repo is cloned at `/teamspace/studios/this_studio/minispatial`
+with the dataset under `data/` and the same terratorch/numpy/albumentations versions as the Mac.
+
+**Decision.** GPU-side work (M0 eval, M1/M2 training, M4 QAT) runs on the studio, driven over SSH
+from the Mac session; files are copied with scp until Ameya approves a push. The Colab notebook
+remains a reproducible artifact but is no longer the execution path. Apple-silicon measurement
+stays on the Mac.
+
+**Consequence.** The M0 evaluation ran on CPU (a few seconds per chip at 224; 90 chips in minutes),
+so no GPU credit was spent on M0. Every result file records `device` and, when present, `gpu`.
+
+---
+
+## 2026-09-13 — D022: The published Sen1Floods11 protocol resizes to 448, not 224
+
+**Context.** The Prithvi-EO-2.0 paper (arXiv 2412.02732, HTML read 2026-09-13) states in the
+Sen1Floods11 results note that "the 512 × 512 images were resized to 448 × 448" because 512 is not
+divisible by the 600M models' 14-pixel patch. The vendored GitHub config resizes to 224 (D010); the
+Hub-shipped `config.yaml` uses `RandomCrop(224)` for training and **no resize** at test. Three
+different test protocols exist for the same checkpoint.
+
+**Decision.** `eval.py --resize N` overrides the Resize size in `resize` mode. M0 evaluates all
+three — 224 (vendored config), 448 (paper), native 512 (Hub config / publisher `inference.py`) — and
+the comparison against the published figure uses the paper's own 448 protocol. All three files
+are kept under `results/runs/`.
+
+**Consequence.** The M0 gate compares like with like only at 448. Whichever protocol the frontier
+adopts must then be used identically for every deployed-runtime row (open question 1).
