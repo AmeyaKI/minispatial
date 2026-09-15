@@ -1,0 +1,140 @@
+# minispatial M1 — fine-tune Prithvi-EO-2.0 tiny-TL on Sen1Floods11.
+#
+# Derived from the config.yaml shipped WITH the published 300M-TL checkpoint on the
+# Hub (revision 91ce9d38, see DECISIONS D019), not from the GitHub template the repo
+# vendored. Every line that differs from that Hub config is marked `# DIFF:` with the
+# reason, and the set of diffs is logged in DECISIONS D024.
+#
+# Run with:  .venv/bin/python train/train.py --config train/configs/tiny_tl.yaml
+# (a thin wrapper over `terratorch fit`; --dry-run prints the resolved config).
+
+seed_everything: 0
+trainer:
+  accelerator: auto
+  strategy: auto
+  devices: auto
+  num_nodes: 1
+  precision: 16-mixed
+  logger:
+    class_path: lightning.pytorch.loggers.CSVLogger        # DIFF: Hub uses default TensorBoard; CSV is grep-able and lands under results/runs (rule "nothing important only in stdout")
+    init_args:
+      save_dir: results/runs/train
+      name: tiny_tl
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: epoch
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        monitor: val/loss
+        min_delta: 0.0
+        patience: 20
+        mode: min
+        strict: true
+        check_finite: true
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint  # DIFF: explicit checkpointing; Hub relied on Lightning defaults. Needed because free studios restart on a cycle (D021) — every_n_epochs=1 + save_last lets `--resume` continue.
+      init_args:
+        dirpath: results/runs/train/tiny_tl/checkpoints
+        filename: "epoch{epoch:02d}-valloss{val/loss:.4f}"
+        auto_insert_metric_name: false
+        monitor: val/loss
+        mode: min
+        save_top_k: 1
+        save_last: true
+        every_n_epochs: 1
+  max_epochs: 50
+  check_val_every_n_epoch: 2
+  log_every_n_steps: 10
+  enable_checkpointing: true
+  default_root_dir: results/runs/train/tiny_tl
+  deterministic: warn                                        # DIFF: not set in Hub; asks CUDA for deterministic kernels where available, warns otherwise
+
+model:
+  class_path: terratorch.tasks.SemanticSegmentationTask
+  init_args:
+    model_args:
+      backbone_pretrained: true
+      backbone: prithvi_eo_v2_tiny_tl                        # DIFF: the model under study (Hub: prithvi_eo_v2_300_tl)
+      decoder: UperNetDecoder
+      decoder_channels: 256
+      num_classes: 2
+      rescale: true
+      backbone_bands:
+        - BLUE
+        - GREEN
+        - RED
+        - NIR_NARROW
+        - SWIR_1
+        - SWIR_2
+      head_dropout: 0.1
+      necks:
+        - name: SelectIndices
+          indices: [2, 5, 8, 11]                             # DIFF: tiny-TL has 12 blocks (verified 2026-09-15); Hub's [5,11,17,23] index the 300M's 24 blocks. Same relative depths (quarter points).
+        - name: ReshapeTokensToImage
+        - name: LearnedInterpolateToPyramidal
+    model_factory: EncoderDecoderFactory
+    loss: ce
+    ignore_index: -1
+    lr: 0.001
+    freeze_backbone: false
+    freeze_decoder: false
+    plot_on_val: 10
+
+data:
+  class_path: terratorch.datamodules.Sen1Floods11NonGeoDataModule
+  init_args:
+    data_root: data                                          # DIFF: local path (D016)
+    batch_size: 16
+    num_workers: 4                                           # DIFF: 4 cores on the studio (Hub: 8)
+    bands:
+      - BLUE
+      - GREEN
+      - RED
+      - NIR_NARROW
+      - SWIR_1
+      - SWIR_2
+    train_transform:
+      - class_path: albumentations.RandomCrop
+        init_args:
+          height: 224
+          width: 224
+          p: 1.0
+      - class_path: albumentations.HorizontalFlip
+        init_args:
+          p: 0.5
+      - class_path: albumentations.VerticalFlip
+        init_args:
+          p: 0.5
+      - class_path: albumentations.pytorch.ToTensorV2
+        init_args:
+          transpose_mask: false
+          p: 1.0
+    val_transform:                                           # native 512, no resize (D023)
+      - class_path: albumentations.pytorch.ToTensorV2
+        init_args:
+          transpose_mask: false
+          p: 1.0
+    test_transform:
+      - class_path: albumentations.pytorch.ToTensorV2
+        init_args:
+          transpose_mask: false
+          p: 1.0
+    drop_last: true
+    constant_scale: 0.0001
+    no_data_replace: 0.0
+    no_label_replace: -1
+    use_metadata: false
+
+optimizer:
+  class_path: torch.optim.AdamW
+  init_args:
+    lr: 5.0e-05
+    betas: [0.9, 0.999]
+    eps: 1.0e-08
+    weight_decay: 0.05
+
+lr_scheduler:
+  class_path: torch.optim.lr_scheduler.CosineAnnealingLR
+  init_args:
+    T_max: 50
+    eta_min: 0
