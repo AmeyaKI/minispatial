@@ -3,8 +3,10 @@
 Geospatial foundation models, made small enough to run where there is no cloud — fine-tuned,
 quantized three ways, deployed to Core ML and MLX, measured.
 
-> **Status: Phase 0 (scaffold).** No accuracy, latency or memory result has been measured yet.
-> Every results table below is a placeholder. Nothing here should be cited.
+> **WORK IN PROGRESS.** Active development, Sept–Oct 2026. Milestone M0 (reproduce the published
+> 300M flood result) has run; see `RESULTS.md` for the measured numbers and verdict. No latency,
+> memory or quantized result exists yet. Every other results table below is a placeholder.
+> Nothing here should be cited.
 
 ## The question
 
