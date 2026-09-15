@@ -449,3 +449,60 @@ are kept under `results/runs/`.
 
 **Consequence.** The M0 gate compares like with like only at 448. Whichever protocol the frontier
 adopts must then be used identically for every deployed-runtime row (open question 1).
+
+---
+
+## 2026-09-15 — D023: M0 verdict accepted; native 512 is the frozen protocol; M1 starts
+
+**Context.** M0 measured −1.04 / −1.78 pp against the paper at its 448 protocol and −0.54 / −0.92
+pp at native 512 (RESULTS.md). Ameya was asked (HANDOFF 2026-09-13) whether to accept the miss,
+which protocol the frontier uses, and whether to keep re-pinning the Colab notebook.
+
+**Decision (Ameya, 2026-09-15).** (1) The M0 verdict is accepted as recorded; the teacher loads
+and evaluates, so M1 proceeds. No re-run. (2) **Native 512 — no resize, no tiling — is the protocol
+for the teacher row, every fine-tuned model, every deployed artifact, and every parity check.**
+It is the highest-scoring protocol, resamples nothing, and matches the publisher's own
+`inference.py`. (3) Working rules for the M1+ sessions: report in chat after every major change;
+pause and await approval before any training run or long benchmark.
+
+**Alternatives rejected.** 448 (the paper's number, but a resampled label and a size no runtime
+needs); 224 tiles per ROADMAP §7 (only if a runtime cannot take 512 — revisit at M2 export, and if
+adopted for a runtime it must be adopted for the teacher row too).
+
+**Consequence.** Training keeps the Hub config's `RandomCrop(224)` augmentation (the published
+recipe) while validation and test run at 512; the 300M checkpoint was trained exactly this way
+and evaluates at 512 without issue. Cached teacher logits are produced at 512. ROADMAP §7's
+"9-tile 224/stride-144" line is superseded for now; `tiling.py` stays for the fallback.
+
+---
+
+## 2026-09-15 — D024: M1 training configs derive from the Hub config; every diff is marked
+
+**Context.** ROADMAP §6 says the small-model configs "mirror the official 300M config". Two
+official configs exist (D022); the one that produced the published checkpoint is the Hub-shipped
+`config.yaml` (D019), so that is the base. `train/train.py` is a thin wrapper over `terratorch fit`
+so the loop, loss, metrics and checkpointing are TerraTorch's own — the code path that produced
+the teacher — plus a `--dry-run`, `--resume`, and a JSON-lines run record with the rule-7 stamp.
+
+**Decision.** `train/configs/{tiny_tl,100m_tl}.yaml` differ from the Hub config only in these
+lines, each marked `# DIFF:` in the file:
+
+| Field | Hub (300M-TL) | Ours | Why |
+| --- | --- | --- | --- |
+| `backbone` | `prithvi_eo_v2_300_tl` | `prithvi_eo_v2_tiny_tl` / `prithvi_eo_v2_100_tl` | the models under study |
+| `SelectIndices.indices` | `[5, 11, 17, 23]` (24 blocks) | `[2, 5, 8, 11]` (12 blocks, verified) | same relative depths |
+| `logger` | default TensorBoard | `CSVLogger` → `results/runs/train/<name>` | grep-able, tracked layout |
+| `ModelCheckpoint` | Lightning default | explicit: `every_n_epochs=1`, `save_last`, best on `val/loss` | studio restart cycle; `--resume` |
+| `deterministic` | unset | `warn` | deterministic kernels where available |
+| `data_root` | IBM cluster path | `data` | D016 |
+| `num_workers` | 8 | 4 | studio has 4 cores |
+
+Unchanged on purpose: `RandomCrop(224)` + flips for training, **no resize** at val/test (native
+512, D023), batch 16, `drop_last`, `constant_scale 1e-4`, `head_dropout 0.1`, UperNet 256, CE loss
+with `ignore_index -1`, AdamW `lr 5e-5, wd 0.05`, cosine `T_max 50`, `max_epochs 50`, early
+stopping on `val/loss` patience 20, `check_val_every_n_epoch 2`, `precision 16-mixed`,
+`seed_everything 0`.
+
+**Consequence.** The UNet control (`minispatial/models/unet_small.py`) reuses the *same* YAML with
+only `model_factory: UNetSmallFactory` and its `model_args` swapped, so "same data, loss, epochs,
+augmentations" is enforced by sharing the file rather than by copying it.

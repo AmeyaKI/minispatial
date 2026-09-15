@@ -2,10 +2,10 @@
 
 *Rewritten every session. This is a snapshot, not a log — the log is `HANDOFF.md`.*
 
-**Last updated:** 2026-09-13
-**Session goal:** Stand up the Lightning AI studio as the GPU/Linux execution host and run the M0
-reproduction gate on it.
-**Active milestone:** M0 — Ground truth (Sept 7–13). **Gate has run. Verdict below.**
+**Last updated:** 2026-09-15
+**Session goal:** Start M1 — training configs for tiny-TL and 100M-TL from the Hub config, the UNet
+control, teacher logit caching at native 512, and a timed tiny epoch on the T4 to size the budget.
+**Active milestone:** M1 — Small models trained (Sept 14–20). M0 accepted (D023).
 
 ---
 
