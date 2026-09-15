@@ -5,7 +5,9 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from minispatial.export.coreml import (
+pytest.importorskip("coremltools", reason="coremltools is a macOS-side dependency (export extra)")
+
+from minispatial.export.coreml import (  # noqa: E402
     COREML_SHIM_REASON,
     assert_shim_installed,
     install_numpy2_cast_shim,
