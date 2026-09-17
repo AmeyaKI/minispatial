@@ -1,0 +1,1032 @@
+{
+  "kind": "teacher_logits_cache",
+  "checkpoint": "ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL-Sen1Floods11",
+  "split": "test",
+  "inference_mode": "native",
+  "dtype": "float16",
+  "dtype_note": "computed in fp32, cast to fp16 for storage",
+  "bands": [
+    "BLUE",
+    "GREEN",
+    "RED",
+    "NIR_NARROW",
+    "SWIR_1",
+    "SWIR_2"
+  ],
+  "constant_scale": 0.0001,
+  "ignore_index": -1,
+  "checkpoint_provenance": {
+    "hub_repo": "ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL-Sen1Floods11",
+    "hub_revision": "91ce9d38086a80b078a192b374df758b8855b732",
+    "weights_file": "Prithvi-EO-V2-300M-TL-Sen1Floods11.pt",
+    "config_file": "config.yaml",
+    "checkpoint_epoch": 41,
+    "checkpoint_global_step": 630,
+    "necks": [
+      "SelectIndices",
+      "ReshapeTokensToImage",
+      "LearnedInterpolateToPyramidal"
+    ]
+  },
+  "device": "cpu",
+  "timestamp_utc": "2026-09-17T19:42:43+00:00",
+  "count": 90,
+  "total_bytes": 94383360,
+  "versions": {
+    "torch": "2.14.0",
+    "terratorch": "1.2.13",
+    "numpy": "2.5.3"
+  },
+  "files": [
+    {
+      "index": 0,
+      "file": "test_00000.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "4ef93c82f46f800ba6742bcef434875370b2447e368d4291e6a0ed4a055ec6e5",
+      "bytes": 1048704
+    },
+    {
+      "index": 1,
+      "file": "test_00001.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "9ad409fe0fccfb246e0147006530493c451420d856cd3b19dd2afdf513d74329",
+      "bytes": 1048704
+    },
+    {
+      "index": 2,
+      "file": "test_00002.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "7fe244bd0ad4eefbe0a1aee7f47d19a64d49c340245f400e06156a948589c512",
+      "bytes": 1048704
+    },
+    {
+      "index": 3,
+      "file": "test_00003.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "5242b19352708c207ee96e02397ac180ca66ffcc40cb4e8b66a7d144e23c3283",
+      "bytes": 1048704
+    },
+    {
+      "index": 4,
+      "file": "test_00004.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "22f9034b736ed134e0147c526edb3145f22b5fa309152f148acf13e4091122c4",
+      "bytes": 1048704
+    },
+    {
+      "index": 5,
+      "file": "test_00005.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "337510311162d61523355c443b7d80244c403ef3513cc1726f0366cdfd5fb3eb",
+      "bytes": 1048704
+    },
+    {
+      "index": 6,
+      "file": "test_00006.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "ee2d2f13e7131ff5629661928e02d385c4dc04ccc83627968ed222b9413fb203",
+      "bytes": 1048704
+    },
+    {
+      "index": 7,
+      "file": "test_00007.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "690a90c5de185860164e7a7abcb907a4c29f71fa01fa15dfa59903fe2d58762f",
+      "bytes": 1048704
+    },
+    {
+      "index": 8,
+      "file": "test_00008.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "0fc26f7a8f9c65afb4c2fdf690a802d24d1198740fadbfc361dfac492857cfc8",
+      "bytes": 1048704
+    },
+    {
+      "index": 9,
+      "file": "test_00009.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "787166e0fb17a9f4d5446977383f6fe9b0cd2a7f14bdac4f32d48766750abfd1",
+      "bytes": 1048704
+    },
+    {
+      "index": 10,
+      "file": "test_00010.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "e7d42172c7f539ecb8e72672c75ad4cb86b598dfbde7162db2e36ac7eb27199a",
+      "bytes": 1048704
+    },
+    {
+      "index": 11,
+      "file": "test_00011.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "0a022a1b8d01cadf9060dd04d14207aca15b5964783abcdfc640d77002dca012",
+      "bytes": 1048704
+    },
+    {
+      "index": 12,
+      "file": "test_00012.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "460cf41ace8e7ef89e49da11edeef416a36e77ea516f53f82aa8613d4569c9d6",
+      "bytes": 1048704
+    },
+    {
+      "index": 13,
+      "file": "test_00013.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "b9e40995f7354723ccdb6d4cf0649e6d0a9a695e306cf7162fcf04108cae8c69",
+      "bytes": 1048704
+    },
+    {
+      "index": 14,
+      "file": "test_00014.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "cf5e3471c1eafc5c4370bf4a4dc21f1cef58d31b6e4b894f7d2a254299f973f0",
+      "bytes": 1048704
+    },
+    {
+      "index": 15,
+      "file": "test_00015.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "3ef89b434a4adbea51fd51259aa2a766b56aaac9abb84f6a216e49401600521d",
+      "bytes": 1048704
+    },
+    {
+      "index": 16,
+      "file": "test_00016.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "310ab21136e8d0b6d11eaaabc2f19286460318af46aa9aa77c504ee290f20c5d",
+      "bytes": 1048704
+    },
+    {
+      "index": 17,
+      "file": "test_00017.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "7502d17c12d85d1de736d1a1af0f2e6438b15437a6f5b90b2cacf28030c24afe",
+      "bytes": 1048704
+    },
+    {
+      "index": 18,
+      "file": "test_00018.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "bf2068d546a8beb3cf583ad29d64bc7d1c712f6f2a039840ef053f8dfd444f38",
+      "bytes": 1048704
+    },
+    {
+      "index": 19,
+      "file": "test_00019.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "e8f47dc557c184cf6209dff37acd1cc6a993f0071c2f6eb3b78a8a48580a996d",
+      "bytes": 1048704
+    },
+    {
+      "index": 20,
+      "file": "test_00020.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "6420bdca3c0d95013f2caaa4f442fda7673656f41ad88fe03091f4816a597302",
+      "bytes": 1048704
+    },
+    {
+      "index": 21,
+      "file": "test_00021.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "473a2423a014c1c2daa4e469fe3ced757922849dcd01e091a501480dcfebc89b",
+      "bytes": 1048704
+    },
+    {
+      "index": 22,
+      "file": "test_00022.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "434f12885e338983d0f514d7ce9e1e2b98e7f3862c6ce99daec2add7cbbf018d",
+      "bytes": 1048704
+    },
+    {
+      "index": 23,
+      "file": "test_00023.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "fc16ebed3f1a0c43bf986563fd7693ff580d8565cc04704310a3ae3a0ba76718",
+      "bytes": 1048704
+    },
+    {
+      "index": 24,
+      "file": "test_00024.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "7c616efc2b49b0d2e1c06b2b32a2d1a73a9b839cb1277efce46450f69393ed4e",
+      "bytes": 1048704
+    },
+    {
+      "index": 25,
+      "file": "test_00025.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "35d466145ebc84f7d28f375ee0a553dc6acbd092962fea8608c878d2ebcc89b4",
+      "bytes": 1048704
+    },
+    {
+      "index": 26,
+      "file": "test_00026.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "aa818cb3f624824be1c7b7509c7b6a9d5b2220516f6499af416c0f9238a5ddfe",
+      "bytes": 1048704
+    },
+    {
+      "index": 27,
+      "file": "test_00027.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "692e1ce8448ff21c977ef7ae7374fe7013fdea8ba0722220ac07b689aa74466b",
+      "bytes": 1048704
+    },
+    {
+      "index": 28,
+      "file": "test_00028.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "442fe11e2eb7fe3d0ac0832f4eb4b07564e3cc4292f4b434e5b90102eba8e744",
+      "bytes": 1048704
+    },
+    {
+      "index": 29,
+      "file": "test_00029.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "94f271ad04cdbba9f97c77c921c55b2f5401a6176964c025f6b5fce695d07585",
+      "bytes": 1048704
+    },
+    {
+      "index": 30,
+      "file": "test_00030.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "0b2b78d6a40149be1e60d6033578f52cefcfb09727b381a3f3850258e08599b5",
+      "bytes": 1048704
+    },
+    {
+      "index": 31,
+      "file": "test_00031.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "c94907181bac45687c9007aa46d572af0e84dfeaff666ad2e69ab043f2a48163",
+      "bytes": 1048704
+    },
+    {
+      "index": 32,
+      "file": "test_00032.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "8546fb2088be53a69c7702e8f867675c2ef6e4df96fb92b64c0800e41f1b0175",
+      "bytes": 1048704
+    },
+    {
+      "index": 33,
+      "file": "test_00033.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "1e25dde54f0deaf415f51673e1194d0291aa8a6c3a3b3d0a4914391eb59cc91f",
+      "bytes": 1048704
+    },
+    {
+      "index": 34,
+      "file": "test_00034.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "9627ff9f56874bd8d259a1468d05491773bb6273ebc17bbec819b1e4efc20d65",
+      "bytes": 1048704
+    },
+    {
+      "index": 35,
+      "file": "test_00035.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "f9554d79a6b3c5b57d5d7c70bb350ebba9846f6a4641097798e8b4518aae6874",
+      "bytes": 1048704
+    },
+    {
+      "index": 36,
+      "file": "test_00036.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "80fa8a0afdb11f63763a8f7f2d99bc09656037dc9937d84160ba40863839d42d",
+      "bytes": 1048704
+    },
+    {
+      "index": 37,
+      "file": "test_00037.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "e2bd373a36722897e4cc2779a255c73b5f65b9d29379a62140f1faa4a2c89576",
+      "bytes": 1048704
+    },
+    {
+      "index": 38,
+      "file": "test_00038.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "28f7a6aae3fda10f8c2139902c5bb2c6799798f67f50d1190be703f71cf488bb",
+      "bytes": 1048704
+    },
+    {
+      "index": 39,
+      "file": "test_00039.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "011abc645f02405ba7fe243632f0dbda96ebde8e0c104fbe112423201bcf92fa",
+      "bytes": 1048704
+    },
+    {
+      "index": 40,
+      "file": "test_00040.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "e314473d1c350b795ad78dae06c854feed0b2366521c1379fe2fc30683cb1ad9",
+      "bytes": 1048704
+    },
+    {
+      "index": 41,
+      "file": "test_00041.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "6a6863b5c00c361d51255c902f08ddd63c0c4be261662bcbce7e2f840f3b4dee",
+      "bytes": 1048704
+    },
+    {
+      "index": 42,
+      "file": "test_00042.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "3689dd0d71ccc355936896cfaef7bcacca4335a480f0a29fe2df1fb8091a70f0",
+      "bytes": 1048704
+    },
+    {
+      "index": 43,
+      "file": "test_00043.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "8ad15d4e62a36fd686e872515b272ef0d0b311c42db4b15ea226888309cf3cd5",
+      "bytes": 1048704
+    },
+    {
+      "index": 44,
+      "file": "test_00044.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "497fd577fe7fbc1a02bca490cff0a8c4b2d0036f359990c2cda2bfcb1421dce0",
+      "bytes": 1048704
+    },
+    {
+      "index": 45,
+      "file": "test_00045.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "bf8b3c056d137d48ff2994627d141b56f473b68c4191292ba5b3b6a941e76a9f",
+      "bytes": 1048704
+    },
+    {
+      "index": 46,
+      "file": "test_00046.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "51ccb731cbd2cffb786059aa20b5c0846f4257cfa9a868696b9f3730f4a00f74",
+      "bytes": 1048704
+    },
+    {
+      "index": 47,
+      "file": "test_00047.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "9ea6f0de626d12051b2f9f3146d851fb208bd32ba4d800e7d538c02094cc37e0",
+      "bytes": 1048704
+    },
+    {
+      "index": 48,
+      "file": "test_00048.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "8fbae98fc5cd12edd4fe34ceada1e09c9c8ebacd75c65ed65672001d8cbfdcf4",
+      "bytes": 1048704
+    },
+    {
+      "index": 49,
+      "file": "test_00049.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "a8a1727b601a99185ec95f4902033402bc3a967020788fe47df6f12cc943dd3d",
+      "bytes": 1048704
+    },
+    {
+      "index": 50,
+      "file": "test_00050.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "29a3cb0c7b944f17474e4d7300a303ed5c0a4c340c6f4f224d2d5829745a6783",
+      "bytes": 1048704
+    },
+    {
+      "index": 51,
+      "file": "test_00051.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "e2f16690dd3f76ed87b3477c8b0afaeaca26f6ac4de5a2e9d208a6bc4effe4cd",
+      "bytes": 1048704
+    },
+    {
+      "index": 52,
+      "file": "test_00052.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "cce99f7b93106609eb1113e6bb4d78db1f5e09e3eb079a25c88bbaab9418fa09",
+      "bytes": 1048704
+    },
+    {
+      "index": 53,
+      "file": "test_00053.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "a03e0ba6951b096a9e792b3438abf196e9c6a6fac7256e9ed737d957750c79eb",
+      "bytes": 1048704
+    },
+    {
+      "index": 54,
+      "file": "test_00054.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "c2b82ad7aae7d507314cc3b61933de6ea235535d20e98e2a34adf632546e64c5",
+      "bytes": 1048704
+    },
+    {
+      "index": 55,
+      "file": "test_00055.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "0daf8b154549bcbff9a8f7b78a1e0485c203c29b9ebb610f234ba2576c740c4c",
+      "bytes": 1048704
+    },
+    {
+      "index": 56,
+      "file": "test_00056.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "ad27e982bb8c638ed03e2f5e799aec40872c06ad75f5852b7a3c5c2716054be3",
+      "bytes": 1048704
+    },
+    {
+      "index": 57,
+      "file": "test_00057.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "2b38433efb9ae76bdd181b00b69546232e217f1e1e760a28006cbcee3555445b",
+      "bytes": 1048704
+    },
+    {
+      "index": 58,
+      "file": "test_00058.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "ce6f2adad681b9d9a466a79978a32f27af470c4b409e5b888cbe58eb9ccac420",
+      "bytes": 1048704
+    },
+    {
+      "index": 59,
+      "file": "test_00059.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "3fb0e2ee86a7a3665b595c750d3b250399f650a8489af32bc80d351217b6d0fe",
+      "bytes": 1048704
+    },
+    {
+      "index": 60,
+      "file": "test_00060.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "5ea15d781f002527be996a5d3d2c7364632766c8f3d4fc56fbc805b785dca942",
+      "bytes": 1048704
+    },
+    {
+      "index": 61,
+      "file": "test_00061.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "ebe86f3b242aadf1e1cda566d29d5038541359036b9af75b0f1bedbc0921bbe9",
+      "bytes": 1048704
+    },
+    {
+      "index": 62,
+      "file": "test_00062.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "07c7e853141a33db7b658d83f1af80b6e37cf99400670bfa0139a137e5b2b898",
+      "bytes": 1048704
+    },
+    {
+      "index": 63,
+      "file": "test_00063.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "9b93d2d4683c7566169dae3fd653eca6214fc1fcfb2cf92fd42bc96124952f19",
+      "bytes": 1048704
+    },
+    {
+      "index": 64,
+      "file": "test_00064.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "2ca832eccd45fed7698c56ee90b1d0a7460d36083ca937b4994fdf6901fdc31e",
+      "bytes": 1048704
+    },
+    {
+      "index": 65,
+      "file": "test_00065.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "561ae011779c884426d22d0a1aa1ac77a49e58a53b47b5d261ad340eeb37dbd7",
+      "bytes": 1048704
+    },
+    {
+      "index": 66,
+      "file": "test_00066.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "c7590c5117e7eee01c28bc550548caa8ea879cc5eaf7ec6af09b6880a8a9d629",
+      "bytes": 1048704
+    },
+    {
+      "index": 67,
+      "file": "test_00067.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "7aeb5e79a936aece9157a131b120d040e69befea9ee623e5200c7f129a5e2afb",
+      "bytes": 1048704
+    },
+    {
+      "index": 68,
+      "file": "test_00068.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "1446e8f526d0d5ffeddcaba35152f6d31af22d1c40aa1151e12b14604b60c990",
+      "bytes": 1048704
+    },
+    {
+      "index": 69,
+      "file": "test_00069.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "76bb71045e60d1c0031a4ceff6ba182fab51eff2041837a3eb1d6474a4eb44f0",
+      "bytes": 1048704
+    },
+    {
+      "index": 70,
+      "file": "test_00070.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "9ceee2b418716e7efe1da58ed45bc2583b8727b1cb127fa727bde48d07c0022b",
+      "bytes": 1048704
+    },
+    {
+      "index": 71,
+      "file": "test_00071.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "bed654a495888513898c16115f560ac908bc423c0b41136171d4f3345cafdab3",
+      "bytes": 1048704
+    },
+    {
+      "index": 72,
+      "file": "test_00072.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "4019d3dc9ef9f892660da6b1beeeac88a5ce16311c439710143f28e6cd971860",
+      "bytes": 1048704
+    },
+    {
+      "index": 73,
+      "file": "test_00073.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "a5f6247545f6ac40eefeb2a65a7b6f92680f4e51d574f50c40e6bd106bce571b",
+      "bytes": 1048704
+    },
+    {
+      "index": 74,
+      "file": "test_00074.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "db1421695ca367d74081337d6f2bce4a131e60b60ed94b906662e7fbd2352ab8",
+      "bytes": 1048704
+    },
+    {
+      "index": 75,
+      "file": "test_00075.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "4fc89dd795678e949b4de174e664e6cf1b6fca492c4981d9cc30bdb77a546d10",
+      "bytes": 1048704
+    },
+    {
+      "index": 76,
+      "file": "test_00076.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "beed44d1f534497bad1b7be1789c59255639e51e82964ec2a87cc5164b013844",
+      "bytes": 1048704
+    },
+    {
+      "index": 77,
+      "file": "test_00077.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "b529b82736e0db4a870e4534919538bd81206be4485f008c4fe1a304bba7a9c1",
+      "bytes": 1048704
+    },
+    {
+      "index": 78,
+      "file": "test_00078.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "ff170b687c992ba8291085da63fe5269bb623471a5c05e471956daba64de98f2",
+      "bytes": 1048704
+    },
+    {
+      "index": 79,
+      "file": "test_00079.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "3a24548e644e26825393d7146a91d95278fb11ba8fa2589186d5db1c616e76d9",
+      "bytes": 1048704
+    },
+    {
+      "index": 80,
+      "file": "test_00080.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "ee24585acded399409251fa813ea0c5d715b22e2276358d4240612ec903dd86f",
+      "bytes": 1048704
+    },
+    {
+      "index": 81,
+      "file": "test_00081.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "6202d47c0b8455fc855c055b1adb56794fd15560f9e39cbfcc0aabfcb46d34a8",
+      "bytes": 1048704
+    },
+    {
+      "index": 82,
+      "file": "test_00082.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "eb98a6ac2032c3d2335770a4fc5b70b8222b6ab7589440ec80c810522546bfbf",
+      "bytes": 1048704
+    },
+    {
+      "index": 83,
+      "file": "test_00083.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "81215dd9101493de47511195317bec5be5d13cda6e129156e65f6a99ce6640e2",
+      "bytes": 1048704
+    },
+    {
+      "index": 84,
+      "file": "test_00084.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "f4269ea094eb4feabe507917fcb6aaa20d83153018ef8b052fd0e93eec9a170c",
+      "bytes": 1048704
+    },
+    {
+      "index": 85,
+      "file": "test_00085.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "50aa1266597429d0766dee29eca371a9598f73b4dc767d663968ed0ec39d554f",
+      "bytes": 1048704
+    },
+    {
+      "index": 86,
+      "file": "test_00086.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "269e768ab0a363e78b8ae278fcf6a6651742815da63712dbcd9c8f5b4735026e",
+      "bytes": 1048704
+    },
+    {
+      "index": 87,
+      "file": "test_00087.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "cc869f270d83c9d8f2b187cd98c9784737b69a4de1230d2eedff82b2cf490e96",
+      "bytes": 1048704
+    },
+    {
+      "index": 88,
+      "file": "test_00088.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "3131e92a76a49a63108fc001d86f8aefd4f5f11dd41363e0eafa315b427ce66d",
+      "bytes": 1048704
+    },
+    {
+      "index": 89,
+      "file": "test_00089.npy",
+      "shape": [
+        2,
+        512,
+        512
+      ],
+      "sha256": "9df9c6e43e14c3e02e3f9decf71bc1f50a8193aa62b98a3432234ee118303b31",
+      "bytes": 1048704
+    }
+  ]
+}

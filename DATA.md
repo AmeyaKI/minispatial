@@ -72,6 +72,22 @@ renamed. `scripts/download_sen1floods11.py` derives the `.txt` files after downl
 chip id per line (e.g. `Ghana_313799`). Their provenance is that script, not the publisher. See
 DECISIONS D013.
 
+## Cached teacher logits (D026)
+
+Raw two-channel outputs of the published 300M-TL checkpoint, computed in fp32 and stored as fp16,
+one `.npy` per chip, at the frozen native-512 protocol (D023). They are the distillation targets
+for M2 and are too large to commit (about 1 MB per chip). They live on the Lightning studio:
+
+```
+/teamspace/studios/this_studio/minispatial/artifacts/logits/test_native512/   # 90 chips + manifest.json
+```
+
+Only the manifest is tracked, at `results/runs/logits_test_native512_manifest.json`. It carries a
+SHA-256 per shard, the checkpoint's Hub revision and epoch, the protocol, and the environment, so a
+regenerated cache can be checked against it byte for byte. The train split is not cached yet;
+`train/cache_logits.py` refuses non-test splits until the deterministic-transform path is
+verified for M2 (D014).
+
 ## Band order and normalization
 
 Read at runtime by `minispatial/data/bands.py`; never hard-coded. Two sources, because the two
