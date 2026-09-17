@@ -1,6 +1,6 @@
 # minispatial M1 — the from-scratch UNet CONTROL (<= 2M params) on Sen1Floods11.
 #
-# Identical to tiny_tl.yaml except the `model` block: same data, lr (5e-5, the strict control),
+# The SECOND control run (D025): identical to unet_small.yaml except optimizer.lr = 1e-3. Same data,
 # loss, epochs, augmentations, schedule. That is the point of a control. Diffs from
 # tiny_tl.yaml are marked `# CONTROL:`.
 #
@@ -19,7 +19,7 @@ trainer:
     class_path: lightning.pytorch.loggers.CSVLogger        # DIFF: Hub uses default TensorBoard; CSV is grep-able and lands under results/runs (rule "nothing important only in stdout")
     init_args:
       save_dir: results/runs/train
-      name: unet_small
+      name: unet_small_lr1e-3
   callbacks:
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
       init_args:
@@ -34,7 +34,7 @@ trainer:
         check_finite: true
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint  # DIFF: explicit checkpointing; Hub relied on Lightning defaults. Needed because free studios restart on a cycle (D021) — every_n_epochs=1 + save_last lets `--resume` continue.
       init_args:
-        dirpath: results/runs/train/unet_small/checkpoints
+        dirpath: results/runs/train/unet_small_lr1e-3/checkpoints
         filename: "epoch{epoch:02d}-valloss{val/loss:.4f}"
         auto_insert_metric_name: false
         monitor: val/loss
@@ -46,7 +46,7 @@ trainer:
   check_val_every_n_epoch: 2
   log_every_n_steps: 10
   enable_checkpointing: true
-  default_root_dir: results/runs/train/unet_small
+  default_root_dir: results/runs/train/unet_small_lr1e-3
   deterministic: warn                                        # DIFF: not set in Hub; asks CUDA for deterministic kernels where available, warns otherwise
 
 model:
@@ -113,7 +113,7 @@ data:
 optimizer:
   class_path: torch.optim.AdamW
   init_args:
-    lr: 5.0e-05
+    lr: 1.0e-03                                              # CONTROL-B: from-scratch rate; see D025. Everything else identical to unet_small.yaml.
     betas: [0.9, 0.999]
     eps: 1.0e-08
     weight_decay: 0.05
