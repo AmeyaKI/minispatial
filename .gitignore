@@ -15,6 +15,7 @@
 !/results/runs/teacher_eval.json
 !/results/runs/teacher_eval_resize448.json
 !/results/runs/teacher_eval_native.json
+!/results/runs/logits_test_native512_manifest.json
 
 # Model artifacts
 *.mlpackage
