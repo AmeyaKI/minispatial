@@ -2,7 +2,7 @@
 
 Geospatial foundation models, made small enough to run where there is no cloud — fine-tuned, quantized three ways, deployed to Core ML and MLX, measured.
 
-Last updated: 2026-09-07. Owner: Ameya Kiwalkar. Window: Sept 7 – Oct 16, 2026 at 8–12 h/week.
+Last updated: 2026-09-18. Maintainer: Ameya Kiwalkar. Window: Sept 7 – Oct 16, 2026.
 
 ---
 
@@ -14,11 +14,9 @@ Last updated: 2026-09-07. Owner: Ameya Kiwalkar. Window: Sept 7 – Oct 16, 2026
 
 **The question this repo answers.** How small and how low-precision can a disaster-mapping foundation model go before the map is wrong, and which compression method gets you furthest?
 
-## 2. The thesis (why this project exists on a resume)
+## 2. What this work contributes
 
-Neither RetObs (evaluation rigor) nor open-hearts (probabilistic modeling, low-level performance) demonstrates training a real deep model and shipping it under a memory/latency budget. This repo does: fine-tune a pretrained vision transformer, distill it, quantize it under three regimes (one implemented from the paper), move it across runtimes, and report the cost with a control and an ablation.
-
-Personal thread for the README: lunar surface CV as a freshman → Earth-observation foundation models compressed to run where disasters and satellites don't have a cloud. Imagery from above, processed where compute is scarce.
+Converting and quantizing a model is routine engineering. The contribution here is what has not been measured: fine-tuned small checkpoints that do not exist publicly, the first sub-fp16 accuracy numbers for an Earth-observation foundation model, a three-way comparison of quantization methods with one implemented from the paper, a per-layer sensitivity analysis, and a measurement protocol with pre-registered thresholds and parity columns. Every comparison carries a control or an ablation, and null results are reported as findings.
 
 ## 3. Who it's for, and what the Mac is
 
@@ -47,7 +45,7 @@ Not in running a converter. In:
 
 ## 6. Milestones
 
-### M0 — Ground truth (Sept 7–13; light week: URAP interview)
+### M0 — Ground truth (Sept 7–13)
 - Repo scaffold, `uv` env, pytest skeleton, docs skeleton (README, DATA.md, RESULTS.md, FUTURE_WORK.md, DECISIONS.md, HANDOFF.md, BLOCKERS.md).
 - Sen1Floods11 hand-labeled subset (`S2Hand`, `LabelHand`, split CSVs) acquired; exact source path, bytes, SHA-256 of split CSVs, Bolivia CSV presence recorded in DATA.md. License recorded as unstated / research use.
 - Colab: 300M-TL flood checkpoint loaded via TerraTorch, test-split mIoU and IoU_water reproduced, written to RESULTS.md next to the published figure with URL. Tolerance for "reproduced" written down before running. **Gate for everything else.**
@@ -84,7 +82,7 @@ Not in running a converter. In:
 ### M5 — Publish + freeze (Oct 12–16)
 - Publish two HF repos (explicit go required): `minispatial-prithvi-eo-2.0-tiny-tl-sen1floods11`, `…-100m-tl-sen1floods11` — PyTorch checkpoint, Core ML packages, MLX safetensors, card with frontier rows, parity, training-config diff, provenance, positioning.
 - Scope freeze. FUTURE_WORK.md finalized. README with frontier plot, reproduction instructions, limitations.
-- Resume bullets with real numbers; every number audited against CSV.
+- Final audit: every number in the README, RESULTS.md and model cards traced to a CSV row.
 
 ### Stretch (only if M4 completes by Oct 11)
 - Task 2: wildfire burn scars (`ibm-nasa-geospatial/hls_burn_scars`, `configs/firescars.yaml`), 300M teacher fine-tuned by us on Colab, tiny fine-tuned, vendor PTQ only.
@@ -126,7 +124,7 @@ Protocol: batch 1; 10 warmup; 100 timed iters; `perf_counter_ns` around predict 
 7. Per-layer int4 sensitivity finding, with numbers.
 8. Parity columns for every artifact, no exceptions.
 9. Two HF repos with cards; `bench/run.py` regenerates the CSV.
-10. Two resume bullets, every number traceable to a CSV row.
+10. A two-sentence summary of the findings, every number traceable to a CSV row.
 
 ## 11. Kill and fallback conditions
 
@@ -141,13 +139,13 @@ Protocol: batch 1; 10 warmup; 100 timed iters; `perf_counter_ns` around predict 
 
 Sentinel-1/SAR; iOS app; 600M; ExecuTorch / LiteRT / ONNX Runtime; pretraining-level distillation; weakly-labeled chips; energy via `powermetrics`; landslides (task 3); QAT on 100M; Core ML 300M if not free; MLX 300M; packaging `bench/` for PyPI.
 
-## 13. Skeleton resume bullets (fill only from CSV)
+## 13. Summary template (fill only from CSV)
 
-> Fine-tuned and compressed the Prithvi-EO-2.0 family (5M/100M/300M) for disaster segmentation and deployed it to Apple silicon via Core ML and MLX, comparing data-free PTQ, reconstruction PTQ, and QAT at int8/int4 across [N] configurations
+> Fine-tuned and compressed the Prithvi-EO-2.0 family (5M/100M/300M) for disaster segmentation and deployed it to Apple silicon via Core ML and MLX, comparing data-free PTQ, reconstruction PTQ, and QAT at int8/int4 across [N] configurations.
 >
-> [Verb] AdaRound-style reconstruction quantization that held the 5M model to [−Δ] pp mIoU at int4 versus [−Δ'] for vendor PTQ, running [L] ms per tile on the M5 Neural Engine at [S] MB, [K]× faster than the 300M PyTorch-MPS baseline
+> AdaRound-style reconstruction quantization held the 5M model to [−Δ] pp mIoU at int4 versus [−Δ'] for vendor PTQ, running [L] ms per tile on the M5 Neural Engine at [S] MB, [K]× faster than the 300M PyTorch-MPS baseline.
 
-"Fine-tuned" is unused elsewhere on the resume. "Implemented" is taken by the Merck line; pick the second verb when the numbers land.
+Bracketed values stay bracketed until a CSV row supplies them. If the second sentence turns out false, it is rewritten to say what was measured.
 
 ## 14. Verified facts the work depends on (recheck anything time-sensitive)
 

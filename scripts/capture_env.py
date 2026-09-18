@@ -173,7 +173,9 @@ def capture() -> dict[str, Any]:
         "macos_build": _run(["sw_vers", "-buildVersion"]) or "unknown",
         "arch": platform.machine(),
         "python_version": platform.python_version(),
-        "python_executable": sys.executable,
+        # Home directory collapsed to "~": the repository is public and the account
+        # name is not part of the environment that matters for a measurement.
+        "python_executable": sys.executable.replace(str(Path.home()), "~", 1),
         "package_versions": _package_versions(),
         "xcode_select_path": xcode_path,
         "xctrace_status": xctrace_status,

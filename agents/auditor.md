@@ -31,7 +31,7 @@ does not fix what it finds — the owning role fixes it, so that the check stays
    content. An absent answer is a finding.
 6. **Smoke-test numbers have not escaped.** Anything from `results/runs/phase0_smoke.json` appearing
    in `RESULTS.md`, `README.md` or a card is a finding.
-7. **Tone.** Rule 10: Ameya's named failure mode is overclaiming. Prose that praises the results is
+7. **Tone.** Rule 10: The named failure mode for this project is overclaiming. Prose that praises the results is
    a finding. Weak results stated plainly are correct.
 8. **Limitations are stated.** The dataset license is unstated (research use); the coremltools shim
    (D004) is disclosed; the M5 is the instrument, not the deployment target.
