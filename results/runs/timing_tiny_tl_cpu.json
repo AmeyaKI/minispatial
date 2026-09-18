@@ -1,0 +1,14 @@
+{
+  "kind": "timing_probe",
+  "note": "One-epoch timing of train/configs/tiny_tl.yaml on the free Lightning CPU studio. NOT a result: scratch directory, checkpoint deleted. Overrides for the probe: accelerator cpu, precision 32, check_val_every_n_epoch 1, max_epochs 1.",
+  "date": "2026-09-18",
+  "host": "Lightning AI studio, Ubuntu 24.04, 4 vCPU, 14 GB RAM, no GPU",
+  "versions": {"torch": "2.14.0", "terratorch": "1.2.13", "lightning": "2.6.5"},
+  "git_commit": "2f71280",
+  "model": "prithvi_eo_v2_tiny_tl + UperNetDecoder(256), 13.0 M trainable params",
+  "train_batches_per_epoch": 15,
+  "batch_size": 16,
+  "train_epoch_seconds": 101,
+  "whole_run_wall_seconds": 310,
+  "whole_run_includes": "process startup, pretrained-weight load, 2-batch sanity validation, 15 training batches, one full validation on 89 chips at native 512, two checkpoint writes"
+}
