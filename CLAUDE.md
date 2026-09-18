@@ -36,7 +36,7 @@ satellites are out of scope.
    hypothesis) and move to the next independent task.
 9. **Every session ends by updating `context/STATE.md` and appending to `context/HANDOFF.md`.**
    A session that ends without this is incomplete.
-10. **Ameya's named failure mode is overclaiming.** Report weak results plainly. Null results are
+10. **The named failure mode for this project is overclaiming.** Report weak results plainly. Null results are
     content. Never write prose that praises the results.
 11. **Verify before building on it.** Facts in `context/FACTS.md` marked `verified` carry a URL
     and date; anything marked `unverified` must be checked before it is used, then updated with

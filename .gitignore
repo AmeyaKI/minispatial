@@ -1,3 +1,6 @@
+# Owner-only planning notes. Never committed.
+/private/
+
 # Data and large artifacts — paths documented in DATA.md, never committed (>10 MB rule)
 # Anchored with a leading slash: a bare "data/" would also match
 # minispatial/data/, silently excluding source files (caught 2026-09-07).
@@ -16,6 +19,7 @@
 !/results/runs/teacher_eval_resize448.json
 !/results/runs/teacher_eval_native.json
 !/results/runs/logits_test_native512_manifest.json
+!/results/runs/timing_tiny_tl_cpu.json
 
 # Model artifacts
 *.mlpackage

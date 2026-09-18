@@ -2,7 +2,7 @@
 
 Geospatial foundation models, made small enough to run where there is no cloud — fine-tuned, quantized three ways, deployed to Core ML and MLX, measured.
 
-Last updated: 2026-09-07. Owner: Ameya Kiwalkar. Window: Sept 7 – Oct 16, 2026 at 8–12 h/week.
+Last updated: 2026-09-18. Maintainer: Ameya Kiwalkar. Window: Sept 7 – Oct 16, 2026.
 
 ---
 
@@ -13,6 +13,10 @@ Last updated: 2026-09-07. Owner: Ameya Kiwalkar. Window: Sept 7 – Oct 16, 2026
 **Technical layer.** Nobody knows what these models lose when you shrink them. No Earth-observation foundation model has been run below fp16 on any hardware with the accuracy cost measured. A Jan 2026 survey (Sang et al., *Remote Sensing* 18(2):298) calls on-device deployment of remote-sensing foundation models "largely unexplored." The one serious attempt (Du et al., arXiv 2512.01181, Dec 2025) stopped at fp16 on a Myriad-2 and released no code or weights. IBM's 5M-parameter Prithvi-EO-2.0-tiny-TL model card claims it is small enough for phones and satellites; no measurement accompanies the claim.
 
 **The question this repo answers.** How small and how low-precision can a disaster-mapping foundation model go before the map is wrong, and which compression method gets you furthest?
+
+## 2. What this work contributes
+
+Converting and quantizing a model is routine engineering. The contribution here is what has not been measured: fine-tuned small checkpoints that do not exist publicly, the first sub-fp16 accuracy numbers for an Earth-observation foundation model, a three-way comparison of quantization methods with one implemented from the paper, a per-layer sensitivity analysis, and a measurement protocol with pre-registered thresholds and parity columns. Every comparison carries a control or an ablation, and null results are reported as findings.
 
 ## 3. Who it's for, and what the Mac is
 
@@ -78,6 +82,7 @@ Not in running a converter. In:
 ### M5 — Publish + freeze (Oct 12–16)
 - Publish two HF repos (explicit go required): `minispatial-prithvi-eo-2.0-tiny-tl-sen1floods11`, `…-100m-tl-sen1floods11` — PyTorch checkpoint, Core ML packages, MLX safetensors, card with frontier rows, parity, training-config diff, provenance, positioning.
 - Scope freeze. FUTURE_WORK.md finalized. README with frontier plot, reproduction instructions, limitations.
+- Final audit: every number in the README, RESULTS.md and model cards traced to a CSV row.
 
 ### Stretch (only if M4 completes by Oct 11)
 - Task 2: wildfire burn scars (`ibm-nasa-geospatial/hls_burn_scars`, `configs/firescars.yaml`), 300M teacher fine-tuned by us on Colab, tiny fine-tuned, vendor PTQ only.
@@ -119,6 +124,7 @@ Protocol: batch 1; 10 warmup; 100 timed iters; `perf_counter_ns` around predict 
 7. Per-layer int4 sensitivity finding, with numbers.
 8. Parity columns for every artifact, no exceptions.
 9. Two HF repos with cards; `bench/run.py` regenerates the CSV.
+10. A two-sentence summary of the findings, every number traceable to a CSV row.
 
 ## 11. Kill and fallback conditions
 
@@ -132,6 +138,14 @@ Protocol: batch 1; 10 warmup; 100 timed iters; `perf_counter_ns` around predict 
 ## 12. Out of scope (FUTURE_WORK.md seeds)
 
 Sentinel-1/SAR; iOS app; 600M; ExecuTorch / LiteRT / ONNX Runtime; pretraining-level distillation; weakly-labeled chips; energy via `powermetrics`; landslides (task 3); QAT on 100M; Core ML 300M if not free; MLX 300M; packaging `bench/` for PyPI.
+
+## 13. Summary template (fill only from CSV)
+
+> Fine-tuned and compressed the Prithvi-EO-2.0 family (5M/100M/300M) for disaster segmentation and deployed it to Apple silicon via Core ML and MLX, comparing data-free PTQ, reconstruction PTQ, and QAT at int8/int4 across [N] configurations.
+>
+> AdaRound-style reconstruction quantization held the 5M model to [−Δ] pp mIoU at int4 versus [−Δ'] for vendor PTQ, running [L] ms per tile on the M5 Neural Engine at [S] MB, [K]× faster than the 300M PyTorch-MPS baseline.
+
+Bracketed values stay bracketed until a CSV row supplies them. If the second sentence turns out false, it is rewritten to say what was measured.
 
 ## 14. Verified facts the work depends on (recheck anything time-sensitive)
 

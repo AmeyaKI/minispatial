@@ -41,8 +41,7 @@ may start. Raw files: `results/runs/teacher_eval{,_resize448,_native}.json`.
 ## NOT COMMITTED — Ameya asked to hold all commits
 
 Working tree carries: `train/eval.py`, `train/cache_logits.py`, `RESULTS.md`, `context/FACTS.md`,
-`context/DECISIONS.md`, `context/STATE.md`, `context/HANDOFF.md`, and untracked
-`HANDOFF_CONTEXT.md`. The three `teacher_eval*.json` files under `results/runs/` are currently
+`context/DECISIONS.md`, `context/STATE.md`, `context/HANDOFF.md`. The three `teacher_eval*.json` files under `results/runs/` are currently
 **gitignored** (`/results/runs/*`); like the provenance JSONs (D012) they must be exempted in
 `.gitignore` when committed, or every number in `RESULTS.md` traces to an untracked file. None contain secrets (checked: no tokens,
 no SSH material; the studio host id appears nowhere in the repo). The studio's copy of the two

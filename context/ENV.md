@@ -27,7 +27,7 @@ this file — they are volatile and are excluded from the `--check` comparison.
 | Field | Value |
 | --- | --- |
 | version | 3.12.12 |
-| executable | `/Users/ameyakiwalkar/Documents/minispatial/.venv/bin/python` |
+| executable | `~/Documents/minispatial/.venv/bin/python` |
 
 ## Package versions
 

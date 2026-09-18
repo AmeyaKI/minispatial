@@ -241,7 +241,6 @@ recorded anywhere.
 2. **Frontier protocol** (open question 1). *Recommend:* native 512 everywhere.
 3. **Push the working tree to origin.** *Recommend:* yes after reviewing the diff; the studio
    then pulls instead of receiving scp'd files. No secrets are present.
-4. **Commit `HANDOFF_CONTEXT.md`.** *Recommend:* yes.
 
 ### Exact next step
 
