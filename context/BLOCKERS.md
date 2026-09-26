@@ -49,9 +49,13 @@ bottom with the fix, so a later session can find how it was solved.
 - **Fix.** A five-line shim in `minispatial/export/coreml.py`, installed at import and guarded by
   `assert_shim_installed()`. See `DECISIONS.md` D004; disclosed in the README's limitations.
 
-## B002 — Environment visibility mismatch during documentation review (2026-09-19)
+### R004 (was B002) — Environment visibility mismatch during documentation review (2026-09-19)
 
 `capture_env.py --check` returned 1: recorded chip/RAM were visible in the baseline, but this
 session returned `chip=unknown`, `ram_GB=None`. This does not prove hardware changed. No baseline
 was overwritten and no measurement was attempted. Resolve visibility or establish and document
 the real execution environment before measurements. Does not block authorized documentation work.
+- **Resolved 2026-09-21.** `capture_env.py --check` run from the Mac session returned
+  `env OK: Apple M5 Max, macOS 26.6.2, python 3.12.12, power ac, low power mode off`, matching
+  `context/ENV.md`. The 2026-09-19 failure was a visibility problem in that session's sandbox
+  (no `sysctl` access), not a hardware change. Baseline unchanged. Measurements are not gated.

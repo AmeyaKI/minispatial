@@ -583,3 +583,30 @@ No first-ever claims. Mobile conclusions require physical-device evidence. A con
 simpler model remains publishable. Implementation/schema reconciliation is the next task, not a
 claim of work completed by this documentation change. Historical ADRs and the old roadmap remain
 preserved; D027 wins where their prospective priorities conflict.
+
+---
+
+## 2026-09-26 — D028: GPU training runs on Kaggle; Lightning stays CPU-only
+
+**Context.** D021 chose a free Lightning AI studio as execution host. Attaching any GPU to it
+requires a credit card and a paid migration of the studio disk (quoted at 3.58 of the 5 free
+credits on 2026-09-18), and a new GPU studio also requires a card. Azure for Students blocks GPU
+quota on student subscriptions (sources in the 2026-09-18 chat, Microsoft Q&A). Kaggle offers a
+free weekly GPU quota (T4/P100), 12-hour sessions, background execution after the tab is closed,
+and a command-line client that can submit a kernel, poll it, and download its outputs — so the
+Mac session can drive it without a browser. The user's Kaggle API token is present on the Mac.
+
+**Measured alternative.** Tiny-TL trains at 101 s per epoch on the free 4-core CPU studio
+(`results/runs/timing_tiny_tl_cpu.json`), so a 50-epoch run is a few hours on CPU. That is
+viable for tiny and the U-Nets but the studio sleeps when idle and the user must restart it.
+
+**Decision (Ameya, 2026-09-18, "let's use ... kaggle normal").** GPU training runs on Kaggle via
+a generated, pinned-commit kernel. The Lightning CPU studio keeps the environment, dataset and
+cached logits and runs short jobs (evaluation, logit caching, timing). Apple-silicon export and
+measurement run on the Mac. No paid host.
+
+**Consequence.** Kaggle kernels see the repo at a pinned commit, so training code must be pushed
+before a run (push approval per rule 5). Training on Kaggle uses `precision: 16-mixed` as the
+published recipe does; CPU fallback runs use 32 and mark the difference. Trained checkpoints are
+pulled back to the Mac (`artifacts/checkpoints/`, gitignored) with a checksum manifest tracked
+under `results/runs/`, mirroring D026.

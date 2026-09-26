@@ -285,3 +285,36 @@ with the explicit existing RESULTS.md/Rule-1 allowance for historical evaluation
 (the command's older CSV-only wording is narrower). External review claims carry primary links
 and access dates and are not represented as reproduced results. This was a local self-check,
 not an independent publication audit or a model test run.
+
+---
+
+## 2026-09-26 — Review work committed; roadmap reconciled with the repository; R0 opened
+
+**Committed and pushed** the 2026-09-19 review session's 19 files unchanged (scanned: no secrets,
+no career framing). **Reconciled** ROADMAP section 3 and the R0 checklist against what the repo
+and hosts actually contain: nothing trained; training wrapper, four configs, U-Net, logit
+manifest and CPU timing exist and are reused; the tiny config's duplicate `lr` resolves to the
+optimizer's 5e-5 (published recipe), the task-level 0.001 is inert and will be removed. **Resolved
+B002** (env check passes on the Mac). **D028** fixes hosts: Lightning CPU studio, Kaggle GPU, Mac.
+
+**Analysis of the review, for the record.** Accepted in full. The two findings that matter most
+were mine to catch: the U-Net comparison confounds architecture with initialization (the clean
+control is the same tiny model with a random encoder), and "5M" understated the deployed model by
+a factor of ~2.3 while the U-Net was called matched at 1/7 the size. The FloodDistill preprint
+(Sept 17) removes the "nobody has done low-bit Prithvi flood deployment" claim; the narrower
+question — when does quantized tiny beat a compact task model under fixed constraints — is the
+one this repo can actually answer. One review claim was wrong on the facts: B002; the machine is
+visible from this session.
+
+### Needs approval
+
+1. **Random-init tiny run** (new under D027; the tiny pretrained and U-Net runs were approved
+   2026-09-17). *Recommend:* approve as part of the R0 run request, same budget as tiny.
+2. **Push after each R0 commit** so Kaggle kernels can pin a commit. *Recommend:* standing
+   approval for pushes to `main` during R0–R2, with the same secret scan each time.
+3. **History rewrite** to purge the career text from commits a229df6/f7f3170 (asked 2026-09-18,
+   still open). *Recommend:* yes; solo repo, eleven days old; force-push once.
+
+### Exact next step
+
+R0 item 1: remove the inert `lr` from the four configs, then the parameter manifest script.

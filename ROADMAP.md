@@ -1,6 +1,6 @@
 # minispatial — revised execution roadmap
 
-Updated 2026-09-19 after the user-requested adversarial review. **This replaces the previous
+Updated 2026-09-26 (reconciled with the repository; first revised 2026-09-19 after the user-requested adversarial review). **This replaces the previous
 schedule and scope priorities.** Historical M0–M5 references refer to
 [the archived plan](docs/archive/ROADMAP-before-2026-09-19.md), not current work orders.
 Read [the critique and rationale](docs/reviews/2026-09-19-adversarial-review.md) and
@@ -25,18 +25,35 @@ phone/tablet and OS. Satellites, live imagery delivery and a full iOS app are ou
 
 ## 3. Current evidence and standing decisions
 
+Reconciled 2026-09-26 against the repository and the execution hosts.
+
 - M0 is recorded in RESULTS.md; the paper-protocol reproduction missed tolerance. D023 accepts
   proceeding, not rewriting the miss as a pass.
 - **Native 512, no resize or tiling, is already approved for evaluation and deployment (D023).**
   Training may retain RandomCrop(224). Any fallback must be a separately documented common protocol.
-- Existing tiny/U-Net configs and teacher logit manifest must be inspected before doing duplicate work.
-- FACTS.md records tiny+neck+decoder at approximately 13.0M parameters; “tiny” is a model-family name.
-  The U-Net is a smaller practical baseline, not a matched-size pretraining control.
-- Compression, distillation, MLX and benchmark runner files inspected on September 19 are stubs.
-  Encoder smoke export is not a full segmentation artifact or a benchmark.
-- Training and long benchmarks still need the approval required by D023. Do not infer new run
-  authorization from this documentation revision. Preserve active work; do not terminate another
-  agent's jobs. No commits/pushes/uploads in this documentation session.
+- **What exists and is reused, not rebuilt:** `train/train.py` (wrapper over `terratorch fit` with
+  dry-run, resume, run records); `train/configs/tiny_tl.yaml`, `100m_tl.yaml`, `unet_small.yaml`,
+  `unet_small_lr1e-3.yaml` (D024, D025); `minispatial/models/unet_small.py` with tests; teacher
+  test logits at native 512 on the Lightning studio with a committed checksum manifest (D026); a
+  CPU timing probe (`results/runs/timing_tiny_tl_cpu.json`: 101 s per training epoch for tiny).
+- **Resolved optimizer settings (checked 2026-09-26 via `terratorch fit --print_config`):** the
+  tiny config carries `model.init_args.lr: 0.001` and `optimizer.init_args.lr: 5.0e-05`; the
+  explicit `optimizer` block wins, so training runs at 5e-5 as the published recipe did. The
+  task-level field is inert and is removed in R0 so the file says what it does.
+- FACTS.md records tiny+neck+decoder at approximately 13.0M parameters; "tiny" is a model-family
+  name. The U-Net (1.965M) is a smaller practical baseline, not a matched-size control.
+- **Nothing has been trained.** No tiny, random-init, or U-Net checkpoint exists. Compression,
+  distillation, MLX and the benchmark runner are stubs. The encoder-only Core ML smoke export is
+  not a segmentation artifact.
+- **Execution hosts (D021, D028):** the free Lightning CPU studio holds the environment, dataset
+  and cached logits and runs anything short; the studio sleeps when idle and the user must start
+  it. GPU training runs on Kaggle (free T4/P100 quota, background execution, token present on the
+  Mac). Apple-silicon measurement runs on the Mac. Lightning GPU machines require a card and a
+  paid studio migration; not used.
+- Training and long benchmarks need per-run approval (D023). The user approved four runs on
+  2026-09-17 (test-logit caching — done; a timed epoch — done on CPU; the tiny fine-tune; the U-Net
+  controls). The random-init tiny run is new under D027 and is **not yet approved**.
+- Environment check passes on the Mac (B002 resolved as R004).
 
 ## 4. Required comparisons
 
@@ -54,20 +71,33 @@ report both. They do not isolate pretraining. Test and Bolivia cannot select any
 
 ## 5. Stages, outputs, and acceptance gates
 
-### R0 — Reconcile state and freeze the experiment contract (next)
+### R0 — Reconcile state and freeze the experiment contract (in progress, 2026-09-26)
 
-- [ ] Inspect latest git diff, local manifests and existing run records; preserve other-agent work.
-- [ ] Read D023–D027; correct remaining old milestone references as files are touched.
-- [ ] Record complete model parameter counts by encoder/neck/decoder and actual resolved optimizer
-  settings. Reconcile duplicate learning-rate fields through the resolved trainer configuration.
-- [ ] Prepare the identical random-initialization tiny config and spectral baseline specification.
-- [ ] Write `context/EXPERIMENT_PROTOCOL.md`: exact splits, bands, scaling/normalization, native
-  geometry, ignored-label/cloud policy, validation-only selection, calibration IDs, seed plan,
-  timing boundary, conversion parity, compression acceptability and evidence requirements.
-- [ ] Align `minispatial/bench/matrix.yaml`, `context/SCHEMA.md` and schema validation with the
-  revised contract before the first new measurement; preserve backward compatibility/raw records.
-- [ ] Prepare concrete training/measurement commands and bounded runtime estimates for any pending
-  D023 approval. No rerun of M0 merely to seek a passing number.
+- [x] Inspect latest git diff, local manifests and existing run records; preserve other-agent work.
+  (Review session committed 2026-09-26; nothing lost.)
+- [x] Read D023–D027; resolve B002 (environment check passes on the Mac).
+- [ ] Remove the inert task-level `lr` from all four training configs so the resolved optimizer
+  setting is the only one in the file (D024 table updated).
+- [ ] `scripts/param_manifest.py`: machine-readable parameter counts by encoder / neck / decoder /
+  head for tiny, 100M and U-Net, written to `results/runs/param_manifest.json` and tracked.
+- [ ] `train/configs/tiny_random.yaml`: identical to `tiny_tl.yaml` except `backbone_pretrained:
+  false`, own checkpoint/log paths, seed recorded; a check in `train.py --dry-run` that no
+  pretrained weights would load. Diff logged as D029.
+- [ ] `minispatial/baselines/mndwi.py`: MNDWI = (GREEN − SWIR_1) / (GREEN + SWIR_1) on scaled
+  reflectance *before* per-band standardization; zero denominator → not water; nodata → ignored;
+  threshold chosen on the validation split only; evaluated with the same confusion-matrix code.
+- [ ] `context/EXPERIMENT_PROTOCOL.md`: splits, bands, scaling, standardization, native geometry,
+  ignore-index policy, validation-only selection, seed plan, timing boundary, parity vs
+  compression-loss vs acceptability definitions, calibration-set identity.
+- [ ] Align `minispatial/bench/matrix.yaml` (drop the M1–M4 cell enumeration; list only R1–R2
+  cells and mark the rest deferred), `context/SCHEMA.md` (add `protocol`, `component_counts_ref`,
+  `compute_units_requested` vs `placement_observed`, `parity_status` separate from
+  `compression_delta`) and `schema_check.py` with tests. Historical records untouched.
+- [ ] Kaggle job path: `scripts/make_kaggle_kernel.py` generating a pinned-commit kernel that
+  clones, syncs, downloads and runs `train/train.py`; outputs pulled back by the Kaggle CLI.
+  Verified with a two-batch smoke run before any real training.
+- [ ] Run request for approval: tiny pretrained, tiny random-init, U-Net ×2; seeds; estimated
+  time; checkpoint destinations; abort conditions.
 
 **Gate:** an auditable protocol and runnable configs, not additional architecture scaffolding.
 
@@ -149,6 +179,8 @@ If export fails, bound investigation, log failure and evaluate a documented fall
 provenance. If Prithvi loses to a well-tuned small model or spectral rule, report it. One valid
 runtime is sufficient for a bounded study; absence of a second runtime no longer kills the project.
 Do not promise the historical calendar without estimating the remaining approved work.
+Execution hosts are fixed by D021/D028: Lightning CPU studio for short jobs, Kaggle for GPU
+training, the Mac for Apple-silicon measurement. Adding a paid host needs explicit approval.
 
 ## 8. Agent handoff and source of truth
 

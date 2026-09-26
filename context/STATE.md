@@ -1,12 +1,21 @@
 # STATE.md — current snapshot
 
-**Updated:** 2026-09-19. **Session:** save the adversarial review and revise project direction,
-authorized by the user. **Active stage:** R0 in ROADMAP.md; old M1–M5 schedule is superseded.
+**Updated:** 2026-09-26. **Session goal:** commit the review session's work, reconcile ROADMAP
+and context with the repository as it actually is, and start R0. **Active stage:** R0.
 
-## Mandatory reading for the next agent
+## Read first
 
-Read NEXT_AGENT.md and ../docs/reviews/2026-09-19-adversarial-review.md before new work.
-D027 explains what changed and why. This is a documentation update, not completed implementation.
+`context/NEXT_AGENT.md`, `docs/reviews/2026-09-19-adversarial-review.md`, ROADMAP.md R0, D027–D028.
+
+## What changed this session
+
+- The 2026-09-19 review session's 19 uncommitted files were committed as one changeset and pushed.
+- B002 resolved (R004): the environment check passes on the Mac; the earlier failure was sandbox
+  visibility, not hardware.
+- ROADMAP section 3 now states observed status (nothing trained; what exists; resolved lr; hosts).
+  The R0 checklist names the concrete files to produce.
+- D028: GPU training runs on Kaggle; Lightning stays the free CPU studio; the Mac measures.
+- Duplicate banner removed from SCHEMA.md.
 
 ## Established evidence and decisions
 
@@ -19,8 +28,10 @@ D027 explains what changed and why. This is a documentation update, not complete
   execution host before reuse; do not recache just because old STATE.md said it had not run.
 - Quantization, distillation, MLX model and benchmark runner inspected for this review are stubs.
   Encoder smoke conversion is not full segmentation deployment.
-- Existing decisions identify Lightning studio as execution host. Reconfirm its current availability;
-  this session neither connected to it nor inspected running jobs/checkpoints there.
+- Execution hosts per D028: Lightning CPU studio (sleeps when idle; user starts it), Kaggle for
+  GPU training (token present on the Mac; CLI not yet installed in the venv), Mac for measurement.
+  The studio was asleep on 2026-09-21 and 2026-09-26; the cached logit shards were last verified
+  present (90 files, 91 MB) on 2026-09-17.
 
 ## Changes made this session
 
@@ -30,24 +41,24 @@ results questions and deferred scope. No code, YAML, model, metric, dataset or e
 was changed; implementation must reconcile those existing files with the revised contract in R0.
 No training, benchmark, commit, push, upload or remote-agent message was performed.
 
-## Verification and blocker
+## Verification
 
-`capture_env.py --check` returned nonzero: chip is not visible (`unknown`) and RAM is `None` in
-this session, unlike the recorded environment. Baseline left intact. See B002. This prevents claiming
-fresh environment validation; resolve before measurement. Documentation checks are recorded in the
-latest HANDOFF.md entry. Past test counts are historical, not current test results.
+`capture_env.py --check`: **passes** on 2026-09-26 (Apple M5 Max, macOS 26.6.2, AC power).
+Test suite: 57 passed on 2026-09-18 (last run before the review session); not re-run this session.
 
-## Next actions
+## Next actions (R0, in order)
 
-1. Inspect latest work from the other agent and current run/checkpoint inventory.
-2. Complete R0 protocol and model/component manifest; prepare identical random-tiny and spectral
-   controls, validation selection and measurement metadata. NEXT_AGENT.md names files and checks.
-3. Prepare the complete segmentation export path and concrete run commands. Obtain only outstanding
-   D023 run approval, with estimated budget; do not ask again about already-approved native geometry.
-4. Execute R1–R2 before optional custom quantization, distillation, 100M, MLX or wildfire work.
+1. Strip the inert task-level `lr` from the four training configs; update the D024 table.
+2. `scripts/param_manifest.py` → `results/runs/param_manifest.json` (encoder/neck/decoder/head).
+3. `train/configs/tiny_random.yaml` + dry-run check that no pretrained weights load (D029).
+4. `minispatial/baselines/mndwi.py` with tests; threshold on validation only.
+5. `context/EXPERIMENT_PROTOCOL.md`.
+6. Reconcile `matrix.yaml`, `SCHEMA.md`, `schema_check.py` and tests with the R1–R2 contract.
+7. Kaggle kernel generator + two-batch smoke run (needs a push first).
+8. Run request for approval: tiny pretrained, tiny random-init, U-Net ×2.
 
 ## Authorization boundaries
 
-The user authorized updating planning/context files. D023 training/long-benchmark approval,
-publication/push restrictions and preservation of other-agent work remain. Historical “needs
-approval” questions about M0 and native geometry were resolved by D023; do not revive them.
+Approved on 2026-09-17: the tiny fine-tune and the two U-Net controls (runs 3 and 4), on a GPU,
+after a cost report. Not yet approved: the random-init tiny run (new under D027) and any Kaggle
+job. Pushes need approval per rule 5. Native geometry and the M0 verdict are settled (D023).
