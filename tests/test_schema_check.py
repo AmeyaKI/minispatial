@@ -13,8 +13,15 @@ from minispatial.bench.schema_check import (
 
 
 def _roadmap_columns() -> list[str]:
-    """Parse the authoritative column list out of ROADMAP.md section 8."""
-    roadmap = (Path(__file__).resolve().parents[1] / "ROADMAP.md").read_text()
+    """Parse the authoritative column list from the archived roadmap's section 8.
+
+    The revised ROADMAP.md (2026-09-19, D027) no longer carries the column
+    line; the archived plan is the historical source of the existing schema.
+    R0 item 6 reconciles SCHEMA.md with the revised contract, at which point
+    SCHEMA.md itself becomes authoritative and this cross-check is replaced.
+    """
+    root = Path(__file__).resolve().parents[1]
+    roadmap = (root / "docs" / "archive" / "ROADMAP-before-2026-09-19.md").read_text()
     line = next(ln for ln in roadmap.splitlines() if ln.startswith("`model_id,"))
     return [c.strip() for c in line.strip("`").split(",")]
 
