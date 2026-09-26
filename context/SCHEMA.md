@@ -1,5 +1,21 @@
 # SCHEMA.md — `results/frontier.csv`
 
+> **R0 reconciliation required (D027, 2026-09-19):** This is the existing schema, not a completed
+> implementation of the revised experiment contract. Native 512 is approved. Before measurements,
+> distinguish implementation parity from compression loss and deployment acceptability; add
+> component/protocol/placement metadata with validator compatibility. Requested compute units do
+> not prove hardware placement. Encoder-only rows cannot stand in for full segmentation results.
+> Do not change raw historical records to conform to a new contract.
+
+
+> **R0 reconciliation required (D027, 2026-09-19):** This is the existing schema, not a completed
+> implementation of the revised experiment contract. Native 512 is approved. Before measurements,
+> distinguish implementation parity from compression loss and deployment acceptability; add
+> component/protocol/placement metadata with validator compatibility. Requested compute units do
+> not prove hardware placement. Encoder-only rows cannot stand in for full segmentation results.
+> Do not change raw historical records to conform to a new contract.
+
+
 Every column, its unit, and how it is measured. `minispatial/bench/schema_check.py` validates CSVs
 against this file; if you add a column here, the validator picks it up from the list below.
 

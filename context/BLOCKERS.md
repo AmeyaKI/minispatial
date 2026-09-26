@@ -48,3 +48,10 @@ bottom with the fix, so a later session can find how it was solved.
   versions. But terratorch ≥1.2 requires numpy ≥2.2, so downgrading is not available.
 - **Fix.** A five-line shim in `minispatial/export/coreml.py`, installed at import and guarded by
   `assert_shim_installed()`. See `DECISIONS.md` D004; disclosed in the README's limitations.
+
+## B002 — Environment visibility mismatch during documentation review (2026-09-19)
+
+`capture_env.py --check` returned 1: recorded chip/RAM were visible in the baseline, but this
+session returned `chip=unknown`, `ram_GB=None`. This does not prove hardware changed. No baseline
+was overwritten and no measurement was attempted. Resolve visibility or establish and document
+the real execution environment before measurements. Does not block authorized documentation work.

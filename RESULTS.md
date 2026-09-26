@@ -42,29 +42,30 @@ may resize the label differently from `albumentations.Resize` nearest-neighbour;
 saved at epoch 41 of 50 by early stopping. Per D015 a miss is a signal to investigate, not a kill:
 ROADMAP §11's kill condition is the teacher failing to load or evaluate, and it does both.
 
-Everything below M0 is conditional on this gate (ROADMAP section 6).
+D023 accepted proceeding with the miss recorded. The revised ROADMAP R0–R4 governs further
+work; it does not change this historical verdict.
 
 ## The questions, and their answers
 
-ROADMAP section 10 names the questions whose answer is the deliverable — in each case, **either
-answer is content**.
+The revised ROADMAP defines the questions below. Answers require adequate controls; an
+unfinished experiment is not a null result. No new measurement was made by the September 19 review.
 
-| # | Question | Answer |
-| --- | --- | --- |
-| 1 | Does our evaluation reproduce the published 300M flood result within tolerance? | **No** at the paper's 448 protocol (−1.04 / −1.78 pp); yes at native 512 (−0.54 / −0.92 pp), which was not the pre-registered protocol. See M0 above. |
-| 2 | Do tiny-TL and 100M-TL fine-tune to usable accuracy on test and Bolivia? | `[unanswered]` |
-| 3 | Does pretraining buy anything — tiny-TL vs a matched-size UNet? | `[unanswered]` |
-| 4 | Does distillation from the 300M teacher help the tiny model? | `[unanswered]` |
-| 5 | Which of vendor PTQ, reconstruction PTQ and QAT gets furthest at int8 and int4? | `[unanswered]` |
-| 6 | Where is the accuracy–latency frontier across runtimes and precisions? | `[unanswered]` |
-| 7 | Which layers break first at int4? | `[unanswered]` |
-| 8 | What is the parity cost of every deployed artifact? | `[unanswered]` |
+| Question | Answer |
+| --- | --- |
+| Was M0 reproduced at the pre-registered paper protocol? | No; see the recorded comparison above. D023 permits proceeding. |
+| Does pretrained tiny beat identical random initialization under a stated budget? | `[unanswered]`; requires same-architecture control. |
+| Which of tiny, practical U-Net and spectral baseline should be deployed? | `[unanswered]`; choose candidates on validation, then evaluate held-out data. |
+| What is the full segmentation artifact's float accuracy, latency and memory? | `[unmeasured]`; encoder smoke output is insufficient. |
+| Which supported vendor compression method offers the best trade-off? | `[unanswered]`; include calibrated baseline or documented incompatibility. |
+| What bottleneck motivates a compact decoder, reconstruction PTQ or QAT? | `[unanswered]`; select a targeted experiment after profiling. |
+| Does compression affect geographic subsets differently? | `[unanswered]`; per-event evidence and uncertainty needed. |
+| Does the complete model work on a physical mobile device? | `[unvalidated]`; Mac conversion alone does not answer this. |
 
 ## Null results
 
-Recorded here as they arise. ROADMAP section 11 names two outcomes that are findings rather than
-failures: tiny-TL not beating the UNet control, and reconstruction PTQ not beating the vendor
-default. Neither has been tested.
+Recorded here only after completing an adequately controlled experiment. A model losing to a
+simpler baseline or a compression method failing to help is a reportable finding; unimplemented
+experiments are not findings.
 
 *(none yet)*
 

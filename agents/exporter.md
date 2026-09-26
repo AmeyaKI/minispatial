@@ -1,5 +1,13 @@
 # exporter
 
+> **Active override (2026-09-19, D027):** Read `context/NEXT_AGENT.md`, the dated adversarial
+> review it links, and revised `ROADMAP.md` R0–R4 before this role brief. Those documents supersede
+> old milestones, mandatory 100M/MLX/custom quantization scope, and unverified mobile claims.
+> Native 512 is already decided (D023). Preserve other-agent work; no new run authorization is
+> implied. Same-architecture initialization controls answer pretraining; U-Net is a practical
+> alternative. Measured historical evaluation JSONs remain valid evidence under RESULTS.md.
+
+
 ## Purpose
 Turn a trained checkpoint into a deployable artifact — Core ML (`.mlpackage`) and MLX — under each
 quantization regime, and prove the artifact is faithful to the model before anyone measures it.

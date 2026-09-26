@@ -246,3 +246,42 @@ recorded anywhere.
 
 Cache the teacher's test logits on the studio under the chosen protocol, then start M1 config
 drafting from the Hub `config.yaml`, not the vendored GitHub one.
+
+## 2026-09-19 — Adversarial review saved; roadmap revised (D027)
+
+**User request:** save the critique, rationale, suggestions and concrete next work into project
+files so another agent can continue with the new context. No implementation requested in this turn.
+
+**Read first:** NEXT_AGENT.md, revised ROADMAP.md and
+`docs/reviews/2026-09-19-adversarial-review.md`. Previous roadmap archived under docs/archive.
+
+**Core change:** stop claiming broad novelty; complete full tiny segmentation deployment and fair
+controls before expanding to 100M, MLX, distillation or custom quantization. Add identical random
+initialization to isolate pretraining; retain U-Net as a practical alternative and spectral baseline.
+Vendor calibrated methods matter, quantized storage is not execution, mobile claims require devices.
+
+**Correction to the conversational review:** full tiny segmentation size was already recorded in
+FACTS.md, and D023 had already fixed native 512. The revised documents acknowledge both rather
+than asking for rediscovery or reopening resolved decisions. Existing test-logit manifest also exists;
+verify shards before reuse. Historical STATE.md instructions were stale relative to D023–D026.
+
+**Preserved:** M0 numerical result and raw files, training/config implementations, environment
+baseline, pending run/publication approval boundaries. No commit/push/upload or remote-agent
+message. Other agents must reread current diffs before editing shared files.
+
+**Environment check:** nonzero due to unavailable chip/RAM introspection; recorded as B002.
+No training or benchmark was run, and no current test pass is claimed.
+
+**Next:** complete ROADMAP R0 using NEXT_AGENT.md's file-level checklist; then full segmentation
+export and vendor/control measurements. This planning authorization does not authorize pending
+D023 training or long benchmark runs. No further permission is needed for this documentation update.
+
+**Documentation verification:** checked all 20 changed/new Markdown files for file scope and
+active edited-document relative links; no broken links or ignored documentation paths found.
+`git diff --check` passed. Historical M0 comparison text was preserved exactly; recomputing IoU
+from all three saved confusion matrices matched their stored values. No source/YAML/raw result
+files changed. Numerical-claim review used `.claude/commands/audit-numbers.md` as a checklist,
+with the explicit existing RESULTS.md/Rule-1 allowance for historical evaluation JSON evidence
+(the command's older CSV-only wording is narrower). External review claims carry primary links
+and access dates and are not represented as reproduced results. This was a local self-check,
+not an independent publication audit or a model test run.

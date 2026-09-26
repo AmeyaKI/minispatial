@@ -1,157 +1,158 @@
-# minispatial — Roadmap
+# minispatial — revised execution roadmap
 
-Geospatial foundation models, made small enough to run where there is no cloud — fine-tuned, quantized three ways, deployed to Core ML and MLX, measured.
+Updated 2026-09-19 after the user-requested adversarial review. **This replaces the previous
+schedule and scope priorities.** Historical M0–M5 references refer to
+[the archived plan](docs/archive/ROADMAP-before-2026-09-19.md), not current work orders.
+Read [the critique and rationale](docs/reviews/2026-09-19-adversarial-review.md) and
+[the next-agent checklist](context/NEXT_AGENT.md) before continuing.
 
-Last updated: 2026-09-18. Maintainer: Ameya Kiwalkar. Window: Sept 7 – Oct 16, 2026.
+## 1. Question and contribution
 
----
+Under fixed device and accuracy constraints, when does quantized Prithvi tiny offer a better
+accuracy–latency–memory trade-off than a compact task-specific segmentation model?
 
-## 1. The problem
+Fine-tuning, distillation, geospatial model compression and edge deployment have prior art.
+Do not claim first low-bit EO deployment, missing public checkpoints, or universally unexplored
+compression. Our deliverable is a reproducible deployment comparison with usable artifacts,
+controlled ablations, and explained failures. Prithvi is allowed to lose.
 
-**Real-world layer.** After a flood, wildfire, or landslide, the people who need damage maps fastest — first responders and the science teams supporting them — are the people most likely to have no connectivity. Satellite imagery arrives within hours. The models that turn it into maps are 300M–600M-parameter foundation models built for a GPU server and a network.
+## 2. User and product boundary
 
-**Technical layer.** Nobody knows what these models lose when you shrink them. No Earth-observation foundation model has been run below fp16 on any hardware with the accuracy cost measured. A Jan 2026 survey (Sang et al., *Remote Sensing* 18(2):298) calls on-device deployment of remote-sensing foundation models "largely unexplored." The one serious attempt (Du et al., arXiv 2512.01181, Dec 2025) stopped at fp16 on a Myriad-2 and released no code or weights. IBM's 5M-parameter Prithvi-EO-2.0-tiny-TL model card claims it is small enough for phones and satellites; no measurement accompanies the claim.
+Initial user: an analyst processing already-downloaded Sentinel-2 imagery on a local Mac.
+The measured product is optical water segmentation, not proven damage assessment or emergency
+response. Mobile suitability remains unvalidated until a complete model is tested on a named
+phone/tablet and OS. Satellites, live imagery delivery and a full iOS app are outside core scope.
 
-**The question this repo answers.** How small and how low-precision can a disaster-mapping foundation model go before the map is wrong, and which compression method gets you furthest?
+## 3. Current evidence and standing decisions
 
-## 2. What this work contributes
+- M0 is recorded in RESULTS.md; the paper-protocol reproduction missed tolerance. D023 accepts
+  proceeding, not rewriting the miss as a pass.
+- **Native 512, no resize or tiling, is already approved for evaluation and deployment (D023).**
+  Training may retain RandomCrop(224). Any fallback must be a separately documented common protocol.
+- Existing tiny/U-Net configs and teacher logit manifest must be inspected before doing duplicate work.
+- FACTS.md records tiny+neck+decoder at approximately 13.0M parameters; “tiny” is a model-family name.
+  The U-Net is a smaller practical baseline, not a matched-size pretraining control.
+- Compression, distillation, MLX and benchmark runner files inspected on September 19 are stubs.
+  Encoder smoke export is not a full segmentation artifact or a benchmark.
+- Training and long benchmarks still need the approval required by D023. Do not infer new run
+  authorization from this documentation revision. Preserve active work; do not terminate another
+  agent's jobs. No commits/pushes/uploads in this documentation session.
 
-Converting and quantizing a model is routine engineering. The contribution here is what has not been measured: fine-tuned small checkpoints that do not exist publicly, the first sub-fp16 accuracy numbers for an Earth-observation foundation model, a three-way comparison of quantization methods with one implemented from the paper, a per-layer sensitivity analysis, and a measurement protocol with pre-registered thresholds and parity columns. Every comparison carries a control or an ablation, and null results are reported as findings.
+## 4. Required comparisons
 
-## 3. Who it's for, and what the Mac is
+| Comparison | Question | Controls |
+| --- | --- | --- |
+| Pretrained tiny vs identical randomly initialized tiny | What does initialization buy under the stated training budget? | Same encoder/neck/decoder; bounded validation tuning and convergence reporting |
+| Tiny vs practical U-Net | Which compact system should an analyst deploy? | Same inputs, masks, evaluation; report actual total size and tuning budget |
+| MNDWI threshold vs learned models | Is a cheap spectral rule sufficient here? | Validation-selected threshold, same valid pixels and label semantics |
+| Float vs compressed, same model/runtime | What does compression change? | Same checkpoint, preprocessing, input size and timing boundary |
+| Same model across runtimes, if added | What does runtime selection change? | Same artifact semantics and evaluation protocol |
+| Large teacher vs compact deployed system | What overall quality/resource trade-off is obtained? | Label as system comparison; do not attribute the whole gain to quantization |
 
-- Field teams with an iPad or laptop and no signal.
-- Disaster-science groups running these models on the machine they own instead of a cluster.
-- Further out: satellite and drone operators deciding what to downlink.
+D025's two U-Net learning rates remain retained. Select the preferred control on validation and
+report both. They do not isolate pretraining. Test and Bolivia cannot select any candidate.
 
-The M5 MacBook is the measuring instrument, not the mission: its Neural Engine is the most accessible NPU to measure rigorously, and the Core ML artifacts it produces run unchanged on iPad and iPhone — the actual field device. State this plainly in the README. Do not claim satellites; the lessons transfer, the numbers don't.
+## 5. Stages, outputs, and acceptance gates
 
-## 4. Approach
+### R0 — Reconcile state and freeze the experiment contract (next)
 
-1. **Start from a model family that exists.** Prithvi-EO-2.0: 5M (tiny-TL), 100M (100M-TL), 300M (300M-TL), one architecture, one pretraining corpus, Apache-2.0. The 300M is already fine-tuned for flood (`ibm-nasa-geospatial/Prithvi-EO-2.0-300M-TL-Sen1Floods11`): accuracy ceiling and teacher.
-2. **Train the small ones ourselves.** Fine-tune tiny-TL and 100M-TL on Sen1Floods11 with the official recipe. Train a from-scratch UNet control at matched size. Run one distillation ablation (tiny with vs without the 300M's soft labels).
-3. **Compress three ways, compared fairly.** (a) Vendor PTQ via coremltools (data-free). (b) Reconstruction PTQ implemented here (AdaRound/BRECQ-style, calibrated on a few hundred tiles, per-block output matching). (c) Quantization-aware fine-tuning of the tiny model at int4. Same target precisions (int8, int4) for all three.
-4. **Deploy and measure on real hardware.** Core ML on Neural Engine / GPU / CPU; MLX as second runtime; PyTorch MPS as reference. Every cell: accuracy from the deployed artifact itself, latency, memory, file size, parity vs fp32. Cold-burst and 60-second sustained modes. Thresholds written before measuring.
-5. **Publish.** Checkpoints, Core ML and MLX packages, model cards with the numbers, one-command harness. Task-agnostic from day one: flood is task 1; wildfire burn scars (config and HF dataset exist in the NASA-IMPACT repo) is the stretch task 2.
+- [ ] Inspect latest git diff, local manifests and existing run records; preserve other-agent work.
+- [ ] Read D023–D027; correct remaining old milestone references as files are touched.
+- [ ] Record complete model parameter counts by encoder/neck/decoder and actual resolved optimizer
+  settings. Reconcile duplicate learning-rate fields through the resolved trainer configuration.
+- [ ] Prepare the identical random-initialization tiny config and spectral baseline specification.
+- [ ] Write `context/EXPERIMENT_PROTOCOL.md`: exact splits, bands, scaling/normalization, native
+  geometry, ignored-label/cloud policy, validation-only selection, calibration IDs, seed plan,
+  timing boundary, conversion parity, compression acceptability and evidence requirements.
+- [ ] Align `minispatial/bench/matrix.yaml`, `context/SCHEMA.md` and schema validation with the
+  revised contract before the first new measurement; preserve backward compatibility/raw records.
+- [ ] Prepare concrete training/measurement commands and bounded runtime estimates for any pending
+  D023 approval. No rerun of M0 merely to seek a passing number.
 
-## 5. Where the technical depth is
+**Gate:** an auditable protocol and runnable configs, not additional architecture scaffolding.
 
-Not in running a converter. In:
-- fine-tuning and distilling a ViT with a matched-size control;
-- implementing a quantization algorithm from the paper and beating — or failing to beat — the vendor default;
-- QAT for a dense-prediction model;
-- per-layer sensitivity: which layers and ops break at int4 (patch embedding, attention on the NE, decoder convs MLX cannot quantize) and why;
-- a measurement protocol with parity columns, thermal behavior, and pre-registered thresholds.
+### R1 — Complete one deployed segmentation path
 
-## 6. Milestones
+- [ ] Reuse a valid trained tiny checkpoint if one exists; otherwise run approved training with
+  checkpoint/resume and provenance. Evaluate using the established normalized native-512 path.
+- [ ] Export encoder, neck and decoder together to Core ML FP16. Verify output shape, class order,
+  valid-pixel mask and logits on fixed real scenes against PyTorch.
+- [ ] Evaluate the deployed artifact itself; save confusion matrices and per-scene/event outputs.
+- [ ] Implement the smallest benchmark path needed to emit traceable float accuracy, artifact size,
+  latency and memory. Include preprocessing and stitching costs if claiming end-to-end performance.
+- [ ] Profile encoder/neck/decoder to identify the actual bottleneck; separate size from latency.
 
-### M0 — Ground truth (Sept 7–13)
-- Repo scaffold, `uv` env, pytest skeleton, docs skeleton (README, DATA.md, RESULTS.md, FUTURE_WORK.md, DECISIONS.md, HANDOFF.md, BLOCKERS.md).
-- Sen1Floods11 hand-labeled subset (`S2Hand`, `LabelHand`, split CSVs) acquired; exact source path, bytes, SHA-256 of split CSVs, Bolivia CSV presence recorded in DATA.md. License recorded as unstated / research use.
-- Colab: 300M-TL flood checkpoint loaded via TerraTorch, test-split mIoU and IoU_water reproduced, written to RESULTS.md next to the published figure with URL. Tolerance for "reproduced" written down before running. **Gate for everything else.**
-- 300M test-split logits cached fp16 on Drive with a manifest.
-- Mac: coremltools + MLX installed; tiny-TL encoder Conv3d (1,16,16) → Conv2d (16,16) reparameterization with asserted equivalence; Core ML fp16 conversion; one `CPU_AND_NE` prediction; encoder parity printed. `results/env.json` written.
+**Gate:** one complete float segmentation artifact with real-input parity and measured behavior.
+Random-input encoder output cannot satisfy it.
 
-### M1 — Small models trained (Sept 14–20)
-- `train/` TerraTorch configs for tiny-TL and 100M-TL mirroring the official 300M config (UperNetDecoder 256, 50 epochs, lr 5e-5, cosine, ignore_index −1). Every diff logged in DECISIONS.md.
-- Fine-tune tiny-TL; evaluate test + Bolivia.
-- UNet control (≤2M params, plain Conv2d/BN/ReLU/bilinear; same data, loss, epochs, augmentations).
-- Cache 300M train-split logits for distillation.
-- Fine-tune 100M-TL (should-have; first thing cut if behind).
+### R2 — Establish fair alternatives and vendor compression
 
-### M2 — Distillation ablation + vendor PTQ (Sept 21–27)
-- Tiny trained twice: labels only vs labels + KL on temperature-softened 300M logits. Ship the better, publish both.
-- Lock checkpoints. Draft model cards in `cards/` (not published).
-- `export/coreml.py`: fp16; `int8_linear_pc`; `int4_linear_pb32`; `int4_palettize_4b_g16`. Compute-unit sweep. Stretch: W8A8 with 64 calibration tiles.
-- `bench/parity.py`: pixel disagreement %, ΔmIoU, max-abs logit diff vs fp32 on fixed tiles.
-- `bench/thresholds.yaml` (parity, run-to-run spread) committed with justification **before any quantized measurement**. Ameya approves.
-- **Vendor PTQ must be fully measured before any custom quantizer is written.**
+- [ ] Complete approved random-tiny and U-Net controls with validation-only selection. Give random
+  initialization an explicitly bounded tuning opportunity; report convergence limitations.
+- [ ] Evaluate the spectral baseline and chosen models on test and Bolivia using identical semantics.
+- [ ] Measure Core ML FP16, data-free weight INT8/INT4 and palettization where supported. Unsupported
+  configurations become explicit outcomes, not invented Cartesian-product matrix cells.
+- [ ] Attempt compatible vendor calibrated compression (e.g. documented GPTQ). Record a precise
+  compatibility limitation if unavailable in this architecture/version.
+- [ ] Record weight representation, activation precision, parameter coverage, requested compute units,
+  observed placement if obtainable, load/first-call and steady/sustained timing, and memory.
+- [ ] Repeat key training comparisons across a proposed three seeds, subject to approved budget;
+  single-seed results remain exploratory. Use paired scene/event-level uncertainty, not independent
+  pixel assumptions. Keep geography-specific failures visible.
 
-### M3 — Reconstruction PTQ (Sept 28–Oct 4)
-- `minispatial/quant/reconstruct.py`: AdaRound/BRECQ-style per-block reconstruction at int8 and int4 on tiny and 100M; calibration set of a few hundred train tiles; export the reconstructed weights through the same Core ML path.
-- Per-layer sensitivity sweep: quantize one layer/block at a time to int4, record ΔmIoU; produce `results/sensitivity.csv` and a mixed-precision recommendation.
-- MLX port (encoder + decoder, mlx-image blocks as starting point), weight transfer with NHWC handling, fp16 parity; `mlx.nn.quantize` int8/int4 (group 64); `quant_coverage_pct` recorded (Linear/Embedding only).
+**Gate:** a useful deployment frontier with practical and causal controls, with conclusions no
+broader than the observed evidence. Three seeds is a proposed protocol, not a result or approval.
 
-### M4 — QAT + full matrix (Oct 5–11)
-- QAT on tiny only: fake-quant int4 weights (STE), short fine-tune on Colab from the M2 checkpoint; export through Core ML; compare to vendor PTQ and reconstruction PTQ at int4.
-- Full measurement matrix, 3 fresh-process runs per cell, cold-burst + sustained.
-- 300M on torch_mps fp16 (practitioner baseline); Core ML 300M only if conversion works within 3 h.
-- Stretch: iPhone/iPad row via Xcode performance report on a connected device.
-- `results/frontier.csv`, `results/frontier.png`, `results/methods.csv` (three-method comparison), RESULTS.md prose with findings and every null result.
+### R3 — One targeted deeper experiment, selected from evidence
 
-### M5 — Publish + freeze (Oct 12–16)
-- Publish two HF repos (explicit go required): `minispatial-prithvi-eo-2.0-tiny-tl-sen1floods11`, `…-100m-tl-sen1floods11` — PyTorch checkpoint, Core ML packages, MLX safetensors, card with frontier rows, parity, training-config diff, provenance, positioning.
-- Scope freeze. FUTURE_WORK.md finalized. README with frontier plot, reproduction instructions, limitations.
-- Final audit: every number in the README, RESULTS.md and model cards traced to a CSV row.
+Choose one: compact decoder ablation, reconstruction PTQ, or QAT. Document an observed bottleneck,
+falsifiable hypothesis, comparator, fixed budget and stop condition before implementation.
 
-### Stretch (only if M4 completes by Oct 11)
-- Task 2: wildfire burn scars (`ibm-nasa-geospatial/hls_burn_scars`, `configs/firescars.yaml`), 300M teacher fine-tuned by us on Colab, tiny fine-tuned, vendor PTQ only.
+- If decoder cost dominates, compare a compact decoder under the same training/evaluation budget.
+- If low-bit accuracy degrades, use layer sensitivity and geography-specific failures to motivate
+  reconstruction/QAT. Preserve quantization grid and rounding across export and verify numerically.
+- Compare calibrated vendor methods where supported; distinguish algorithm gains from extra
+  training/calibration data and compute.
 
-## 7. Feature list (cross-cutting)
+**Gate:** an explained result, including an adequately controlled null result. A custom quantizer
+is optional; writing one from a paper is not in itself algorithmic novelty.
 
-- **Data:** Sen1Floods11 wrapper over TerraTorch's `Sen1Floods11NonGeo`; band order and normalization read from the official config, never inferred; 9-tile 224/stride-144 stitched inference for 512 chips, one implementation shared by every runtime.
-- **Training:** TerraTorch YAML configs; `train.py`, `eval.py`, `cache_logits.py`, `distill.py`, `qat.py`; Colab bootstrap notebook that clones a pinned commit and runs scripts. Notebooks are never the source of truth.
-- **Quant:** vendor PTQ recipes (coremltools); `reconstruct.py` (ours); `qat.py` (ours); `sensitivity.py`.
-- **Export:** Conv3d→Conv2d reparam; Core ML converter; MLX port + weight transfer; parity test per path.
-- **Bench:** `run.py --config bench/matrix.yaml` → convert → parity → measure → CSV + plot; env capture; thresholds enforced; `unstable` / `parity_fail` flags (never delete a row).
-- **Docs:** DATA.md, RESULTS.md, FUTURE_WORK.md, DECISIONS.md (dated entry per non-obvious choice), HANDOFF.md (per session), BLOCKERS.md.
-- **Publishing:** HF cards with frontier rows, parity, provenance, license note (dataset license unstated).
+### R4 — Package and establish the actual deployment boundary
 
-## 8. Table schema (`results/frontier.csv`)
+- [ ] Publish-ready code/configs, artifact hashes, model card, reproducible commands, CSV provenance,
+  failure examples and a concise decision recommendation.
+- [ ] If phone/tablet suitability is claimed, test on a named physical device with its OS, complete
+  model, memory and sustained behavior. If unavailable, publish a Mac-only claim.
+- [ ] Add an external flood dataset only after checking preprocessing, event overlap and label
+  semantics; keep its score separate from incompatible leaderboard protocols.
+- [ ] Audit every claim and source; obtain standing approval before external publication.
 
-`model_id, task, backbone_params_M, total_params_M, decoder, runtime, compute_units, weight_precision, quant_method, activation_precision, quant_coverage_pct, artifact_size_MB, load_time_ms, first_call_ms, iou_water_test, miou_test, f1_water_test, iou_water_bolivia, miou_bolivia, delta_miou_vs_fp32_ref_pp, pixel_disagreement_pct, max_abs_logit_diff, latency_ms_median, latency_ms_p95, latency_ms_iqr, sustained_median_ms, sustained_ratio, throughput_tiles_per_s_b8, peak_rss_delta_MB, peak_rss_abs_MB, peak_accel_MB, run_spread_pct, unstable, parity_fail, chip, ram_GB, macos_version, coremltools_version, mlx_version, torch_version, power_state, date`
+**Gate:** another engineer can reproduce the reported comparison and knows where it applies.
 
-`quant_method` ∈ {none, coreml_linear_pc, coreml_linear_pb32, coreml_palettize_4b_g16, coreml_w8a8, recon_int8, recon_int4, qat_int4, mlx_affine_g64}.
+## 6. Measurement contract to preserve
 
-Protocol: batch 1; 10 warmup; 100 timed iters; `perf_counter_ns` around predict incl. host→device copy; MLX `mx.eval(out)` and torch `mps.synchronize()` inside the timed region; sustained = 60 s continuous, median of last 20 s; RSS via psutil at 5 ms from pre-load; `peak_accel_MB` = `mx.get_peak_memory()` / `torch.mps.driver_allocated_memory()` / `not_observable` for Core ML; 3 fresh-process runs, row = median of medians.
+Accuracy comes from each deployed artifact. Use pinned model/data/config identities, shared
+preprocessing, and environment provenance. Existing warmup, timed-iteration and fresh-process
+settings in SCHEMA.md remain proposed defaults until reconciled in R0. Pre-register numerical
+thresholds before the measurements they judge; preserve D023/user approval boundaries.
 
-## 9. Named baselines
+Separate implementation parity from intended compression loss and from deployment acceptability.
+Do not exclude a numerically valid compressed model merely for losing accuracy; it can be a valid
+but dominated point. Retain unstable or invalid rows with explanations. Do not rename CPU_AND_NE
+to “Neural Engine execution” without placement evidence. No energy claim without energy measurement.
 
-- Parity baseline: same model, fp32 PyTorch.
-- Practitioner baseline: 300M-TL on torch_mps fp16 — every speedup/size ratio in prose is against this row.
-- Non-foundation baseline: `unet_small`.
-- Method baseline: coremltools data-free PTQ — reconstruction PTQ and QAT are judged against it.
-- External sanity check: the published 300M-TL Sen1Floods11 figure (Prithvi-EO-2.0 paper, arXiv 2412.02732).
+## 7. Scope cuts and stopping rules
 
-## 10. Concrete goals (verifiable; no numbers invented)
+Defer 100M experiments, MLX implementation, distillation, wildfire and a broad runtime sweep until
+R1–R2 succeed. Preserve existing files. Add optional work only when it resolves a specific decision.
+If export fails, bound investigation, log failure and evaluate a documented fallback; do not erase
+provenance. If Prithvi loses to a well-tuned small model or spectral rule, report it. One valid
+runtime is sufficient for a bounded study; absence of a second runtime no longer kills the project.
+Do not promise the historical calendar without estimating the remaining approved work.
 
-1. 300M flood result reproduced within a pre-written tolerance.
-2. Two fine-tuned checkpoints that don't exist publicly (tiny, 100M), evaluated on test and Bolivia.
-3. Pretraining question answered: tiny vs matched-size UNet. Either answer is content.
-4. Distillation question answered: tiny with vs without teacher. Either answer is content.
-5. Three quantization methods compared at int8 and int4 on the same models, with a one-sentence recommendation.
-6. Frontier chart complete for ≥3 models × {fp16, int8, int4} × {NE, GPU, MLX} + PyTorch reference; frontier line through stable cells only.
-7. Per-layer int4 sensitivity finding, with numbers.
-8. Parity columns for every artifact, no exceptions.
-9. Two HF repos with cards; `bench/run.py` regenerates the CSV.
-10. A two-sentence summary of the findings, every number traceable to a CSV row.
+## 8. Agent handoff and source of truth
 
-## 11. Kill and fallback conditions
-
-- 300M teacher won't load/evaluate on Colab after M0 + 4 h → switch reference to `ibm-nasa-geospatial/Prithvi-EO-1.0-100M-sen1floods11`. Not a kill.
-- Tiny doesn't beat UNet after two serious attempts → publish as finding. Not a kill.
-- No tiny artifact meets fp16 parity threshold after 8 h → **kill**; report.
-- Run-to-run spread can't be brought under threshold after controlling power/thermal → cut to stable subset; **kill** if fewer than two runtimes remain.
-- Reconstruction PTQ doesn't beat vendor PTQ → publish as null result. Not a kill.
-- Calendar: if behind at end of M3, cut in this order: burn scars → MLX quantized rows for 100M → QAT → 100M entirely. The frontier and the vendor-vs-reconstruction comparison are never cut.
-
-## 12. Out of scope (FUTURE_WORK.md seeds)
-
-Sentinel-1/SAR; iOS app; 600M; ExecuTorch / LiteRT / ONNX Runtime; pretraining-level distillation; weakly-labeled chips; energy via `powermetrics`; landslides (task 3); QAT on 100M; Core ML 300M if not free; MLX 300M; packaging `bench/` for PyPI.
-
-## 13. Summary template (fill only from CSV)
-
-> Fine-tuned and compressed the Prithvi-EO-2.0 family (5M/100M/300M) for disaster segmentation and deployed it to Apple silicon via Core ML and MLX, comparing data-free PTQ, reconstruction PTQ, and QAT at int8/int4 across [N] configurations.
->
-> AdaRound-style reconstruction quantization held the 5M model to [−Δ] pp mIoU at int4 versus [−Δ'] for vendor PTQ, running [L] ms per tile on the M5 Neural Engine at [S] MB, [K]× faster than the 300M PyTorch-MPS baseline.
-
-Bracketed values stay bracketed until a CSV row supplies them. If the second sentence turns out false, it is rewritten to say what was measured.
-
-## 14. Verified facts the work depends on (recheck anything time-sensitive)
-
-- tiny-TL: 5M params, embed dim 192, input (B, 6, 1, 224, 224), bands Blue/Green/Red/Narrow NIR/SWIR1/SWIR2, registry `prithvi_eo_v2_tiny_tl`, needs terratorch ≥ 1.1. 100M-TL registry name: verify.
-- 300M-TL flood config: `configs/sen1floods11.yaml` in NASA-IMPACT/Prithvi-EO-2.0 — UperNetDecoder 256, 50 epochs, lr 5e-5, cosine, ignore_index −1, batch 16. Lightning non-determinism ~1% per the repo author.
-- Sen1Floods11: 4,831 chips 512×512 @10 m, 11 events; 446 hand-labeled; IID split 252/89/90; Bolivia held out (verify CSV). Public GCS bucket; README names both `gs://senfloods11/` and `gs://sen1floods11`; TerraTorch split_dir `v1.1/splits/flood_handlabeled`. License unstated.
-- Tooling (Sept 4, 2026): coremltools 9.0; MLX 0.32.2 (`nn.quantize` → Linear/Embedding only); TerraTorch 1.2.13; TorchGeo 0.10.0 (no Sen1Floods11); PyTorch legacy quantized backend not implemented on MPS; mlx-image 0.1.10 has ViT blocks.
-- Second task assets: `ibm-nasa-geospatial/hls_burn_scars` + `configs/firescars.yaml` (verified present Sept 7).
-- Prior work to position against: Du et al. 2512.01181; Sang et al. RS 18(2):298; Jankovic et al. 2501.12087; IBM tiny-TL card.
+Follow `context/NEXT_AGENT.md` for immediate actions and `context/STATE.md` for observed status.
+DECISIONS.md is append-only history; D027 supersedes conflicting earlier priorities and the causal
+interpretation of D025. Existing historical records remain intact. The previous roadmap is an
+archive only. FACTS.md distinguishes local evidence, external source reports and unverified claims.

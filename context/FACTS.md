@@ -26,7 +26,7 @@ Re-check anything time-sensitive (tool versions, bucket contents, model cards).
 | The paper defines mIoU as the plain mean over classes, `(1/C) Σ_c IoU_c` — i.e. macro, same as `minispatial.metrics` | `verified` | same paper, Section IV metric definition | 2026-09-13 |
 | The paper evaluates Sen1Floods11 at **448 × 448** (Table III: "446 (448 × 448)"; text: 512 resized to 448 because 512 is not divisible by the 600M's 14-px patch) | `verified` | same paper, Table III and Section IV-B | 2026-09-13 |
 | The Hub-shipped `config.yaml` for the checkpoint uses `RandomCrop(224)` for training and **no resize** at val/test; the publisher's `inference.py` runs 512 windows | `verified` | files in the Hub repo at the revision above | 2026-09-13 |
-| IBM tiny-TL model card claims phone/satellite suitability without measurement | `unverified` | ROADMAP §1 | — |
+| Broad claim that IBM provides no edge measurements is withdrawn; its release includes hardware throughput and demos (different workloads from ours) | `verified` source report | https://research.ibm.com/blog/terramind-prithvi-tiny-small-models-geospatial | 2026-09-19 |
 
 ## Training configuration
 
@@ -91,9 +91,26 @@ Re-check anything time-sensitive (tool versions, bucket contents, model cards).
 
 ## Prior work to position against
 
+Source verification means the source was read, not that an external experiment was reproduced.
+The detailed distinctions and rationale are in `docs/reviews/2026-09-19-adversarial-review.md`.
+
 | Fact | Tag | Source | Date |
 | --- | --- | --- | --- |
-| Du et al., arXiv 2512.01181 (Dec 2025) — fp16 on Myriad-2, no code or weights | `unverified` | ROADMAP §1 | — |
+| Du et al. reports compact distilled models, FP16 Myriad-2 validation and on-orbit inference; inspected version promises later code release, not proof of current universal code absence | `verified` source report, not reproduced | https://arxiv.org/html/2512.01181v1 | 2026-09-19 |
 | Sang et al., *Remote Sensing* 18(2):298 (Jan 2026) — calls on-device RS foundation model deployment "largely unexplored" | `unverified` | ROADMAP §1 | — |
 | Jankovic et al., arXiv 2501.12087 | `unverified` | ROADMAP §14 | — |
 | Second-task assets `ibm-nasa-geospatial/hls_burn_scars` + `configs/firescars.yaml` | `verified` (config only) | `configs/firescars.yaml` listed in the NASA-IMPACT repo, 2897 bytes; the HF dataset was not checked | 2026-09-07 |
+
+## September 19 source review — active positioning
+
+| Fact | Tag | Source | Date |
+| --- | --- | --- | --- |
+| FloodDistill preprint submitted September 17, 2026 reports Prithvi-teacher flood distillation into EfficientViT with deployed INT8 QAT; it does not directly quantize tiny-TL | `verified` source report, not reproduced | https://arxiv.org/abs/2609.20441 | 2026-09-19 |
+| FloodDistill public repository includes training, evaluation, quantization and deployment recipes and identifies exported ONNX/TensorRT student artifacts | `verified` repository inspected, artifacts not executed | https://github.com/sycz00/FloodDistill | 2026-09-19 |
+| IBM October 2025 release includes Prithvi tiny hardware throughput/browser demo and a TerraMind tiny iPhone demo; these are not our proposed flood/Core ML benchmark | `verified` source report | https://research.ibm.com/blog/terramind-prithvi-tiny-small-models-geospatial | 2026-09-19 |
+| GeoFM-Prune studies structural pruning across Prithvi, Clay and TerraMind with public experiments | `verified` repository inspected | https://github.com/amisaid/GeoFM-Prune | 2026-09-19 |
+| Core ML documents RTN, calibrated GPTQ, activation quantization and fine-tuning methods; compatibility with our pinned model is not established | `verified` documentation, local applicability unverified | https://apple.github.io/coremltools/docs-guides/source/opt-quantization-algos.html | 2026-09-19 |
+| Core ML distinguishes weight and activation quantization; hardware benefits depend on representation and execution path | `verified` documentation | https://apple.github.io/coremltools/docs-guides/source/opt-quantization-overview.html and https://apple.github.io/coremltools/docs-guides/source/opt-overview.html | 2026-09-19 |
+| TESSERA README documents QAT variants and INT8 embedding outputs; this review does not establish integer end-to-end execution or matched flood accuracy | `verified` README only | https://github.com/ucam-eo/tessera | 2026-09-19 |
+| A community Prithvi-Tiny flood card describes DEM/precipitation inputs, not the exact tiny-TL/Sen1Floods11 task | `verified` model-card description only | https://huggingface.co/chrimerss/flood-foundation-prithvi-tiny | 2026-09-19 |
+| Exact tiny-TL/Core ML/MLX multi-method public duplication was not located | `search observation`, NOT proof of novelty/absence | Review search scope in docs/reviews/2026-09-19-adversarial-review.md | 2026-09-19 |

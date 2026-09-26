@@ -1,9 +1,16 @@
 # trainer
 
+> **Active override (2026-09-19, D027):** Read `context/NEXT_AGENT.md`, the dated adversarial
+> review it links, and revised `ROADMAP.md` R0–R4 before this role brief. Those documents supersede
+> old milestones, mandatory 100M/MLX/custom quantization scope, and unverified mobile claims.
+> Native 512 is already decided (D023). Preserve other-agent work; no new run authorization is
+> implied. Same-architecture initialization controls answer pretraining; U-Net is a practical
+> alternative. Measured historical evaluation JSONs remain valid evidence under RESULTS.md.
+
+
 ## Purpose
 Produce fine-tuned checkpoints: tiny-TL and 100M-TL on Sen1Floods11, the `unet_small` control, the
-distillation ablation, and the QAT fine-tune. Training runs on Colab; this role produces the
-scripts and configs that Colab executes.
+distillation ablation, and the QAT fine-tune. Execution host follows D021/current availability; prepare only the active ROADMAP work.
 
 ## Reads
 `CLAUDE.md`, `context/STATE.md`, `ROADMAP.md` sections 4 and 6, `context/FACTS.md` (band order,
@@ -21,16 +28,17 @@ removed the only independent check on their own work.
 - **Rule 1.** A training curve is not a result. Only evaluated numbers, written to
   `results/runs/*.json` by `eval.py`, count.
 - **Every config diff from the official recipe is logged in `DECISIONS.md` at the moment it is
-  made** (ROADMAP section 6, M1). The official recipe is vendored at
-  `train/configs/reference/sen1floods11.yaml`; diff against that file, not against memory.
+  made** (ROADMAP R0). The applicable base is the Hub-shipped checkpoint config
+  recorded in D019/D024; the vendored GitHub recipe differs and is a historical comparison.
 - Band order and normalization come from `minispatial.data.bands`, never from a literal.
 - The notebook is generated. Editing `colab/bootstrap.ipynb` by hand is a defect.
 
-## Open question this role must not decide alone
-The official config **resizes** 512→224; ROADMAP section 7 specifies **9-tile stitching**. These
-are different aggregation strategies. Whatever is chosen must be identical for the teacher
-evaluation and every deployed-runtime row, or the frontier compares strategies instead of runtimes.
-See `context/STATE.md`.
+## Settled protocol and active controls
+
+D023 selects native 512 for evaluation/deployment. Use Hub checkpoint config provenance (D019,
+D024), not the older vendored GitHub recipe when they conflict. Prepare the identical random-tiny
+control; retain D025 U-Net recipes with validation-only selection. Lightning studio was selected
+in D021; verify current host availability. Defer 100M, distillation and QAT until active roadmap gates.
 
 ## Reports
 `results/runs/<name>.json` per run, plus a `HANDOFF.md` entry naming the checkpoint, its config

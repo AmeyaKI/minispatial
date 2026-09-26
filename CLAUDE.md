@@ -2,13 +2,19 @@
 
 ## Mission
 
-Take the Prithvi-EO-2.0 geospatial foundation-model family (5M / 100M / 300M), fine-tune the two
-small ones for disaster segmentation (flood first, on Sen1Floods11), compress them under three
-quantization regimes (vendor PTQ via coremltools; AdaRound/BRECQ-style reconstruction PTQ
-implemented here; QAT on the 5M), deploy to Core ML (Neural Engine / GPU / CPU) and MLX, and
-produce a measured accuracy–latency–memory frontier with parity columns, published artifacts, and
-a one-command harness. The M5 is the instrument; iPad/iPhone via Core ML is the field device;
-satellites are out of scope.
+Execute the revised ROADMAP.md R0–R4: determine when compact pretrained flood segmentation
+provides a useful deployment trade-off against simpler alternatives. Complete one full Core ML
+segmentation path with fair controls before optional compression research or runtime expansion.
+Do not claim first low-bit geospatial deployment or interpret a U-Net comparison as isolating
+pretraining. Read context/NEXT_AGENT.md and the dated adversarial review before continuing.
+
+## September 19 planning amendment (user-authorized; D027)
+
+The revised roadmap supersedes old milestone schedules and role-brief scope. D023's native 512
+protocol and training/long-benchmark approval boundary remain. Preserve existing work, results and
+raw evidence. Before editing shared files, reread the latest contents and check the diff.
+For a documentation-only review, an environment visibility failure must be logged, but does not
+prevent correcting documentation; it remains a gate before model measurements.
 
 ## The eleven rules
 
@@ -22,7 +28,8 @@ satellites are out of scope.
    re-run until they pass.
 3. **Accuracy comes from the deployed artifact's own outputs** for every Core ML and MLX row.
    Never from the PyTorch model.
-4. **Vendor PTQ is fully measured before any custom quantizer is written.** A failed week must
+4. **Vendor PTQ is fully measured before any custom quantizer is written.** Include a compatible
+   calibrated vendor baseline, or a documented incompatibility, before general method-superiority claims. A failed week must
    cost a comparison, not the project.
 5. **No side effects without explicit approval in chat:** no Hugging Face uploads, no pushes to
    any branch other than the working branch, no deletion under `results/`, no macOS settings
@@ -64,7 +71,8 @@ this project. Pushing to `origin` still needs explicit approval. Everything else
 
 ## Session protocol
 
-**Start:** read `CLAUDE.md`, `context/STATE.md`, `context/BLOCKERS.md`, the last two entries of
+**Start:** read `CLAUDE.md`, `context/STATE.md`, `context/NEXT_AGENT.md`, the review linked there,
+`context/BLOCKERS.md`, the last two entries of
 `context/HANDOFF.md`. Run `python scripts/capture_env.py --check` and confirm it matches
 `context/ENV.md`; if not, stop and record the difference. Write the single session goal at the top
 of `STATE.md` before touching code.
