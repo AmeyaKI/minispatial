@@ -1,7 +1,8 @@
 # STATE.md — current snapshot
 
-**Updated:** 2026-09-26. **Session goal:** commit the review session's work, reconcile ROADMAP
-and context with the repository as it actually is, and start R0. **Active stage:** R0.
+**Updated:** 2026-09-26 (session closed). **Session goal:** commit the review session's work and
+reconcile ROADMAP and context with the repository as it actually is. Done. **Active stage:** R0,
+item 1 not yet started; the next session picks it up from a handoff prompt.
 
 ## Read first
 
@@ -16,6 +17,7 @@ and context with the repository as it actually is, and start R0. **Active stage:
   The R0 checklist names the concrete files to produce.
 - D028: GPU training runs on Kaggle; Lightning stays the free CPU studio; the Mac measures.
 - Duplicate banner removed from SCHEMA.md.
+- Three commits pushed to origin/main; tip is `279c4a8`. Working tree clean.
 
 ## Established evidence and decisions
 
@@ -44,7 +46,9 @@ No training, benchmark, commit, push, upload or remote-agent message was perform
 ## Verification
 
 `capture_env.py --check`: **passes** on 2026-09-26 (Apple M5 Max, macOS 26.6.2, AC power).
-Test suite: 57 passed on 2026-09-18 (last run before the review session); not re-run this session.
+Test suite: **57 passed on 2026-09-26** after fixing `tests/test_schema_check.py`, which the
+roadmap rewrite had broken (it parsed a column line the revised ROADMAP no longer has; it now reads
+the archived roadmap until R0 item 6 makes SCHEMA.md authoritative).
 
 ## Next actions (R0, in order)
 

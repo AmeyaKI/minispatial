@@ -318,3 +318,13 @@ visible from this session.
 ### Exact next step
 
 R0 item 1: remove the inert `lr` from the four configs, then the parameter manifest script.
+
+### Session close (2026-09-26)
+
+Three commits pushed: `a159355` (review session's work, unchanged), `8891775` (reconciliation,
+B002 resolved, D028), `279c4a8` (schema test pointed at the archived roadmap; the review session
+had left the suite failing and ran no tests). 57 tests pass. Tree clean. No training, no
+benchmark, no install. The user closed the session to start a fresh window; a handoff prompt
+covering state, settled decisions, hosts, the R0 queue and the four open approvals was given in
+chat and matches STATE.md. Next session: R0 item 1 (strip the inert task-level `lr` from the
+four configs).
