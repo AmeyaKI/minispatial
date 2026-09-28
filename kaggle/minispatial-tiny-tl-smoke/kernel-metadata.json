@@ -1,0 +1,15 @@
+{
+  "id": "ameyakiwalkar/minispatial-tiny-tl-smoke",
+  "title": "minispatial-tiny-tl-smoke",
+  "code_file": "minispatial-tiny-tl-smoke.py",
+  "language": "python",
+  "kernel_type": "script",
+  "is_private": "true",
+  "enable_gpu": "true",
+  "enable_internet": "true",
+  "machine_shape": "NvidiaTeslaT4",
+  "dataset_sources": [],
+  "competition_sources": [],
+  "kernel_sources": [],
+  "model_sources": []
+}

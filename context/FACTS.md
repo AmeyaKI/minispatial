@@ -115,3 +115,10 @@ The detailed distinctions and rationale are in `docs/reviews/2026-09-19-adversar
 | TESSERA README documents QAT variants and INT8 embedding outputs; this review does not establish integer end-to-end execution or matched flood accuracy | `verified` README only | https://github.com/ucam-eo/tessera | 2026-09-19 |
 | A community Prithvi-Tiny flood card describes DEM/precipitation inputs, not the exact tiny-TL/Sen1Floods11 task | `verified` model-card description only | https://huggingface.co/chrimerss/flood-foundation-prithvi-tiny | 2026-09-19 |
 | Exact tiny-TL/Core ML/MLX multi-method public duplication was not located | `search observation`, NOT proof of novelty/absence | Review search scope in docs/reviews/2026-09-19-adversarial-review.md | 2026-09-19 |
+
+## Execution hosts
+
+| Fact | Tag | Source | Date |
+| --- | --- | --- | --- |
+| Kaggle kernel limits (GPU session length, weekly GPU quota, GPU types beyond the `NvidiaTeslaT4` machine shape used in `kernel-metadata.json`, output size, background execution after the browser closes) | `unverified` | https://www.kaggle.com/docs/notebooks could not be read without a browser on 2026-09-27 (page is script-rendered); D028's "12-hour sessions, T4/P100" is this unverified statement. Read the page before relying on any of it in a run request. | 2026-09-27 |
+| `kernel-metadata.json` fields: `id`, `title`, `code_file`, `language` (python/r/rmarkdown), `kernel_type` (script/notebook), `is_private`, `enable_gpu`, `enable_internet`, `machine_shape` (e.g. `NvidiaTeslaT4`), `dataset_sources`, `competition_sources`, `kernel_sources`, `model_sources`; commands `kaggle kernels push -p <dir>`, `status <owner/slug>`, `output <owner/slug> -p <dir>` | `verified` | https://github.com/Kaggle/kaggle-api/blob/main/docs/kernels_metadata.md and docs/kernels.md, read 2026-09-27 | 2026-09-27 |

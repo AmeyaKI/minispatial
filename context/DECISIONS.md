@@ -664,3 +664,38 @@ validation only. Not created yet: needs Ameya's answer.
 **Consequence.** The random-init run is still **not approved** for training (STATE.md). This
 decision freezes the config so the run request can cite it. `tiny_random.yaml` also inherits the
 R0 item 1 removal of the inert task-level `lr`.
+
+---
+
+## 2026-09-27 — D030: Kaggle kernel design — pinned clone, lock-pinned install minus CUDA, scratch data, manifest
+
+**Context.** D028 made Kaggle the GPU host. A kernel needs to reproduce the repository state, the
+environment and the dataset inside a fresh container, then hand back checkpoints the Mac can trust.
+
+**Decision.** `scripts/make_kaggle_kernel.py` generates `kaggle/<slug>/` (tracked) for one training
+config. The kernel: clones `origin` at a **pinned commit**; installs `.[train]` under
+`kaggle/constraints.txt`, which pins every package from `uv.lock` **except torch / torchvision /
+nvidia-* / triton**, left as Kaggle's CUDA-matched build (a CPU/macOS torch pin would break the GPU);
+downloads Sen1Floods11 to `/kaggle/tmp` (scratch, not saved) rather than `/kaggle/working` (saved
+as output on every run); runs `train/train.py` with `--data.init_args.data_root` overridden on the
+command line so the YAML is unchanged; copies `results/runs/train/<name>/` to `/kaggle/working` with
+a SHA-256-per-file manifest (D026 discipline). `--smoke` adds `--max-epochs 1 --limit-batches 2` and
+a `-smoke` slug: a path check that produces no result. Metadata: private, `script`, GPU + internet,
+`machine_shape: NvidiaTeslaT4`. The Kaggle **username** is read from the token file; the key never is.
+
+**Consequences.**
+- The pinned commit must contain `kaggle/constraints.txt`, so a kernel is generated *after* the
+  commit that adds or changes the constraints, and the kernel folder is committed afterwards
+  (it is not needed inside the clone). The generator warns when the pinned commit is not on
+  `origin/main`; pushing needs approval (rule 5).
+- Installed versions on Kaggle may differ from the Mac (Kaggle's python selects lock markers; torch
+  is Kaggle's). The run record and manifest carry the actual versions (rule 7); a difference is
+  recorded, not hidden. Kaggle's own session/quota limits are recorded in FACTS.md as
+  `unverified` until read on the site; D028's "12-hour sessions" is that unverified statement.
+- Not built (scope): resuming a cut-off run (needs outputs re-attached as a dataset), uploading the
+  dataset as a Kaggle dataset (a side effect; only if the 1 GB download proves slow), pushing from
+  a script (the Kaggle CLI is not in the venv; approval pending).
+
+**Alternatives rejected.** Notebook kernel (`.ipynb`): harder to diff and generate; script does the
+same. Pinning torch: CUDA mismatch risk on an image we do not control. Data under `/kaggle/working`:
+1 GB of output per run. Unpinned pip install: irreproducible environment.
