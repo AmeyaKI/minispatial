@@ -1,8 +1,8 @@
 # STATE.md — current snapshot
 
-**Updated:** 2026-09-26 (session closed). **Session goal:** commit the review session's work and
-reconcile ROADMAP and context with the repository as it actually is. Done. **Active stage:** R0,
-item 1 not yet started; the next session picks it up from a handoff prompt.
+**Updated:** 2026-09-27 (session open). **Session goal:** execute the R0 queue in order (items 1–8 of
+the checklist below), committing one concern at a time; no training, no benchmark, no push without
+approval. **Active stage:** R0.
 
 ## Read first
 
