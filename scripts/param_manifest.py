@@ -49,6 +49,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 DEFAULT_CONFIGS = (
     "train/configs/tiny_tl.yaml",
+    "train/configs/tiny_random.yaml",  # identical architecture to tiny_tl; the manifest proves it
     "train/configs/100m_tl.yaml",
     "train/configs/unet_small.yaml",
 )

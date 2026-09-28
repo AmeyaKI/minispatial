@@ -7,7 +7,10 @@ under ``train/configs/`` (derived from the Hub-shipped config of the published
 checkpointing are TerraTorch's own -- the same code path that produced the
 teacher. This file adds only what the project's rules require:
 
-* ``--dry-run``  prints the resolved config and the environment stamp, runs nothing.
+* ``--dry-run``  prints the run record, the config file as written (NOT the CLI-resolved
+                 config; use ``terratorch fit -c <yaml> --print_config`` for that) and, for a
+                 config with ``backbone_pretrained: false``, builds the model with weight
+                 downloads blocked and asserts the encoder is random (D029). Runs nothing.
 * ``--resume``   continues from ``<dirpath>/last.ckpt`` (free studios restart on a
                  cycle, D021; the ModelCheckpoint callback writes ``last.ckpt``
                  every epoch).
@@ -64,6 +67,68 @@ def _env_stamp() -> dict:
     return stamp
 
 
+def init_check(cfg: dict) -> dict:
+    """Verify what the config's ``backbone_pretrained`` setting will actually do (D029).
+
+    For ``backbone_pretrained: false`` the model is BUILT here, with every route terratorch
+    uses to fetch or read pretrained Prithvi weights (``hf_hub_download`` and ``torch.load``
+    inside ``terratorch.models.backbones.prithvi_vit``) replaced by a function that raises.
+    If the build succeeds, no weights were loaded. The encoder is then built a second time
+    under a different torch seed; random initialisation must produce different tensors,
+    whereas a loaded checkpoint would produce identical ones. Both facts go in the record.
+
+    For ``backbone_pretrained: true`` nothing is built (that would download weights in a
+    dry run); the record just states that weights would load.
+    """
+    model_cfg = cfg["model"]["init_args"]
+    model_args = dict(model_cfg["model_args"])
+    pretrained = bool(model_args.get("backbone_pretrained", False))
+    report = {
+        "backbone_pretrained": pretrained,
+        "backbone_ckpt_path": model_args.get("backbone_ckpt_path"),
+        "pretrained_weights_would_load": pretrained or model_args.get("backbone_ckpt_path") is not None,
+    }
+    if report["pretrained_weights_would_load"]:
+        return report
+
+    import torch
+    import terratorch.models.backbones.prithvi_vit as pv
+    from terratorch.tasks import SemanticSegmentationTask
+
+    attempted = {"download": False}
+
+    def _blocked(*args, **kwargs):  # noqa: ANN002, ANN003
+        attempted["download"] = True
+        raise RuntimeError("D029 init check: pretrained-weight load attempted for a random-init config")
+
+    saved = (pv.hf_hub_download, pv.torch.load)
+    pv.hf_hub_download = _blocked
+    pv.torch.load = _blocked
+    try:
+        def _build(seed: int):
+            torch.manual_seed(seed)
+            return SemanticSegmentationTask(**model_cfg).model.encoder
+
+        enc_a = _build(0)
+        enc_b = _build(1)
+    finally:
+        pv.hf_hub_download, pv.torch.load = saved
+
+    differs = any(
+        not torch.equal(pa, pb)
+        for (na, pa), (_, pb) in zip(enc_a.state_dict().items(), enc_b.state_dict().items(), strict=True)
+        if pa.dtype.is_floating_point
+    )
+    report.update({
+        "download_attempted": attempted["download"],
+        "encoder_differs_across_seeds": differs,
+        "encoder_params": sum(p.numel() for p in enc_a.parameters()),
+    })
+    if attempted["download"] or not differs:
+        raise SystemExit(f"D029 init check FAILED: {report}")
+    return report
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -115,8 +180,9 @@ def main(argv: list[str] | None = None) -> int:
         "started_utc": datetime.now(UTC).isoformat(timespec="seconds"),
     }
     if args.dry_run:
+        record["init_check"] = init_check(cfg)
         print(json.dumps(record, indent=2))
-        print("\n[dry-run] resolved config:")
+        print("\n[dry-run] config file as written (CLI-resolved view: terratorch fit -c <yaml> --print_config):")
         print(yaml.safe_dump(cfg, sort_keys=False)[:2000], "...")
         return 0
 

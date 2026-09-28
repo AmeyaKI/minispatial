@@ -1,8 +1,8 @@
 {
   "kind": "param_manifest",
   "note": "Parameter counts per component, from the module terratorch fit builds from each YAML. Pretrained weights are NOT loaded (counts are weight-independent). This is not an artifact-size measurement; see SCHEMA.md artifact_size_MB.",
-  "generated_utc": "2026-09-28T05:25:53+00:00",
-  "git_commit": "d31a06d",
+  "generated_utc": "2026-09-28T05:29:04+00:00",
+  "git_commit": "78c4f2e",
   "versions": {
     "torch": "2.14.0",
     "terratorch": "1.2.13",
@@ -18,6 +18,35 @@
     {
       "config": "train/configs/tiny_tl.yaml",
       "config_sha256": "c509117a8cd0c2ba045adbbcc82b472c190fa9a9190f923728d6b895df340a02",
+      "model_factory": "EncoderDecoderFactory",
+      "backbone": "prithvi_eo_v2_tiny_tl",
+      "decoder": "UperNetDecoder",
+      "necks": [
+        "SelectIndices",
+        "ReshapeTokensToImage",
+        "LearnedInterpolateToPyramidal"
+      ],
+      "model_class": "PixelWiseModel",
+      "weights_loaded": false,
+      "components": {
+        "encoder": 5634050,
+        "neck": 166320,
+        "decoder": 7219200,
+        "head": 514
+      },
+      "component_share_pct": {
+        "encoder": 43.27,
+        "neck": 1.28,
+        "decoder": 55.45,
+        "head": 0.0
+      },
+      "total_params": 13020084,
+      "trainable_params": 13020084,
+      "total_params_M": 13.02
+    },
+    {
+      "config": "train/configs/tiny_random.yaml",
+      "config_sha256": "3964b4248e65e2b3661c6a92cee6bd1fb8379e41fa0569ee8fdc97fbe1e7d661",
       "model_factory": "EncoderDecoderFactory",
       "backbone": "prithvi_eo_v2_tiny_tl",
       "decoder": "UperNetDecoder",

@@ -611,3 +611,56 @@ before a run (push approval per rule 5). Training on Kaggle uses `precision: 16-
 published recipe does; CPU fallback runs use 32 and mark the difference. Trained checkpoints are
 pulled back to the Mac (`artifacts/checkpoints/`, gitignored) with a checksum manifest tracked
 under `results/runs/`, mirroring D026.
+
+---
+
+## 2026-09-27 — D029: `tiny_random.yaml` is the pretraining control; its diff from `tiny_tl.yaml` is frozen
+
+**Context.** D027 replaced the U-Net as the pretraining ablation with "the identical tiny model,
+randomly initialised": the U-Net changes architecture, capacity and initialisation together, so
+its result cannot be attributed to pretraining. ROADMAP R0 requires a config identical to
+`tiny_tl.yaml` except for initialisation, with its own output paths, a recorded seed, and a check
+that no pretrained weights load.
+
+**Decision.** `train/configs/tiny_random.yaml` is generated from `tiny_tl.yaml` and may differ in
+exactly these four values, each marked `# RANDOM-INIT:` in the file and enforced by
+`tests/test_tiny_random_config.py` (any other difference fails the suite):
+
+| Path | `tiny_tl.yaml` | `tiny_random.yaml` |
+| --- | --- | --- |
+| `model.init_args.model_args.backbone_pretrained` | `true` | `false` |
+| `trainer.logger.init_args.name` | `tiny_tl` | `tiny_random` |
+| `trainer.callbacks[ModelCheckpoint].init_args.dirpath` | `results/runs/train/tiny_tl/checkpoints` | `results/runs/train/tiny_random/checkpoints` |
+| `trainer.default_root_dir` | `results/runs/train/tiny_tl` | `results/runs/train/tiny_random` |
+
+Everything else is byte-identical: `seed_everything: 0`, data, RandomCrop(224) + flips, native
+512 validation, CE loss, AdamW 5e-5 / wd 0.05, cosine T_max 50, 50 epochs, early stopping
+patience 20, `16-mixed`. The parameter manifest (`results/runs/param_manifest.json`) lists both
+configs with identical component counts, which is the architecture-identity check.
+
+**The initialisation check.** `train/train.py --dry-run` now runs `init_check(cfg)`. For
+`backbone_pretrained: false` it builds the model with terratorch's two weight-loading routes
+(`hf_hub_download` and `torch.load` inside `terratorch.models.backbones.prithvi_vit`, the only
+code path under `if pretrained:` in terratorch 1.2.13) replaced by a function that raises, then
+builds the encoder again under a different torch seed and asserts the tensors differ (a loaded
+checkpoint would be identical across seeds). The record carries `pretrained_weights_would_load`,
+`download_attempted` and `encoder_differs_across_seeds`. Run 2026-09-27 on the Mac: all three as
+expected, encoder 5,634,050 parameters. The test suite also proves the guard fires for a
+`backbone_pretrained: true` build, so a passing check is not vacuous. For pretrained configs the
+dry run does not build (it would download) and only reports that weights would load.
+
+**Alternatives rejected.** Diffing the YAML text only (would not catch a terratorch default that
+quietly loads weights); re-using the tiny_tl output paths with a suffix (a `--resume` on the wrong
+`last.ckpt` would silently continue the other run); a different seed for the random run (would
+confound initialisation with data order).
+
+**Open, for the R0 run request (item 8).** Whether the random-init model gets a second,
+higher-learning-rate run selected on validation, mirroring D025 for the U-Net. The published
+5e-5 is a fine-tuning rate; at 50 epochs × 15 batches a random encoder may be undertrained by
+construction, which the review (criticism 2) flags. If approved, that run would be a second
+`# RANDOM-INIT` file with only `optimizer.init_args.lr` changed, and the choice made on
+validation only. Not created yet: needs Ameya's answer.
+
+**Consequence.** The random-init run is still **not approved** for training (STATE.md). This
+decision freezes the config so the run request can cite it. `tiny_random.yaml` also inherits the
+R0 item 1 removal of the inert task-level `lr`.
