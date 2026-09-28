@@ -91,3 +91,25 @@ def test_init_check_blocking_actually_intercepts_a_pretrained_build():
             SemanticSegmentationTask(**cfg)
     finally:
         pv.hf_hub_download, pv.torch.load = saved
+
+
+RANDOM_B = REPO_ROOT / "train" / "configs" / "tiny_random_lr1e-3.yaml"
+
+#: Run 2b (approved 2026-09-28): differs from tiny_random.yaml only in lr and its output paths.
+ALLOWED_DIFFS_B = {
+    "optimizer.init_args.lr",
+    "trainer.logger.init_args.name",
+    "trainer.callbacks[ModelCheckpoint].init_args.dirpath",
+    "trainer.default_root_dir",
+}
+
+
+def test_random_lr1e3_differs_from_random_only_in_lr_and_paths():
+    a = dict(_flatten(yaml.safe_load(RANDOM.read_text())))
+    b = dict(_flatten(yaml.safe_load(RANDOM_B.read_text())))
+    assert a.keys() == b.keys()
+    differing = {k for k in a if a[k] != b[k]}
+    assert differing == ALLOWED_DIFFS_B, f"unexpected diff: {differing ^ ALLOWED_DIFFS_B}"
+    assert a["optimizer.init_args.lr"] == 5.0e-05 and b["optimizer.init_args.lr"] == 1.0e-03
+    assert b["model.init_args.model_args.backbone_pretrained"] is False
+    assert "tiny_random_lr1e-3" in b["trainer.default_root_dir"]

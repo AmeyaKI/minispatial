@@ -1,0 +1,139 @@
+# minispatial R2 — the pretraining CONTROL, second recipe (run 2b, approved 2026-09-28; D029 open item).
+#
+# Generated from tiny_random.yaml and identical to it except the lines marked `# RANDOM-INIT-B:`
+# (tests/test_tiny_random_config.py enforces the allowed diff). The ONE experimental difference
+# from tiny_random.yaml is optimizer.init_args.lr = 1e-3, the conventional from-scratch AdamW rate,
+# mirroring D025's CONTROL-B for the U-Net: 5e-5 is a fine-tuning rate and a randomly initialised
+# encoder may be undertrained by construction at that rate. The better of tiny_random and this run
+# is chosen on VALIDATION mIoU only; both are reported. Test and Bolivia never select.
+#
+# Run with:  .venv/bin/python train/train.py --config train/configs/tiny_random_lr1e-3.yaml
+seed_everything: 0
+trainer:
+  accelerator: auto
+  strategy: auto
+  devices: auto
+  num_nodes: 1
+  precision: 16-mixed
+  logger:
+    class_path: lightning.pytorch.loggers.CSVLogger        # DIFF: Hub uses default TensorBoard; CSV is grep-able and lands under results/runs (rule "nothing important only in stdout")
+    init_args:
+      save_dir: results/runs/train
+      name: tiny_random_lr1e-3                             # RANDOM-INIT-B: own log directory
+  callbacks:
+    - class_path: lightning.pytorch.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: epoch
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        monitor: val/loss
+        min_delta: 0.0
+        patience: 20
+        mode: min
+        strict: true
+        check_finite: true
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint  # DIFF: explicit checkpointing; Hub relied on Lightning defaults. Needed because free studios restart on a cycle (D021) — every_n_epochs=1 + save_last lets `--resume` continue.
+      init_args:
+        dirpath: results/runs/train/tiny_random_lr1e-3/checkpoints   # RANDOM-INIT-B: own checkpoints
+        filename: "epoch{epoch:02d}-valloss{val/loss:.4f}"
+        auto_insert_metric_name: false
+        monitor: val/loss
+        mode: min
+        save_top_k: 1
+        save_last: true
+        every_n_epochs: 1
+  max_epochs: 50
+  check_val_every_n_epoch: 2
+  log_every_n_steps: 10
+  enable_checkpointing: true
+  default_root_dir: results/runs/train/tiny_random_lr1e-3      # RANDOM-INIT-B
+  deterministic: warn                                        # DIFF: not set in Hub; asks CUDA for deterministic kernels where available, warns otherwise
+
+model:
+  class_path: terratorch.tasks.SemanticSegmentationTask
+  init_args:
+    model_args:
+      backbone_pretrained: false                             # RANDOM-INIT: the one experimental difference from tiny_tl.yaml
+      backbone: prithvi_eo_v2_tiny_tl                        # DIFF: the model under study (Hub: prithvi_eo_v2_300_tl)
+      decoder: UperNetDecoder
+      decoder_channels: 256
+      num_classes: 2
+      rescale: true
+      backbone_bands:
+        - BLUE
+        - GREEN
+        - RED
+        - NIR_NARROW
+        - SWIR_1
+        - SWIR_2
+      head_dropout: 0.1
+      necks:
+        - name: SelectIndices
+          indices: [2, 5, 8, 11]                             # DIFF: tiny-TL has 12 blocks (verified 2026-09-15); Hub's [5,11,17,23] index the 300M's 24 blocks. Same relative depths (quarter points).
+        - name: ReshapeTokensToImage
+        - name: LearnedInterpolateToPyramidal
+    model_factory: EncoderDecoderFactory
+    loss: ce
+    ignore_index: -1
+    freeze_backbone: false
+    freeze_decoder: false
+    plot_on_val: 10
+
+data:
+  class_path: terratorch.datamodules.Sen1Floods11NonGeoDataModule
+  init_args:
+    data_root: data                                          # DIFF: local path (D016)
+    batch_size: 16
+    num_workers: 4                                           # DIFF: 4 cores on the studio (Hub: 8)
+    bands:
+      - BLUE
+      - GREEN
+      - RED
+      - NIR_NARROW
+      - SWIR_1
+      - SWIR_2
+    train_transform:
+      - class_path: albumentations.RandomCrop
+        init_args:
+          height: 224
+          width: 224
+          p: 1.0
+      - class_path: albumentations.HorizontalFlip
+        init_args:
+          p: 0.5
+      - class_path: albumentations.VerticalFlip
+        init_args:
+          p: 0.5
+      - class_path: albumentations.pytorch.ToTensorV2
+        init_args:
+          transpose_mask: false
+          p: 1.0
+    val_transform:                                           # native 512, no resize (D023)
+      - class_path: albumentations.pytorch.ToTensorV2
+        init_args:
+          transpose_mask: false
+          p: 1.0
+    test_transform:
+      - class_path: albumentations.pytorch.ToTensorV2
+        init_args:
+          transpose_mask: false
+          p: 1.0
+    drop_last: true
+    constant_scale: 0.0001
+    no_data_replace: 0.0
+    no_label_replace: -1
+    use_metadata: false
+
+optimizer:                                                   # DIFF: the ONLY learning rate in this file. The Hub config also carried a task-level `model.init_args.lr`, which LightningCLI ignores whenever this block exists; removed in R0 (2026-09-27) so the file says what it does.
+  class_path: torch.optim.AdamW
+  init_args:
+    lr: 1.0e-03                                              # RANDOM-INIT-B: from-scratch rate; the only experimental diff from tiny_random.yaml
+    betas: [0.9, 0.999]
+    eps: 1.0e-08
+    weight_decay: 0.05
+
+lr_scheduler:
+  class_path: torch.optim.lr_scheduler.CosineAnnealingLR
+  init_args:
+    T_max: 50
+    eta_min: 0
