@@ -21,6 +21,9 @@
 !/results/runs/logits_test_native512_manifest.json
 !/results/runs/timing_tiny_tl_cpu.json
 !/results/runs/param_manifest.json
+!/results/runs/mndwi_threshold.json
+!/results/runs/mndwi_eval_test.json
+!/results/runs/mndwi_eval_bolivia.json
 
 # Model artifacts
 *.mlpackage
