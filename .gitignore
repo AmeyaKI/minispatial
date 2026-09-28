@@ -20,6 +20,7 @@
 !/results/runs/teacher_eval_native.json
 !/results/runs/logits_test_native512_manifest.json
 !/results/runs/timing_tiny_tl_cpu.json
+!/results/runs/param_manifest.json
 
 # Model artifacts
 *.mlpackage

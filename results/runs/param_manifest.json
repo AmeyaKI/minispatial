@@ -1,0 +1,102 @@
+{
+  "kind": "param_manifest",
+  "note": "Parameter counts per component, from the module terratorch fit builds from each YAML. Pretrained weights are NOT loaded (counts are weight-independent). This is not an artifact-size measurement; see SCHEMA.md artifact_size_MB.",
+  "generated_utc": "2026-09-28T05:25:53+00:00",
+  "git_commit": "d31a06d",
+  "versions": {
+    "torch": "2.14.0",
+    "terratorch": "1.2.13",
+    "lightning": "2.6.5"
+  },
+  "python": "3.12.12",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "component_definition": {
+    "prithvi": "terratorch PixelWiseModel attributes encoder / neck / decoder / head",
+    "unet_small": "encoder = enc + bottleneck; neck = none; decoder = dec; head = 1x1 conv"
+  },
+  "models": [
+    {
+      "config": "train/configs/tiny_tl.yaml",
+      "config_sha256": "c509117a8cd0c2ba045adbbcc82b472c190fa9a9190f923728d6b895df340a02",
+      "model_factory": "EncoderDecoderFactory",
+      "backbone": "prithvi_eo_v2_tiny_tl",
+      "decoder": "UperNetDecoder",
+      "necks": [
+        "SelectIndices",
+        "ReshapeTokensToImage",
+        "LearnedInterpolateToPyramidal"
+      ],
+      "model_class": "PixelWiseModel",
+      "weights_loaded": false,
+      "components": {
+        "encoder": 5634050,
+        "neck": 166320,
+        "decoder": 7219200,
+        "head": 514
+      },
+      "component_share_pct": {
+        "encoder": 43.27,
+        "neck": 1.28,
+        "decoder": 55.45,
+        "head": 0.0
+      },
+      "total_params": 13020084,
+      "trainable_params": 13020084,
+      "total_params_M": 13.02
+    },
+    {
+      "config": "train/configs/100m_tl.yaml",
+      "config_sha256": "aa329403e8ceb853d0224b21736525b5b799bba8d5ddf08101e1f2da98c8df78",
+      "model_factory": "EncoderDecoderFactory",
+      "backbone": "prithvi_eo_v2_100_tl",
+      "decoder": "UperNetDecoder",
+      "necks": [
+        "SelectIndices",
+        "ReshapeTokensToImage",
+        "LearnedInterpolateToPyramidal"
+      ],
+      "model_class": "PixelWiseModel",
+      "weights_loaded": false,
+      "components": {
+        "encoder": 86237186,
+        "neck": 2655936,
+        "decoder": 9394176,
+        "head": 514
+      },
+      "component_share_pct": {
+        "encoder": 87.74,
+        "neck": 2.7,
+        "decoder": 9.56,
+        "head": 0.0
+      },
+      "total_params": 98287812,
+      "trainable_params": 98287812,
+      "total_params_M": 98.288
+    },
+    {
+      "config": "train/configs/unet_small.yaml",
+      "config_sha256": "d27c40bebcc2ca6c67ee3a415d90cb349092b6eb33fc414c6040f48f69866fce",
+      "model_factory": "UNetSmallFactory",
+      "backbone": null,
+      "decoder": "UNetSmall (built-in)",
+      "necks": [],
+      "model_class": "_Wrapped",
+      "weights_loaded": false,
+      "components": {
+        "encoder": 1180192,
+        "neck": 0,
+        "decoder": 784320,
+        "head": 34
+      },
+      "component_share_pct": {
+        "encoder": 60.07,
+        "neck": 0.0,
+        "decoder": 39.92,
+        "head": 0.0
+      },
+      "total_params": 1964546,
+      "trainable_params": 1964546,
+      "total_params_M": 1.965
+    }
+  ]
+}
