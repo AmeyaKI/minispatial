@@ -1,16 +1,18 @@
-"""From-scratch UNet control at matched parameter count (<= 2M).
+"""From-scratch UNet: the practical compact alternative (<= 2M parameters).
 
 Plain ``Conv2d`` / ``BatchNorm2d`` / ``ReLU`` / bilinear upsampling only, no
 pretraining, trained on the same data, loss, epochs and augmentations as
 tiny-TL through the *same* TerraTorch config (only ``model_factory`` and
-``model_args`` change). It is the non-foundation baseline (ROADMAP section 9):
-it answers whether pretraining bought anything at ~5M parameters, and either
-answer is content.
+``model_args`` change). Per ROADMAP R0-R2 (D027) it answers "which compact
+system should an analyst deploy?"; it does NOT isolate pretraining and is
+NOT parameter-matched: the deployed tiny segmentation model is ~13.0 M
+parameters (results/runs/param_manifest.json), of which the backbone is
+~5.6 M. The same-architecture random-init tiny run is the pretraining control.
 
 Registered as ``UNetSmallFactory`` in TerraTorch's ``MODEL_FACTORY_REGISTRY``
 so ``SemanticSegmentationTask`` drives it unchanged. The parameter count is
-asserted at build time against ``max_params`` so the "matched size" claim is
-enforced by code, not by a docstring.
+asserted at build time against ``max_params`` so the size budget is enforced
+by code, not by a docstring.
 
 Verified 2026-09-15 by counting: ``widths=(16, 32, 64, 128)`` gives 1.965 M
 parameters; ``(24, 48, 96, 192)`` gives 4.417 M and would exceed the budget.
