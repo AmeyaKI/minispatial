@@ -1,0 +1,74 @@
+# Calibration set for calibrated PTQ (EXPERIMENT_PROTOCOL.md section 9). PROPOSED, 2026-09-27.
+#
+# Derivation (reproducible): the 252 training chip ids from
+# data/v1.1/splits/flood_handlabeled/flood_train_data.txt, sorted; python `random.Random(0).sample(ids, 64)`;
+# result sorted. Train only -- never valid, test or Bolivia. The same list is used for every
+# calibrated method and precision so methods are compared on equal data. A method that needs a
+# different count records the deviation on its row (SCHEMA.md `calibration_set`).
+#
+# The count (64) is a proposed protocol parameter awaiting approval before the first calibrated
+# run; if it changes, regenerate this file by the same recipe and log the change in DECISIONS.md.
+Ghana_103272
+Ghana_128663
+Ghana_154838
+Ghana_194723
+Ghana_26376
+Ghana_597288
+Ghana_61925
+Ghana_7496
+India_136196
+India_177319
+India_566697
+India_624341
+India_804466
+India_91379
+Mekong_1191208
+Mekong_1396181
+Mekong_16233
+Mekong_213094
+Mekong_52610
+Nigeria_35845
+Nigeria_439488
+Nigeria_952958
+Pakistan_246510
+Pakistan_246718
+Pakistan_474121
+Pakistan_712873
+Pakistan_760290
+Paraguay_12870
+Paraguay_149787
+Paraguay_179624
+Paraguay_224845
+Paraguay_225187
+Paraguay_247656
+Paraguay_36146
+Paraguay_482517
+Paraguay_48673
+Paraguay_605682
+Paraguay_822142
+Somalia_1068756
+Somalia_195014
+Somalia_230192
+Somalia_32375
+Somalia_7931
+Spain_2523247
+Spain_337094
+Spain_6199994
+Spain_716716
+Spain_8104659
+Spain_8199661
+Sri-Lanka_178753
+Sri-Lanka_233609
+Sri-Lanka_551926
+Sri-Lanka_748447
+Sri-Lanka_883641
+USA_1068362
+USA_170264
+USA_347609
+USA_348639
+USA_375183
+USA_438959
+USA_604222
+USA_638521
+USA_806273
+USA_994009

@@ -153,8 +153,8 @@ input is the *parity reference*. Its test/Bolivia metrics are the *reference row
 **Parity set.** Pixel disagreement and max-abs logit difference are computed on a fixed list of
 chips that is committed before the first artifact is measured and never changed. *Proposed:*
 10 chips from the **valid** split, chosen deterministically (sorted chip ids, every 9th starting
-at index 0), written to `minispatial/bench/parity_chips.txt` in R0 item 6, replacing the
-224-tile-based `parity_tiles.txt` which native 512 made obsolete. Using valid chips keeps test
+at index 0), written to `minispatial/bench/parity_chips.txt` (done in R0 item 6, 2026-09-27; it replaced
+the 224-tile-based `parity_tiles.txt` which native 512 made obsolete). Using valid chips keeps test
 untouched even though parity uses no labels.
 
 | Concept | Question | Compared against | Metric | Threshold | Consequence |

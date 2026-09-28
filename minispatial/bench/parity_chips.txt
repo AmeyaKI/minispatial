@@ -1,0 +1,21 @@
+# Fixed parity chip set (EXPERIMENT_PROTOCOL.md section 8). Chosen ONCE, 2026-09-27, never changed:
+# comparing parity across artifacts measured on different chips compares the chips, not the artifacts.
+#
+# Derivation (reproducible): the 89 validation chip ids from
+# data/v1.1/splits/flood_handlabeled/flood_valid_data.txt, sorted, every 9th starting at index 0
+# -> 10 chips spanning 8 regions. Validation, not test, so test stays untouched even though parity
+# uses no labels. Whole 512x512 chips at native geometry (D023); the earlier 224-tile scheme
+# (parity_tiles.txt) is obsolete and was removed in R0 item 6.
+#
+# Status: PROPOSED default per EXPERIMENT_PROTOCOL.md; becomes fixed when Ameya approves the parity
+# thresholds. Format: one chip id per line.
+Ghana_1033830
+Ghana_868803
+India_533192
+Mekong_293769
+Pakistan_210595
+Paraguay_252217
+Paraguay_934240
+Spain_7604243
+Sri-Lanka_612594
+USA_308150

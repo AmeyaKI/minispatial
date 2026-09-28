@@ -34,8 +34,9 @@ An artifact is not done when it converts. It is done when:
 1. `assert_shim_installed()` passed before conversion;
 2. `assert_no_conv3d_in_program()` passed — a surviving Conv3d means the Neural Engine row would
    measure a different graph than the one claimed, and nothing downstream would reveal it;
-3. parity has been run against the fp32 PyTorch reference on the fixed tiles in
-   `minispatial/bench/parity_tiles.txt`, and the three parity numbers are recorded;
+3. parity has been run against the fp32 PyTorch reference on the fixed whole-chip set in
+   `minispatial/bench/parity_chips.txt` (native 512, D023), and the three parity numbers plus
+   `parity_status` are recorded; compression loss is reported separately as `compression_delta_pp`;
 4. `quant_coverage_pct` is computed, not assumed — MLX's `nn.quantize` reaches Linear and Embedding
    only, so an "int4 MLX" artifact is partly fp16 and the row must say so.
 

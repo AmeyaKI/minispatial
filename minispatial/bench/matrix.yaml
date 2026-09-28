@@ -1,59 +1,86 @@
 # Measurement matrix consumed by minispatial/bench/run.py.
 #
-# SCAFFOLD ONLY -- no cell here has been measured. Phase 0 does not run the
-# bench. Cells are enumerated so the schema and the runner can be developed
-# against a realistic shape, and so that the size of the M4 matrix is visible
-# early enough to cut it deliberately (ROADMAP section 11 cut order:
-# burn scars -> MLX quantized rows for 100M -> QAT -> 100M entirely).
+# Reconciled with ROADMAP R1-R2 on 2026-09-27 (R0 item 6, D027). NO CELL HERE HAS BEEN MEASURED.
+# Only the cells R1 and R2 actually call for are enumerated; everything the old M1-M4 grid listed
+# (100M, MLX, reconstruction PTQ, QAT, burn scars) is under `deferred:` and is not a work order.
+# Cells that fail to convert are recorded as outcomes on the row (SCHEMA.md), not dropped.
+#
+# Column definitions: context/SCHEMA.md. Measurement rules: context/EXPERIMENT_PROTOCOL.md.
+
+protocol: native512                 # D023: whole 512 chips, no resize, no tiling. Resolved; not an open question.
+task: flood
 
 models:
   - id: prithvi_tiny_tl_sen1floods11
     short: tiny
-    status: not_trained          # M1
-  - id: prithvi_100m_tl_sen1floods11
-    short: 100m
-    status: not_trained          # M1, should-have
-  - id: prithvi_300m_tl_sen1floods11
-    short: 300m
-    status: published            # practitioner baseline, torch_mps fp16
-  - id: unet_small
+    config: train/configs/tiny_tl.yaml
+    status: not_trained             # R1
+    role: model_under_study
+  - id: prithvi_tiny_random_sen1floods11
+    short: tiny_random
+    config: train/configs/tiny_random.yaml
+    status: not_trained             # R2; training not yet approved (D029)
+    role: pretraining_control       # accuracy reference rows only: same architecture as tiny, so same latency
+  - id: unet_small_sen1floods11
     short: unet
-    status: not_trained          # non-foundation control
+    config: [train/configs/unet_small.yaml, train/configs/unet_small_lr1e-3.yaml]   # D025; pick on val
+    status: not_trained             # R2
+    role: practical_alternative
+  - id: mndwi_threshold
+    short: mndwi
+    status: threshold_selected      # results/runs/mndwi_threshold.json (val), held-out eval in R2
+    role: spectral_baseline
+  - id: prithvi_300m_tl_sen1floods11
+    short: teacher
+    status: published               # native-512 test row exists: results/runs/teacher_eval_native.json
+    role: system_reference
 
-task: flood
+# ---------------------------------------------------------------------------------------------
+# R1: one complete float segmentation path. Gate: real-input parity + measured behaviour.
+# ---------------------------------------------------------------------------------------------
+r1_cells:
+  - {model: tiny, runtime: torch_cpu, compute_units_requested: n/a, weight_precision: fp32, quant_method: none, role: parity_reference}
+  - {model: tiny, runtime: coreml, compute_units_requested: CPU_AND_NE, weight_precision: fp16, quant_method: none}
+  - {model: tiny, runtime: coreml, compute_units_requested: CPU_AND_GPU, weight_precision: fp16, quant_method: none}
+  - {model: tiny, runtime: coreml, compute_units_requested: CPU_ONLY,   weight_precision: fp16, quant_method: none}
 
-runtimes:
-  - runtime: coreml
-    compute_units: [CPU_AND_NE, CPU_AND_GPU, CPU_ONLY]
-  - runtime: mlx
-    compute_units: [n/a]
-  - runtime: torch_mps
-    compute_units: [n/a]
+# ---------------------------------------------------------------------------------------------
+# R2: fair alternatives and vendor compression. Same tiny checkpoint for every compressed cell.
+# Compute units for compressed cells: CPU_AND_NE first; other units only if R1 shows they matter.
+# ---------------------------------------------------------------------------------------------
+r2_cells:
+  # accuracy references for the controls (PyTorch, native 512, from their own checkpoints)
+  - {model: tiny_random, runtime: torch_cpu, compute_units_requested: n/a, weight_precision: fp32, quant_method: none, role: parity_reference}
+  - {model: unet,        runtime: torch_cpu, compute_units_requested: n/a, weight_precision: fp32, quant_method: none, role: parity_reference}
+  - {model: mndwi,       runtime: numpy,     compute_units_requested: n/a, weight_precision: fp32, quant_method: none, role: spectral_baseline}
+  # the practical alternative as a deployed artifact, so "which compact system to deploy" has a latency
+  - {model: unet, runtime: coreml, compute_units_requested: CPU_AND_NE, weight_precision: fp16, quant_method: none}
+  # vendor data-free (round-to-nearest) compression of tiny -- measured FIRST (rule 4)
+  - {model: tiny, runtime: coreml, compute_units_requested: CPU_AND_NE, weight_precision: int8, quant_method: coreml_linear_pc,          calibration_set: none}
+  - {model: tiny, runtime: coreml, compute_units_requested: CPU_AND_NE, weight_precision: int4, quant_method: coreml_linear_pb32,        calibration_set: none}
+  - {model: tiny, runtime: coreml, compute_units_requested: CPU_AND_NE, weight_precision: int4, quant_method: coreml_palettize_4b_g16,   calibration_set: none}
+  # vendor calibrated compression of tiny -- or a documented incompatibility (rule 4)
+  - {model: tiny, runtime: coreml, compute_units_requested: CPU_AND_NE, weight_precision: int8, quant_method: coreml_gptq_int8, calibration_set: minispatial/bench/calibration_chips.txt}
+  - {model: tiny, runtime: coreml, compute_units_requested: CPU_AND_NE, weight_precision: int4, quant_method: coreml_gptq_int4, calibration_set: minispatial/bench/calibration_chips.txt}
+  - {model: tiny, runtime: coreml, compute_units_requested: CPU_AND_NE, weight_precision: int8, quant_method: coreml_w8a8, activation_precision: int8, calibration_set: minispatial/bench/calibration_chips.txt, note: stretch; only if supported for this graph}
 
-precisions:
-  - weight_precision: fp32
-    quant_method: none
-    role: parity_reference
-  - weight_precision: fp16
-    quant_method: none
-  - weight_precision: int8
-    quant_method: coreml_linear_pc
-  - weight_precision: int4
-    quant_method: coreml_linear_pb32
-  - weight_precision: int4
-    quant_method: coreml_palettize_4b_g16
-  - weight_precision: int8
-    quant_method: recon_int8       # M3, ours
-  - weight_precision: int4
-    quant_method: recon_int4       # M3, ours
-  - weight_precision: int4
-    quant_method: qat_int4         # M4, ours, tiny only
-  - weight_precision: int8
-    quant_method: mlx_affine_g64
-  - weight_precision: int4
-    quant_method: mlx_affine_g64
+# ---------------------------------------------------------------------------------------------
+# Deferred (ROADMAP section 7). Listed so the omission is visible and deliberate. Not work orders.
+# ---------------------------------------------------------------------------------------------
+deferred:
+  - {what: prithvi_100m_tl_sen1floods11, why: "100M experiments deferred until R1-R2 succeed"}
+  - {what: teacher torch_mps fp16 latency row, why: "system reference; measure only if an R4 recommendation needs it"}
+  - {what: mlx runtime (mlx_affine_g64), why: "second runtime no longer a gate; one valid runtime suffices"}
+  - {what: recon_int8 / recon_int4, why: "R3 option, conditional on an observed low-bit degradation"}
+  - {what: qat_int4, why: "R3 option, same condition"}
+  - {what: compact decoder ablation, why: "R3 option, conditional on decoder dominating measured latency"}
+  - {what: burnscars task, why: "out of scope"}
+  - {what: on-device (iPhone/iPad) rows, why: "requires a named physical device; B001 xctrace blocker"}
 
-protocol:
+# ---------------------------------------------------------------------------------------------
+# Timing/memory protocol (EXPERIMENT_PROTOCOL.md section 7). Proposed defaults, fixed on approval.
+# ---------------------------------------------------------------------------------------------
+measurement:
   batch_size: 1
   warmup_iters: 10
   timed_iters: 100
@@ -61,4 +88,6 @@ protocol:
   sustained_window_seconds: 20
   fresh_process_runs: 3
   rss_sample_ms: 5
-  inference_mode: null    # 'resize' or 'tile' -- OPEN QUESTION, see context/STATE.md
+  power_state_required: ac
+  parity_chips: minispatial/bench/parity_chips.txt
+  thresholds: minispatial/bench/thresholds.yaml   # parity/stability tiers still null; set before the first quantized cell
