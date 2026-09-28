@@ -60,7 +60,6 @@ model:
     model_factory: UNetSmallFactory                          # CONTROL
     loss: ce
     ignore_index: -1
-    lr: 0.001
     freeze_backbone: false
     freeze_decoder: false
     plot_on_val: 10
@@ -110,7 +109,7 @@ data:
     no_label_replace: -1
     use_metadata: false
 
-optimizer:
+optimizer:                                                   # DIFF: the ONLY learning rate in this file. The Hub config also carried a task-level `model.init_args.lr`, which LightningCLI ignores whenever this block exists; removed in R0 (2026-09-27) so the file says what it does.
   class_path: torch.optim.AdamW
   init_args:
     lr: 5.0e-05

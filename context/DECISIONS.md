@@ -496,6 +496,7 @@ lines, each marked `# DIFF:` in the file:
 | `deterministic` | unset | `warn` | deterministic kernels where available |
 | `data_root` | IBM cluster path | `data` | D016 |
 | `num_workers` | 8 | 4 | studio has 4 cores |
+| `model.init_args.lr` | `0.001` (present, but inert: LightningCLI replaces `configure_optimizers` whenever a top-level `optimizer` block exists, so the task-level rate is never read) | removed | **Added 2026-09-27 (R0).** The Hub config carried both rates; ours did too until R0. Dropping the dead field leaves the optimizer block's `5e-5` as the only learning rate in the file. Resolved behaviour unchanged; verified 2026-09-27 with `terratorch fit --print_config` on all four files: the task still shows its class default `lr: 0.001` and the optimizer block shows `5e-5` (`1e-3` for CONTROL-B). Note `train.py --dry-run` echoes the YAML file, not the CLI-resolved config. |
 
 Unchanged on purpose: `RandomCrop(224)` + flips for training, **no resize** at val/test (native
 512, D023), batch 16, `drop_last`, `constant_scale 1e-4`, `head_dropout 0.1`, UperNet 256, CE loss
