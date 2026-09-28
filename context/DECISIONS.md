@@ -699,3 +699,35 @@ a `-smoke` slug: a path check that produces no result. Metadata: private, `scrip
 **Alternatives rejected.** Notebook kernel (`.ipynb`): harder to diff and generate; script does the
 same. Pinning torch: CUDA mismatch risk on an image we do not control. Data under `/kaggle/working`:
 1 GB of output per run. Unpinned pip install: irreproducible environment.
+
+---
+
+## 2026-09-28 — D031: Approvals granted for the R1/R2 run request and the R0 proposals
+
+**Decision (Ameya, 2026-09-28, "approve all, push and add kaggle cli").** All nine items in the
+2026-09-27 session close are approved: (1) push of the session-close commit — done; (2) **standing
+push approval for R0–R2**, each push preceded by the secret / personal-framing scan shown in chat;
+(3) Kaggle CLI as a dev dependency — done (`kaggle>=2.2.4` in the `dev` dependency group);
+(4) submit the smoke kernel; (5) the random-init tiny run (run 2); (6) **run 2b**, random-init at
+lr 1e-3 — config added as `train/configs/tiny_random_lr1e-3.yaml` (diff from `tiny_random.yaml`
+pinned by test; selection on validation only); (7) three seeds deferred until seed-0 results and
+per-run cost exist; (8) the proposed protocol parameters are now **fixed**: the 10-chip validation
+parity set (`minispatial/bench/parity_chips.txt`), the 64-chip seeded train calibration set
+(`minispatial/bench/calibration_chips.txt`), and the batch-1 timing defaults in
+`EXPERIMENT_PROTOCOL.md` §7 / `matrix.yaml`; (9) the history rewrite removing personal planning notes
+from the two old commits.
+
+**Status of the two that could not be completed in-session.**
+- *Kaggle submission (4):* blocked — the legacy API key in `~/.kaggle/kaggle.json` is accepted by
+  the CLI but the server returns HTTP 401 on the first call. Recorded as B003. Needs a regenerated
+  key or `kaggle auth login` by Ameya; no run was submitted.
+- *History rewrite (9):* the tree-filter script was written and verified on the oldest roadmap
+  (the planning sections removed, `HANDOFF_CONTEXT.md` dropped, no other file affected), but running
+  `git filter-branch` was denied by the session's permission classifier as a destructive git
+  action. Ameya runs it (commands in BLOCKERS.md B004). Every commit after the root will change
+  hash; the Colab notebook pin, the Kaggle kernel pin and the hashes quoted in STATE.md must be
+  regenerated afterwards. Kernel generation for the real runs waits until the rewrite has landed,
+  so kernels pin final hashes.
+
+**Consequence.** Thresholds in `thresholds.yaml` remain null: they are set after the fp16
+reference row's spread is measured (EXPERIMENT_PROTOCOL.md §8), not by this approval.

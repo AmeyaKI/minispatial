@@ -371,3 +371,36 @@ unverified; `train.py --dry-run` echoes the YAML rather than the resolved config
 After approvals 1–2: install the CLI, `kaggle kernels push -p kaggle/minispatial-tiny-tl-smoke`,
 poll, pull the output, record the T4 timing in the run request, then submit the approved runs.
 Independently: fix `eval.py` split handling with `iter_split` (R1).
+
+---
+
+## 2026-09-28 — Approvals acted on; Kaggle key rejected (B003); history rewrite handed to Ameya (B004)
+
+**Ameya approved all nine items** from the 2026-09-27 close ("approve all, push and add kaggle cli").
+Recorded as D031. Done: session-close commit pushed; `kaggle>=2.2.4` added as a dev dependency;
+`train/configs/tiny_random_lr1e-3.yaml` (run 2b) with a test pinning its diff from
+`tiny_random.yaml`; protocol parameters (parity chips, calibration chips, timing defaults) marked
+fixed; Kaggle session limits verified in the browser (12 h per CPU/GPU session, 20 GB saved
+output, P100 or T4 x2 with 29 GB RAM) and written to FACTS.md; run request updated. 86 tests pass.
+
+**Blocked.** (B003) The Kaggle API key authenticates locally but the server returns 401 on the
+first call, under every credential path tried; no kernel was submitted. (B004) `git filter-branch`
+for the history rewrite was denied to the agent by the permission classifier; the strip script is
+at `private/history_strip.py`, gitignored (verified on the oldest roadmap: removes exactly two
+sections and four lines, and drops `HANDOFF_CONTEXT.md`; 26 historical commits affected; nothing
+else in any revision matches). Commands are in BLOCKERS.md.
+
+**Not done, deliberately.** No training kernel was generated for the real runs: they must pin
+final commit hashes, and the rewrite (if run) changes every hash. Thresholds remain null.
+
+### Needs Ameya
+
+1. Clear B003: regenerate the key at kaggle.com/settings/api into `~/.kaggle/kaggle.json`, or run
+   `.venv/bin/kaggle auth login`; then `.venv/bin/kaggle quota`.
+2. Run (or decline) the B004 rewrite. If run: say so, and the next session regenerates the notebook
+   and kernel pins and pushes.
+
+### Exact next step
+
+After 1 (and 2 either way): regenerate the smoke kernel against final HEAD, push, submit, poll,
+pull; record the T4 per-epoch time; submit runs 1, 2, 2b, 3, 4 at seed 0.

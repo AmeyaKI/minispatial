@@ -1,8 +1,10 @@
 # STATE.md — current snapshot
 
-**Updated:** 2026-09-27 (session closed). **Session goal:** execute the R0 queue in order. Done:
-items 1–6 and 8, plus the item-7 generator. **Active stage:** R0 → R1 handoff; the only R0 work
-left is the Kaggle smoke run, which needs two approvals (below).
+**Updated:** 2026-09-28. **Session goal (2026-09-28):** act on Ameya's blanket approval of the
+2026-09-27 requests (D031). Done: push, Kaggle CLI, run 2b config, protocol parameters fixed.
+**Blocked:** the Kaggle smoke run (B003: the API key returns 401) and the history rewrite (B004:
+denied to the agent as a destructive git action; commands prepared for Ameya).
+**Active stage:** R0 → R1 handoff.
 
 ## Read first
 
@@ -33,14 +35,15 @@ left is the Kaggle smoke run, which needs two approvals (below).
 - **Kaggle.** `scripts/make_kaggle_kernel.py` (D030) + `kaggle/constraints.txt` (lock pins minus the
   CUDA stack) + `kaggle/minispatial-tiny-tl-smoke/` pinned to `08a9241` (on origin). Not submitted.
 - **Run request:** `docs/run_requests/2026-09-27-r1-r2-training.md`.
-- Tests: **85 passed** on 2026-09-27. `capture_env.py --check` passes (Apple M5 Max, macOS 26.6.2).
+- Tests: **86 passed** on 2026-09-28. `capture_env.py --check` passes (Apple M5 Max, macOS 26.6.2).
 
 ## Known issues logged, not fixed
 
 - `train/eval.py --split val|bolivia` is accepted but the script always evaluates the test loader.
   Fix in R1 when the trained models are evaluated; `minispatial/data/splits.iter_split` already
   handles all four splits and can replace that loader.
-- Kaggle session/quota limits are `unverified` (FACTS.md); the docs page needs a browser.
+- Kaggle session limits are now verified (12 h, FACTS.md 2026-09-28); the weekly GPU quota is
+  unknown until B003 clears.
 - `train.py --dry-run` prints the YAML as written, not the CLI-resolved config; use
   `terratorch fit -c <yaml> --print_config` for the resolved view (noted in D024/D029).
 
@@ -52,16 +55,23 @@ not placement; weight quantization is not compute speed; hosts per D028.
 
 ## Next actions
 
-1. **Await approvals** (below). Then: `uv add --dev kaggle`; push smoke kernel; read its log for the
-   T4 per-epoch time; update the run request's §3 with measured numbers.
-2. Submit approved runs (1, 3, 4, and 2/2b if approved) one kernel each, seed 0.
-3. Begin R1 in parallel where no checkpoint is needed: fix `eval.py` split handling using
-   `iter_split`; draft the full-network Core ML export (`minispatial/export/coreml.py`) against the
-   randomly initialised tiny model for shape/parity plumbing only (no numbers reported).
+1. **Ameya:** clear B003 (regenerate the Kaggle key or `.venv/bin/kaggle auth login`), then run
+   `.venv/bin/kaggle quota` so the weekly GPU hours land in FACTS.md.
+2. **Ameya:** run the B004 history rewrite commands (or decline; nothing else depends on it except
+   that kernels should pin final hashes).
+3. Then, agent: regenerate `colab/bootstrap.ipynb` and `kaggle/minispatial-tiny-tl-smoke/` against
+   the final HEAD; push; `kaggle kernels push -p
+   kaggle/minispatial-tiny-tl-smoke`; poll; pull; put the T4 per-epoch time into the run request.
+4. After a clean smoke log: generate and submit kernels for runs 1, 2, 2b, 3, 4 (seed 0), one
+   kernel each; pull outputs to `artifacts/kaggle/`; write `results/runs/checkpoints_manifest.json`.
+5. In parallel (R1, no checkpoint needed): fix `eval.py` split handling with `iter_split`; draft the
+   full-network Core ML export plumbing against the random-init tiny model (shapes/parity code only).
 
 ## Authorization boundaries
 
-Approved: tiny pretrained and both U-Net runs (2026-09-17); the push made 2026-09-27 (12 commits).
-**Not yet approved:** the random-init tiny run (and its optional lr 1e-3 twin), the Kaggle CLI
-install, the smoke kernel submission, standing push approval, the three-seed repeat, the proposed
-parity/calibration sets and timing defaults, and all thresholds (still null in `thresholds.yaml`).
+Approved 2026-09-28 (D031): standing pushes to `main` during R0–R2 with the scan each time; the
+Kaggle CLI (installed); the smoke submission; runs 1, 2, 2b, 3, 4 at seed 0; the fixed protocol
+parameters (parity chips, calibration chips, timing defaults); the history rewrite (to be run by
+Ameya, B004). **Still not approved / not set:** the three-seed repeat (deferred until seed-0
+results and per-run cost exist); every threshold in `thresholds.yaml` (set after the fp16 reference
+row's spread is measured); any paid host; any upload.

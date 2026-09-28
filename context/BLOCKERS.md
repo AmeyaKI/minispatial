@@ -21,6 +21,41 @@ bottom with the fix, so a later session can find how it was solved.
 - **Not blocking anything now.** The stretch row is M4. Deferred rather than investigated, since
   the fix is a machine-maintenance task, not a project task. Logged in `FUTURE_WORK.md`.
 
+### B003 — Kaggle API key rejected by the server (HTTP 401)
+- **What.** `kaggle kernels list --mine` (CLI 2.2.4 in the venv) prints "Authentication required".
+  With debug logging: the legacy key in `~/.kaggle/kaggle.json` is loaded ("Authenticated with
+  legacy api key"), then `POST /v1/kernels.KernelsApiService/ListKernels` returns **401**.
+- **Impact.** No kernel can be pushed or polled, so the R0 smoke run and every training run wait.
+- **Tried (2026-09-28).** Default config dir; `KAGGLE_CONFIG_DIR=~/.kaggle`; `KAGGLE_USERNAME` /
+  `KAGGLE_KEY` environment variables; the Python API with debug logging. All reach the server and
+  all get 401. The key value was never printed.
+- **Best hypothesis.** The key is stale or was revoked when the account moved to the new token
+  scheme (the CLI's own 403/401 hint says "Regenerate at https://www.kaggle.com/settings/api and
+  replace ~/.kaggle/access_token (or kaggle.json)"). A second possibility is a missing phone
+  verification on the account, which Kaggle requires for internet/GPU kernels.
+- **Needs Ameya.** Either regenerate the key at kaggle.com/settings/api and replace
+  `~/.kaggle/kaggle.json`, or run `.venv/bin/kaggle auth login` (OAuth, browser). Then re-run
+  `.venv/bin/kaggle quota` to confirm and to read the weekly GPU quota.
+
+### B004 — History rewrite: prepared, needs to be run by Ameya
+- **What.** Purging the personal planning notes from history (approved 2026-09-28). They live only
+  in historical versions of `ROADMAP.md` (two sections and four lines) and in `HANDOFF_CONTEXT.md`
+  (deleted from the tree on 2026-09-18). HEAD is clean; 26 historical commits carry them. A
+  `git grep` over every revision found nothing elsewhere.
+- **Why not done.** The session's permission classifier denied `git filter-branch` as destructive.
+- **How to run it.** The tree-filter script is at `private/history_strip.py` (gitignored on
+  purpose: it names the strings it removes). It is idempotent and touches only those two files;
+  verified on the oldest roadmap version. From the repo root:
+  ```bash
+  git branch backup-pre-rewrite-2026-09-28
+  FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --tree-filter ".venv/bin/python $PWD/private/history_strip.py" -- main
+  git log --all --oneline -- HANDOFF_CONTEXT.md | grep -v backup     # expect nothing
+  git push --force-with-lease origin main
+  ```
+  Afterwards: regenerate `colab/bootstrap.ipynb` and the Kaggle kernels (they pin commit hashes)
+  and update the hashes quoted in STATE.md. Old hashes in HANDOFF.md/DECISIONS.md are historical
+  text and stay. Delete the backup branch once satisfied.
+
 ## Audit findings
 
 *(none — `/audit-numbers` has not yet been run against a document containing measured numbers)*
