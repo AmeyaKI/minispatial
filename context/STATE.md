@@ -1,68 +1,67 @@
 # STATE.md — current snapshot
 
-**Updated:** 2026-09-27 (session open). **Session goal:** execute the R0 queue in order (items 1–8 of
-the checklist below), committing one concern at a time; no training, no benchmark, no push without
-approval. **Active stage:** R0.
+**Updated:** 2026-09-27 (session closed). **Session goal:** execute the R0 queue in order. Done:
+items 1–6 and 8, plus the item-7 generator. **Active stage:** R0 → R1 handoff; the only R0 work
+left is the Kaggle smoke run, which needs two approvals (below).
 
 ## Read first
 
-`context/NEXT_AGENT.md`, `docs/reviews/2026-09-19-adversarial-review.md`, ROADMAP.md R0, D027–D028.
+`context/NEXT_AGENT.md`, `context/EXPERIMENT_PROTOCOL.md`, ROADMAP.md R0/R1,
+`docs/run_requests/2026-09-27-r1-r2-training.md`, D029–D030.
 
-## What changed this session
+## What exists now (all pushed; origin/main = `ac87a32` plus this session-close commit)
 
-- The 2026-09-19 review session's 19 uncommitted files were committed as one changeset and pushed.
-- B002 resolved (R004): the environment check passes on the Mac; the earlier failure was sandbox
-  visibility, not hardware.
-- ROADMAP section 3 now states observed status (nothing trained; what exists; resolved lr; hosts).
-  The R0 checklist names the concrete files to produce.
-- D028: GPU training runs on Kaggle; Lightning stays the free CPU studio; the Mac measures.
-- Duplicate banner removed from SCHEMA.md.
-- Three commits pushed to origin/main; tip is `279c4a8`. Working tree clean.
+- **Configs.** Four training configs without the inert task-level `lr` (D024 table updated);
+  `train/configs/tiny_random.yaml` (D029) differing from `tiny_tl.yaml` in exactly four values,
+  enforced by `tests/test_tiny_random_config.py`.
+- **`train/train.py --dry-run`** runs `init_check`: for random-init configs it builds the model with
+  terratorch's weight-loading routes blocked and asserts the encoder differs across seeds. Also
+  fixed: `--limit-batches 2` was passed as `2.0`, which Lightning rejects.
+- **`results/runs/param_manifest.json`** (`scripts/param_manifest.py`): tiny 13,020,084 params
+  (encoder 5,634,050 / neck 166,320 / decoder 7,219,200 / head 514 — the decoder is 55 %);
+  tiny_random identical; 100M 98,287,812; U-Net 1,964,546. FACTS.md cites it.
+- **MNDWI baseline** (`minispatial/baselines/mndwi.py`, `scripts/mndwi_baseline.py`,
+  `minispatial/data/splits.py` which adds the Bolivia split terratorch lacks). Threshold selected on
+  the 89 validation chips: **0.14** (`results/runs/mndwi_threshold.json`; val mIoU 0.854, val
+  IoU_water 0.745 — selection numbers, not results). Test/Bolivia evaluation is R2.
+- **`context/EXPERIMENT_PROTOCOL.md`**: the frozen contract; clauses marked fixed or proposed.
+- **Schema.** `context/SCHEMA.md` authoritative (52 columns; `compute_units` →
+  `compute_units_requested` + `placement_observed`; `protocol`, `parity_status`,
+  `compression_delta_pp`, `acceptable`, etc.). `minispatial/bench/matrix.yaml` lists only R1–R2
+  cells at `native512`; `schema_check.py --matrix` validates it. `parity_chips.txt` (10 validation
+  chips) replaces the obsolete tile list; `calibration_chips.txt` (64 seeded train chips) is proposed.
+- **Kaggle.** `scripts/make_kaggle_kernel.py` (D030) + `kaggle/constraints.txt` (lock pins minus the
+  CUDA stack) + `kaggle/minispatial-tiny-tl-smoke/` pinned to `08a9241` (on origin). Not submitted.
+- **Run request:** `docs/run_requests/2026-09-27-r1-r2-training.md`.
+- Tests: **85 passed** on 2026-09-27. `capture_env.py --check` passes (Apple M5 Max, macOS 26.6.2).
 
-## Established evidence and decisions
+## Known issues logged, not fixed
 
-- M0 teacher evaluation exists; its paper-protocol miss remains recorded in RESULTS.md.
-- D023 accepts proceeding and selects native 512 for evaluation/deployment; no new decision needed.
-- D024 training configs exist; D025 retains two U-Net learning-rate controls. D027 corrects their
-  interpretation: practical alternatives, not a causal pretraining experiment or matched-size models.
-- FACTS.md already records the complete tiny segmentation parameter count including neck/decoder.
-- `results/runs/logits_test_native512_manifest.json` exists. Validate referenced shards on the
-  execution host before reuse; do not recache just because old STATE.md said it had not run.
-- Quantization, distillation, MLX model and benchmark runner inspected for this review are stubs.
-  Encoder smoke conversion is not full segmentation deployment.
-- Execution hosts per D028: Lightning CPU studio (sleeps when idle; user starts it), Kaggle for
-  GPU training (token present on the Mac; CLI not yet installed in the venv), Mac for measurement.
-  The studio was asleep on 2026-09-21 and 2026-09-26; the cached logit shards were last verified
-  present (90 files, 91 MB) on 2026-09-17.
+- `train/eval.py --split val|bolivia` is accepted but the script always evaluates the test loader.
+  Fix in R1 when the trained models are evaluated; `minispatial/data/splits.iter_split` already
+  handles all four splits and can replace that loader.
+- Kaggle session/quota limits are `unverified` (FACTS.md); the docs page needs a browser.
+- `train.py --dry-run` prints the YAML as written, not the CLI-resolved config; use
+  `terratorch fit -c <yaml> --print_config` for the resolved view (noted in D024/D029).
 
-## Changes made this session
+## Established decisions (unchanged)
 
-Saved sourced review/rationale, replaced active roadmap with R0–R4, archived the previous plan,
-rewrote README positioning, added NEXT_AGENT.md, updated agent instructions, prior-work facts,
-results questions and deferred scope. No code, YAML, model, metric, dataset or environment baseline
-was changed; implementation must reconcile those existing files with the revised contract in R0.
-No training, benchmark, commit, push, upload or remote-agent message was performed.
+Native 512 (D023); M0 miss stands; tiny is ~13.0 M deployed; U-Net is a practical alternative, not
+a control; tiny_random is the pretraining control; no novelty claims; requested compute units are
+not placement; weight quantization is not compute speed; hosts per D028.
 
-## Verification
+## Next actions
 
-`capture_env.py --check`: **passes** on 2026-09-26 (Apple M5 Max, macOS 26.6.2, AC power).
-Test suite: **57 passed on 2026-09-26** after fixing `tests/test_schema_check.py`, which the
-roadmap rewrite had broken (it parsed a column line the revised ROADMAP no longer has; it now reads
-the archived roadmap until R0 item 6 makes SCHEMA.md authoritative).
-
-## Next actions (R0, in order)
-
-1. Strip the inert task-level `lr` from the four training configs; update the D024 table.
-2. `scripts/param_manifest.py` → `results/runs/param_manifest.json` (encoder/neck/decoder/head).
-3. `train/configs/tiny_random.yaml` + dry-run check that no pretrained weights load (D029).
-4. `minispatial/baselines/mndwi.py` with tests; threshold on validation only.
-5. `context/EXPERIMENT_PROTOCOL.md`.
-6. Reconcile `matrix.yaml`, `SCHEMA.md`, `schema_check.py` and tests with the R1–R2 contract.
-7. Kaggle kernel generator + two-batch smoke run (needs a push first).
-8. Run request for approval: tiny pretrained, tiny random-init, U-Net ×2.
+1. **Await approvals** (below). Then: `uv add --dev kaggle`; push smoke kernel; read its log for the
+   T4 per-epoch time; update the run request's §3 with measured numbers.
+2. Submit approved runs (1, 3, 4, and 2/2b if approved) one kernel each, seed 0.
+3. Begin R1 in parallel where no checkpoint is needed: fix `eval.py` split handling using
+   `iter_split`; draft the full-network Core ML export (`minispatial/export/coreml.py`) against the
+   randomly initialised tiny model for shape/parity plumbing only (no numbers reported).
 
 ## Authorization boundaries
 
-Approved on 2026-09-17: the tiny fine-tune and the two U-Net controls (runs 3 and 4), on a GPU,
-after a cost report. Not yet approved: the random-init tiny run (new under D027) and any Kaggle
-job. Pushes need approval per rule 5. Native geometry and the M0 verdict are settled (D023).
+Approved: tiny pretrained and both U-Net runs (2026-09-17); the push made 2026-09-27 (12 commits).
+**Not yet approved:** the random-init tiny run (and its optional lr 1e-3 twin), the Kaggle CLI
+install, the smoke kernel submission, standing push approval, the three-seed repeat, the proposed
+parity/calibration sets and timing defaults, and all thresholds (still null in `thresholds.yaml`).

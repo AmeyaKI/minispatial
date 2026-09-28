@@ -71,32 +71,32 @@ report both. They do not isolate pretraining. Test and Bolivia cannot select any
 
 ## 5. Stages, outputs, and acceptance gates
 
-### R0 — Reconcile state and freeze the experiment contract (in progress, 2026-09-26)
+### R0 — Reconcile state and freeze the experiment contract (items 1–6, 8 done 2026-09-27; item 7 smoke run pending approvals)
 
 - [x] Inspect latest git diff, local manifests and existing run records; preserve other-agent work.
   (Review session committed 2026-09-26; nothing lost.)
 - [x] Read D023–D027; resolve B002 (environment check passes on the Mac).
-- [ ] Remove the inert task-level `lr` from all four training configs so the resolved optimizer
+- [x] Remove the inert task-level `lr` from all four training configs so the resolved optimizer
   setting is the only one in the file (D024 table updated).
-- [ ] `scripts/param_manifest.py`: machine-readable parameter counts by encoder / neck / decoder /
+- [x] `scripts/param_manifest.py`: machine-readable parameter counts by encoder / neck / decoder /
   head for tiny, 100M and U-Net, written to `results/runs/param_manifest.json` and tracked.
-- [ ] `train/configs/tiny_random.yaml`: identical to `tiny_tl.yaml` except `backbone_pretrained:
+- [x] `train/configs/tiny_random.yaml`: identical to `tiny_tl.yaml` except `backbone_pretrained:
   false`, own checkpoint/log paths, seed recorded; a check in `train.py --dry-run` that no
   pretrained weights would load. Diff logged as D029.
-- [ ] `minispatial/baselines/mndwi.py`: MNDWI = (GREEN − SWIR_1) / (GREEN + SWIR_1) on scaled
+- [x] `minispatial/baselines/mndwi.py`: MNDWI = (GREEN − SWIR_1) / (GREEN + SWIR_1) on scaled
   reflectance *before* per-band standardization; zero denominator → not water; nodata → ignored;
   threshold chosen on the validation split only; evaluated with the same confusion-matrix code.
-- [ ] `context/EXPERIMENT_PROTOCOL.md`: splits, bands, scaling, standardization, native geometry,
+- [x] `context/EXPERIMENT_PROTOCOL.md`: splits, bands, scaling, standardization, native geometry,
   ignore-index policy, validation-only selection, seed plan, timing boundary, parity vs
   compression-loss vs acceptability definitions, calibration-set identity.
-- [ ] Align `minispatial/bench/matrix.yaml` (drop the M1–M4 cell enumeration; list only R1–R2
+- [x] Align `minispatial/bench/matrix.yaml` (drop the M1–M4 cell enumeration; list only R1–R2
   cells and mark the rest deferred), `context/SCHEMA.md` (add `protocol`, `component_counts_ref`,
   `compute_units_requested` vs `placement_observed`, `parity_status` separate from
   `compression_delta`) and `schema_check.py` with tests. Historical records untouched.
-- [ ] Kaggle job path: `scripts/make_kaggle_kernel.py` generating a pinned-commit kernel that
+- [~] Kaggle job path: `scripts/make_kaggle_kernel.py` (generator done 2026-09-27; smoke run awaits the Kaggle CLI) generating a pinned-commit kernel that
   clones, syncs, downloads and runs `train/train.py`; outputs pulled back by the Kaggle CLI.
   Verified with a two-batch smoke run before any real training.
-- [ ] Run request for approval: tiny pretrained, tiny random-init, U-Net ×2; seeds; estimated
+- [x] Run request for approval: tiny pretrained, tiny random-init, U-Net ×2; seeds; estimated
   time; checkpoint destinations; abort conditions.
 
 **Gate:** an auditable protocol and runnable configs, not additional architecture scaffolding.

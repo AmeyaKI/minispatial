@@ -328,3 +328,46 @@ benchmark, no install. The user closed the session to start a fresh window; a ha
 covering state, settled decisions, hosts, the R0 queue and the four open approvals was given in
 chat and matches STATE.md. Next session: R0 item 1 (strip the inert task-level `lr` from the
 four configs).
+
+---
+
+## 2026-09-27 — R0 executed: items 1–6 and 8 done, Kaggle generator done, smoke run pending
+
+**Session goal:** the R0 queue, in order, one concern per commit. Twelve commits pushed to
+`origin/main` on Ameya's explicit instruction ("push to github all commits") after the secret /
+personal-framing scan of the outgoing diff (only false positives: `ReshapeTokensToImage`, the
+`--resume` flag, and the Kaggle username in the kernel id, which is public and required).
+
+**Done.** (1) inert task-level `lr` removed from four configs, effective rates verified with
+`--print_config`; (2) `scripts/param_manifest.py` → tracked manifest; the decoder is 55 % of the
+deployed tiny model; (3) `tiny_random.yaml` + `init_check` in the trainer's dry run + D029;
+(4) MNDWI baseline with exact histogram sweep, Bolivia-aware split loader, threshold 0.14 chosen on
+validation; (5) `EXPERIMENT_PROTOCOL.md`; (6) SCHEMA.md / matrix.yaml / schema_check / tests
+reconciled, parity set = 10 validation chips, calibration set = 64 seeded train chips (proposed);
+(7) `make_kaggle_kernel.py` + constraints + the tiny_tl smoke kernel pinned to `08a9241`, D030;
+(8) run request at `docs/run_requests/2026-09-27-r1-r2-training.md`. GLOSSARY updated; stub
+docstrings re-pointed to R stages; U-Net docstring no longer says "matched". 85 tests pass.
+
+**Not done.** The Kaggle smoke run (needs the CLI in the venv and a submission approval). No
+training, no benchmark, no install, no upload. Test and Bolivia were not read by anything.
+
+**Found, logged, not fixed:** `train/eval.py` ignores `--split` (always test loader); Kaggle limits
+unverified; `train.py --dry-run` echoes the YAML rather than the resolved config.
+
+### Needs approval
+
+1. **Kaggle CLI as a dev dependency** (`uv add --dev kaggle`). *Recommend: yes.*
+2. **Submit the smoke kernel**, then read the T4 per-epoch time into the run request. *Recommend: yes.*
+3. **Random-init tiny run** (run 2) alongside the three already-approved runs. *Recommend: yes.*
+4. **Run 2b**, random-init at lr 1e-3 (mirrors D025). *Recommend: yes; otherwise run 2 is a
+   recipe-specific result only.*
+5. **Standing push approval for R0–R2** with the scan each time. *Recommend: yes.*
+6. **Proposed protocol parameters** (parity chips, calibration chips, timing defaults) — approve or
+   amend before R2. Thresholds stay null until the fp16 reference row's spread is measured.
+7. Still open from before: history rewrite of the two old commits with career text.
+
+### Exact next step
+
+After approvals 1–2: install the CLI, `kaggle kernels push -p kaggle/minispatial-tiny-tl-smoke`,
+poll, pull the output, record the T4 timing in the run request, then submit the approved runs.
+Independently: fix `eval.py` split handling with `iter_split` (R1).
