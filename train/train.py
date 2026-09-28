@@ -160,8 +160,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.max_epochs is not None:
         cmd += ["--trainer.max_epochs", str(args.max_epochs)]
     if args.limit_batches is not None:
-        cmd += ["--trainer.limit_train_batches", str(args.limit_batches),
-                "--trainer.limit_val_batches", str(args.limit_batches)]
+        # Lightning reads a float in [0, 1] as a fraction and an int as a batch count;
+        # "2.0" would be rejected, so whole numbers above 1 are passed as ints.
+        lb = args.limit_batches
+        lb_str = str(int(lb)) if lb > 1 and float(lb).is_integer() else str(lb)
+        cmd += ["--trainer.limit_train_batches", lb_str,
+                "--trainer.limit_val_batches", lb_str]
     cmd += list(args.extra)
     last = REPO_ROOT / ckpt_dir / "last.ckpt"
     if args.resume:
