@@ -67,6 +67,7 @@ this project. Pushing to `origin` still needs explicit approval. Everything else
 | `context/ENV.md` | Machine mirror of `results/env.json`. Generated; never edit by hand. |
 | `context/GLOSSARY.md` | Project vocabulary, so sessions use the same words. |
 | `context/SCHEMA.md` | `frontier.csv` columns with unit and measurement protocol per column. |
+| `context/EXPERIMENT_PROTOCOL.md` | The frozen R1–R4 contract: data, preprocessing, geometry, selection, seeds, timing, parity definitions. |
 | `agents/` | Role briefs for focused sessions and subagents. |
 
 ## Session protocol
