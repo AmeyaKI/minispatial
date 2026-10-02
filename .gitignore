@@ -24,6 +24,8 @@
 !/results/runs/mndwi_threshold.json
 !/results/runs/mndwi_eval_test.json
 !/results/runs/mndwi_eval_bolivia.json
+!/results/runs/kaggle_smoke_tiny_tl.json
+!/results/runs/checkpoints_manifest.json
 
 # Model artifacts
 *.mlpackage
