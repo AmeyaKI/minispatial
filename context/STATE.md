@@ -5,7 +5,7 @@ Kaggle authentication fixed (BLOCKERS R005: a stale legacy key shadowed the OAut
 is run with `KAGGLE_CONFIG_DIR=$PWD/artifacts/kaggle/.cfg`). Weekly GPU quota 30 h, 0 used.
 **Smoke kernel `ameyakiwalkar/minispatial-tiny-tl-smoke` version 1 submitted 2026-10-02 and still
 RUNNING at last check; no output pulled yet, so no timing and no verdict.**
-**Open:** the history rewrite (B004), to be run or declined by Ameya before real kernels are generated.
+**History rewrite done** (BLOCKERS R006): 49 commits kept, content-only; origin force-updated.
 **Active stage:** R0 → R1 handoff.
 
 ## Read first
@@ -13,7 +13,7 @@ RUNNING at last check; no output pulled yet, so no timing and no verdict.**
 `context/NEXT_AGENT.md`, `context/EXPERIMENT_PROTOCOL.md`, ROADMAP.md R0/R1,
 `docs/run_requests/2026-09-27-r1-r2-training.md`, D029–D030.
 
-## What exists now (all pushed; origin/main = `ac87a32` plus this session-close commit)
+## What exists now (all pushed; hashes below are post-rewrite)
 
 - **Configs.** Four training configs without the inert task-level `lr` (D024 table updated);
   `train/configs/tiny_random.yaml` (D029) differing from `tiny_tl.yaml` in exactly four values,
@@ -35,7 +35,9 @@ RUNNING at last check; no output pulled yet, so no timing and no verdict.**
   cells at `native512`; `schema_check.py --matrix` validates it. `parity_chips.txt` (10 validation
   chips) replaces the obsolete tile list; `calibration_chips.txt` (64 seeded train chips) is proposed.
 - **Kaggle.** `scripts/make_kaggle_kernel.py` (D030) + `kaggle/constraints.txt` (lock pins minus the
-  CUDA stack) + `kaggle/minispatial-tiny-tl-smoke/` pinned to `08a9241` (on origin). Not submitted.
+  CUDA stack) + `kaggle/minispatial-tiny-tl-smoke/` regenerated against post-rewrite HEAD. Version 1 (pre-rewrite pin)
+  ran on 2026-10-02 and FAILED at training under 2-GPU DDP (see HANDOFF); the kernel now passes
+  `--trainer.devices 1`.
 - **Run request:** `docs/run_requests/2026-09-27-r1-r2-training.md`.
 - Tests: **86 passed** on 2026-09-28. `capture_env.py --check` passes (Apple M5 Max, macOS 26.6.2).
 
@@ -60,11 +62,9 @@ not placement; weight quantization is not compute speed; hosts per D028.
 1. Agent: check `kaggle kernels status ameyakiwalkar/minispatial-tiny-tl-smoke`; when complete,
    `kaggle kernels output ... -p artifacts/kaggle/minispatial-tiny-tl-smoke`, read the log and the
    manifest, record T4 timing in the run request. If it failed, fix and resubmit (it is a path check).
-2. **Ameya:** run the B004 history rewrite commands (or decline; nothing else depends on it except
-   that kernels should pin final hashes).
-3. Then, agent: regenerate `colab/bootstrap.ipynb` and `kaggle/minispatial-tiny-tl-smoke/` against
-   the final HEAD; push; `kaggle kernels push -p
-   kaggle/minispatial-tiny-tl-smoke`; poll; pull; put the T4 per-epoch time into the run request.
+2. (done) history rewrite; notebook and kernel regenerated.
+3. Resubmit the smoke kernel (version 2, single GPU); poll; pull; put the T4 per-epoch time into
+   the run request.
 4. After a clean smoke log: generate and submit kernels for runs 1, 2, 2b, 3, 4 (seed 0), one
    kernel each; pull outputs to `artifacts/kaggle/`; write `results/runs/checkpoints_manifest.json`.
 5. In parallel (R1, no checkpoint needed): fix `eval.py` split handling with `iter_split`; draft the

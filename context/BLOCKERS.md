@@ -21,25 +21,6 @@ bottom with the fix, so a later session can find how it was solved.
 - **Not blocking anything now.** The stretch row is M4. Deferred rather than investigated, since
   the fix is a machine-maintenance task, not a project task. Logged in `FUTURE_WORK.md`.
 
-### B004 — History rewrite: prepared, needs to be run by Ameya
-- **What.** Purging the personal planning notes from history (approved 2026-09-28). They live only
-  in historical versions of `ROADMAP.md` (two sections and four lines) and in `HANDOFF_CONTEXT.md`
-  (deleted from the tree on 2026-09-18). HEAD is clean; 26 historical commits carry them. A
-  `git grep` over every revision found nothing elsewhere.
-- **Why not done.** The session's permission classifier denied `git filter-branch` as destructive.
-- **How to run it.** The tree-filter script is at `private/history_strip.py` (gitignored on
-  purpose: it names the strings it removes). It is idempotent and touches only those two files;
-  verified on the oldest roadmap version. From the repo root:
-  ```bash
-  git branch backup-pre-rewrite-2026-09-28
-  FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --tree-filter ".venv/bin/python $PWD/private/history_strip.py" -- main
-  git log --all --oneline -- HANDOFF_CONTEXT.md | grep -v backup     # expect nothing
-  git push --force-with-lease origin main
-  ```
-  Afterwards: regenerate `colab/bootstrap.ipynb` and the Kaggle kernels (they pin commit hashes)
-  and update the hashes quoted in STATE.md. Old hashes in HANDOFF.md/DECISIONS.md are historical
-  text and stay. Delete the backup branch once satisfied.
-
 ## Audit findings
 
 *(none — `/audit-numbers` has not yet been run against a document containing measured numbers)*
@@ -93,3 +74,15 @@ the real execution environment before measurements. Does not block authorized do
   The stale `kaggle.json` was left untouched; deleting or regenerating it would also work and is
   Ameya's call. `scripts/make_kaggle_kernel.py` reads only the username from that file, which is
   still correct.
+
+### R006 (was B004) — History rewrite done (2026-10-02, on Ameya's instruction)
+- **What ran.** `git filter-branch --tree-filter private/history_strip.py -- main` over all 49
+  commits, then `git push --force-with-lease`. Every commit was kept: 49 before and after, same
+  messages in the same order, and the current tree byte-identical to the pre-rewrite tip.
+- **Verified.** No revision of `main` contains `HANDOFF_CONTEXT.md`; a `git grep` over every
+  revision for the removed phrases finds nothing (31 hits in the backup branch, 0 in main).
+- **Consequences handled.** `colab/bootstrap.ipynb` and the smoke kernel were regenerated against
+  the new HEAD. Hashes quoted in HANDOFF.md and DECISIONS.md entries before this date are
+  historical text and refer to the pre-rewrite IDs. Local backup branch
+  `backup-pre-rewrite-2026-10-02` holds the old history; delete it when satisfied
+  (`git branch -D backup-pre-rewrite-2026-10-02`). Anyone with an older clone must re-clone.
