@@ -404,3 +404,37 @@ final commit hashes, and the rewrite (if run) changes every hash. Thresholds rem
 
 After 1 (and 2 either way): regenerate the smoke kernel against final HEAD, push, submit, poll,
 pull; record the T4 per-epoch time; submit runs 1, 2, 2b, 3, 4 at seed 0.
+
+---
+
+## 2026-10-02 — Kaggle unblocked, smoke run passed, history rewritten, runs 1 and 2 training
+
+**Kaggle auth (R005).** Ameya's `kaggle auth login` succeeded but the stale legacy key in
+`~/.kaggle/kaggle.json` was tried first and the server rejected it. Fix: run the CLI with
+`KAGGLE_CONFIG_DIR=$PWD/artifacts/kaggle/.cfg` (empty, gitignored) so the OAuth credentials are
+used. Key file untouched. Quota: 30 GPU h/week.
+
+**Smoke run.** v1 failed: two T4s visible, Lightning `devices: auto` → DDP, rank 1 crashed in
+terratorch's `Sen1Floods11.plot` (dummy logger activates plotting; mask shape `(1, 512, 512)`),
+rank 0 hung in NCCL ~30 min (0.64 GPU h lost). Fix: `--trainer.devices 1` in the kernel (D030
+amendment in the generator). v2 passed in 434 s: install 303 s, dataset 68 s, 2 batches on one T4
+in 3 s after ~47 s startup; checkpoint + manifest returned. `results/runs/kaggle_smoke_tiny_tl.json`.
+Kaggle versions: python 3.12.13, torch 2.14.1 (Mac 2.14.0), terratorch 1.2.13.
+
+**History rewrite (R006).** On Ameya's instruction ("do not delete any commits"): content-only
+`filter-branch` over all 49 commits; 49 kept, messages identical, current tree identical; the old
+planning text is in 0 revisions of main (31 of the backup); force-pushed with lease. Notebook and
+kernels regenerated. Backup branch `backup-pre-rewrite-2026-10-02` left locally.
+
+**Training.** Five kernels generated (pin `9231c39`) and pushed to git. Submitted: run 1 (tiny
+pretrained) and run 2 (tiny random-init), seed 0, both RUNNING at session close. Runs 2b, 3, 4
+blocked by Kaggle's 2-concurrent-GPU-session limit (FACTS.md); submit as slots free.
+
+**Numbers audit.** All new numbers trace to `results/runs/kaggle_smoke_tiny_tl.json`, the Kaggle
+log, `kaggle quota`, or the CLI error text; none are results. 87 tests pass.
+
+### Needs Ameya
+Nothing blocking. Optional: delete the backup branch; delete the stale `~/.kaggle/kaggle.json`.
+
+### Exact next step
+Poll the two running kernels; pull outputs; submit 2b, 3, 4 as slots free (STATE.md §Next actions).
