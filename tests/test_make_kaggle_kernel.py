@@ -46,6 +46,7 @@ def test_script_parses_pins_commit_and_uses_scratch_for_data(smoke):
     assert ("abc123" * 6 + "abcd") in src
     assert '"/kaggle/tmp/sen1floods11"' in src and '"/kaggle/working"' in src
     assert "kaggle/constraints.txt" in src
+    assert '"--trainer.devices", "1"' in src  # single GPU: the first smoke run died under 2-GPU DDP
     assert ("--limit-batches" in src) is smoke
     if smoke:
         assert str(SMOKE_BATCHES) in src

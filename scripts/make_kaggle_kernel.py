@@ -20,9 +20,10 @@ only in Kaggle's log):
 4. downloads Sen1Floods11 (1.02 GB, DATA.md) to ``/kaggle/tmp`` -- scratch, NOT ``/kaggle/working``,
    because everything under ``working`` is saved as kernel output and a 1 GB dataset would be
    re-uploaded with every run;
-5. runs ``train/train.py --config <config>`` with ``--data.init_args.data_root`` pointed at the
-   download (a LightningCLI override; the YAML is otherwise untouched), plus ``--max-epochs 1
-   --limit-batches 2`` for a ``--smoke`` kernel;
+5. runs ``train/train.py --config <config>`` with ``--trainer.devices 1`` (Kaggle's T4 machine has
+   two GPUs; the recipe is single-device, and DDP crashed the first smoke run) and
+   ``--data.init_args.data_root`` pointed at the download (LightningCLI overrides; the YAML is
+   otherwise untouched), plus ``--max-epochs 1 --limit-batches 2`` for a ``--smoke`` kernel;
 6. copies ``results/runs/train/<name>/`` (checkpoints, CSV metrics, ``run.jsonl``) into
    ``/kaggle/working/<name>/`` and writes ``<name>_manifest.json`` with a SHA-256 per file, the
    commit, and the environment -- the same checksum discipline as D026's logit manifest.
@@ -189,8 +190,11 @@ print(f"{{n_tif}} tifs, {{n_txt}} split txts")
 assert n_tif == 892 and n_txt == 4, "dataset incomplete; refusing to train on a partial download"
 
 step("train")
+# ONE GPU (D030 amendment, 2026-10-02): Kaggle's T4 machine exposes two GPUs and Lightning's
+# `devices: auto` would launch DDP across both, changing the effective batch size and crashing
+# rank 1 in terratorch's validation plotting (dummy logger). The recipe is single-device.
 sh(sys.executable, "train/train.py", "--config", CONFIG, {("*" + repr(extra.split()) + ", ") if extra else ""}
-   "--", "--data.init_args.data_root", str(DATA), cwd=SRC)
+   "--", "--trainer.devices", "1", "--data.init_args.data_root", str(DATA), cwd=SRC)
 
 step("collect outputs + checksum manifest")
 run_dir = SRC / "results" / "runs" / "train" / RUN_NAME
