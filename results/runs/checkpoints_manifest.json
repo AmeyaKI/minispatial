@@ -1,0 +1,47 @@
+{
+  "kind": "checkpoints_manifest",
+  "note": "One entry per trained checkpoint pulled to the Mac (D026/D028 discipline). Checkpoints themselves are gitignored under artifacts/checkpoints/.",
+  "checkpoints": [
+    {
+      "run_name": "tiny_tl",
+      "run_request_id": 1,
+      "model_id": "prithvi_tiny_tl_sen1floods11",
+      "seed": 0,
+      "config": "train/configs/tiny_tl.yaml",
+      "config_sha256": "c509117a8cd0c2ba045adbbcc82b472c190fa9a9190f923728d6b895df340a02",
+      "commit": "9231c39958d4e76da0c6f320f236515124db37ea",
+      "kernel": "ameyakiwalkar/minispatial-tiny-tl",
+      "kernel_version": 1,
+      "date": "2026-10-02",
+      "host": "kaggle",
+      "gpu_used": "1x Tesla T4",
+      "python": "3.13.15",
+      "versions": {
+        "torch": "2.14.1",
+        "terratorch": "1.2.13",
+        "lightning": "2.6.5",
+        "numpy": "2.5.3",
+        "albumentations": "2.0.8",
+        "rasterio": "1.5.1"
+      },
+      "wall_seconds_kernel": 1059.9,
+      "epochs_completed": 50,
+      "total_steps": 750,
+      "early_stopped": false,
+      "selected_checkpoint": {
+        "file": "artifacts/checkpoints/tiny_tl/epoch45-valloss0.0809.ckpt",
+        "selected_on": "val",
+        "criterion": "min val/loss (ModelCheckpoint)",
+        "epoch": 45,
+        "val_loss": 0.08092766255140305,
+        "val_mIoU_lightning": 0.8742969036102295,
+        "val_IoU_1_lightning": 0.7780969738960266,
+        "sha256": "1017cff3116d9dcdc827c88fda577a99d704ea71a59f258e821eea006930f76a",
+        "bytes": 156684559
+      },
+      "last_checkpoint_sha256": "1017cff3116d9dcdc827c88fda577a99d704ea71a59f258e821eea006930f76a",
+      "kaggle_output_manifest_verified": true,
+      "note": "Validation metrics here are Lightning's torchmetrics during training (RandomCrop-free native 512 val). They are SELECTION numbers, not results; held-out test/Bolivia evaluation happens in R1 via train/eval.py from this checkpoint."
+    }
+  ]
+}
