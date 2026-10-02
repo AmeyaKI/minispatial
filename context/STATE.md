@@ -1,9 +1,11 @@
 # STATE.md — current snapshot
 
-**Updated:** 2026-09-28. **Session goal (2026-09-28):** act on Ameya's blanket approval of the
-2026-09-27 requests (D031). Done: push, Kaggle CLI, run 2b config, protocol parameters fixed.
-**Blocked:** the Kaggle smoke run (B003: the API key returns 401) and the history rewrite (B004:
-denied to the agent as a destructive git action; commands prepared for Ameya).
+**Updated:** 2026-10-02. **Session goal (2026-10-02):** get Kaggle working and run the smoke kernel.
+Kaggle authentication fixed (BLOCKERS R005: a stale legacy key shadowed the OAuth login; the CLI
+is run with `KAGGLE_CONFIG_DIR=$PWD/artifacts/kaggle/.cfg`). Weekly GPU quota 30 h, 0 used.
+**Smoke kernel `ameyakiwalkar/minispatial-tiny-tl-smoke` version 1 submitted 2026-10-02 and still
+RUNNING at last check; no output pulled yet, so no timing and no verdict.**
+**Open:** the history rewrite (B004), to be run or declined by Ameya before real kernels are generated.
 **Active stage:** R0 → R1 handoff.
 
 ## Read first
@@ -43,7 +45,7 @@ denied to the agent as a destructive git action; commands prepared for Ameya).
   Fix in R1 when the trained models are evaluated; `minispatial/data/splits.iter_split` already
   handles all four splits and can replace that loader.
 - Kaggle session limits are now verified (12 h, FACTS.md 2026-09-28); the weekly GPU quota is
-  unknown until B003 clears.
+  30 h, 0 used on 2026-10-02 (FACTS.md).
 - `train.py --dry-run` prints the YAML as written, not the CLI-resolved config; use
   `terratorch fit -c <yaml> --print_config` for the resolved view (noted in D024/D029).
 
@@ -55,8 +57,9 @@ not placement; weight quantization is not compute speed; hosts per D028.
 
 ## Next actions
 
-1. **Ameya:** clear B003 (regenerate the Kaggle key or `.venv/bin/kaggle auth login`), then run
-   `.venv/bin/kaggle quota` so the weekly GPU hours land in FACTS.md.
+1. Agent: check `kaggle kernels status ameyakiwalkar/minispatial-tiny-tl-smoke`; when complete,
+   `kaggle kernels output ... -p artifacts/kaggle/minispatial-tiny-tl-smoke`, read the log and the
+   manifest, record T4 timing in the run request. If it failed, fix and resubmit (it is a path check).
 2. **Ameya:** run the B004 history rewrite commands (or decline; nothing else depends on it except
    that kernels should pin final hashes).
 3. Then, agent: regenerate `colab/bootstrap.ipynb` and `kaggle/minispatial-tiny-tl-smoke/` against

@@ -21,22 +21,6 @@ bottom with the fix, so a later session can find how it was solved.
 - **Not blocking anything now.** The stretch row is M4. Deferred rather than investigated, since
   the fix is a machine-maintenance task, not a project task. Logged in `FUTURE_WORK.md`.
 
-### B003 — Kaggle API key rejected by the server (HTTP 401)
-- **What.** `kaggle kernels list --mine` (CLI 2.2.4 in the venv) prints "Authentication required".
-  With debug logging: the legacy key in `~/.kaggle/kaggle.json` is loaded ("Authenticated with
-  legacy api key"), then `POST /v1/kernels.KernelsApiService/ListKernels` returns **401**.
-- **Impact.** No kernel can be pushed or polled, so the R0 smoke run and every training run wait.
-- **Tried (2026-09-28).** Default config dir; `KAGGLE_CONFIG_DIR=~/.kaggle`; `KAGGLE_USERNAME` /
-  `KAGGLE_KEY` environment variables; the Python API with debug logging. All reach the server and
-  all get 401. The key value was never printed.
-- **Best hypothesis.** The key is stale or was revoked when the account moved to the new token
-  scheme (the CLI's own 403/401 hint says "Regenerate at https://www.kaggle.com/settings/api and
-  replace ~/.kaggle/access_token (or kaggle.json)"). A second possibility is a missing phone
-  verification on the account, which Kaggle requires for internet/GPU kernels.
-- **Needs Ameya.** Either regenerate the key at kaggle.com/settings/api and replace
-  `~/.kaggle/kaggle.json`, or run `.venv/bin/kaggle auth login` (OAuth, browser). Then re-run
-  `.venv/bin/kaggle quota` to confirm and to read the weekly GPU quota.
-
 ### B004 — History rewrite: prepared, needs to be run by Ameya
 - **What.** Purging the personal planning notes from history (approved 2026-09-28). They live only
   in historical versions of `ROADMAP.md` (two sections and four lines) and in `HANDOFF_CONTEXT.md`
@@ -94,3 +78,18 @@ the real execution environment before measurements. Does not block authorized do
   `env OK: Apple M5 Max, macOS 26.6.2, python 3.12.12, power ac, low power mode off`, matching
   `context/ENV.md`. The 2026-09-19 failure was a visibility problem in that session's sandbox
   (no `sysctl` access), not a hardware change. Baseline unchanged. Measurements are not gated.
+
+### R005 (was B003) — Kaggle API rejected the credentials (HTTP 401)
+- **Symptom.** Every Kaggle CLI call printed "Authentication required"; debug logging showed the
+  legacy key in `~/.kaggle/kaggle.json` (dated 2025) being loaded and the server answering 401.
+  After Ameya ran `kaggle auth login` successfully (2026-10-02), the same message persisted.
+- **Cause.** CLI 2.2.4 tries credentials in the order access token → legacy API key → OAuth. A
+  legacy key file that merely *exists* counts as authenticated locally, so the stale key shadowed
+  the fresh OAuth login (stored at `~/.kaggle/credentials.json`, a fixed path) and the server
+  rejected it.
+- **Fix.** Run the CLI with `KAGGLE_CONFIG_DIR` pointing at an empty folder, so no legacy key is
+  found and the OAuth credentials are used:
+  `KAGGLE_CONFIG_DIR=$PWD/artifacts/kaggle/.cfg .venv/bin/kaggle ...` (the folder is gitignored).
+  The stale `kaggle.json` was left untouched; deleting or regenerating it would also work and is
+  Ameya's call. `scripts/make_kaggle_kernel.py` reads only the username from that file, which is
+  still correct.
