@@ -87,7 +87,7 @@ def kaggle_username(token_file: Path = TOKEN_FILE) -> str:
 def export_constraints(out: Path = CONSTRAINTS) -> list[str]:
     """Pin the train extra from uv.lock, minus the CUDA stack. Returns the kept lines."""
     proc = subprocess.run(
-        ["uv", "export", "--extra", "train", "--no-hashes", "--no-emit-project", "--format", "requirements-txt"],
+        ["uv", "export", "--extra", "train", "--no-dev", "--no-hashes", "--no-emit-project", "--format", "requirements-txt"],
         cwd=REPO_ROOT, capture_output=True, text=True, check=True,
     )
     kept = []
