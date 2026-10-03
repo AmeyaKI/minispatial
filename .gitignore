@@ -27,6 +27,7 @@
 !/results/runs/kaggle_smoke_tiny_tl.json
 !/results/runs/checkpoints_manifest.json
 !/results/runs/eval_*.json
+!/results/runs/export_*.json
 
 # Model artifacts
 *.mlpackage

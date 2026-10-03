@@ -286,7 +286,11 @@ def predict_logits(model, chip: torch.Tensor, mode: str) -> torch.Tensor:
     input resolution (verified: 224 in -> 224 out, 512 in -> 512 out). Nothing
     in this function resamples; the datamodule owns that.
     """
-    device = next(model.parameters()).device
+    device = getattr(model, "device", None)
+    if device is None:
+        device = next(model.parameters()).device
+    if device == "coreml":  # a CoreMLSegmenter: numpy in, logits out, no device transfer
+        return model(chip.unsqueeze(0)).output[0]
     if mode in ("resize", "native"):
         # `resize` already arrived at 224 via the datamodule's own transform;
         # `native` arrives at 512. Either way the model matches its input size.
@@ -313,6 +317,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="Hugging Face repo of the published teacher (ignored when --ckpt is given)")
     parser.add_argument("--ckpt", type=Path, default=None,
                         help="local Lightning checkpoint from train/train.py (R1); overrides --checkpoint")
+    parser.add_argument("--mlpackage", type=Path, default=None,
+                        help="evaluate a Core ML artifact from its own outputs (rule 3); needs --ckpt for provenance")
+    parser.add_argument("--compute-units", default="CPU_AND_NE",
+                        help="requested Core ML compute units for --mlpackage (not placement evidence)")
     parser.add_argument("--model-id", default=None,
                         help="SCHEMA.md model_id for the record (default: from the checkpoints manifest, "
                              "or prithvi_300m_tl_sen1floods11 for the Hub teacher)")
@@ -332,7 +340,10 @@ def main(argv: list[str] | None = None) -> int:
 
     spec = load_band_spec()
     plan: dict[str, Any] = {
-        "kind": "teacher_eval" if args.ckpt is None else "model_eval",
+        "kind": "teacher_eval" if args.ckpt is None else ("artifact_eval" if args.mlpackage else "model_eval"),
+        "runtime": "coreml" if args.mlpackage else "torch_cpu",
+        "mlpackage": str(args.mlpackage) if args.mlpackage else None,
+        "compute_units_requested": args.compute_units if args.mlpackage else "n/a",
         "checkpoint": str(args.ckpt) if args.ckpt is not None else args.checkpoint,
         "model_id": args.model_id,
         "split": args.split,
@@ -361,7 +372,8 @@ def main(argv: list[str] | None = None) -> int:
     if args.data_root is None:
         parser.error("--data-root is required unless --dry-run")
     if args.ckpt is not None and args.out == DEFAULT_OUT:
-        args.out = REPO_ROOT / "results" / "runs" / f"eval_{args.ckpt.parent.name}_{args.split}_{plan['protocol']}.json"
+        stem = args.ckpt.parent.name + (f"_coreml_fp16_{args.compute_units}" if args.mlpackage else "")
+        args.out = REPO_ROOT / "results" / "runs" / f"eval_{stem}_{args.split}_{plan['protocol']}.json"
 
     datamodule = build_datamodule(args.data_root, args.inference, resize=args.resize)
     dataset = build_split_dataset(datamodule, args.data_root, args.split)
@@ -372,10 +384,18 @@ def main(argv: list[str] | None = None) -> int:
         model, provenance = load_local_checkpoint(args.ckpt, device)
         if plan["model_id"] is None and provenance["checkpoints_manifest_entry"]:
             plan["model_id"] = provenance["checkpoints_manifest_entry"]["model_id"]
+        if args.mlpackage is not None:
+            from minispatial.export.segmentation import CoreMLSegmenter, artifact_sha256
+
+            del model  # rule 3: predictions come from the artifact, never the PyTorch model
+            model = CoreMLSegmenter(args.mlpackage, args.compute_units)
+            provenance = {**provenance, "artifact": str(args.mlpackage), "artifact_sha256": artifact_sha256(args.mlpackage),
+                          "load_time_ms": round(model.load_ms, 1)}
     else:
         model, provenance = load_model(args.checkpoint, device)
         plan["model_id"] = plan["model_id"] or "prithvi_300m_tl_sen1floods11"
-    model.eval()
+    if hasattr(model, "eval"):
+        model.eval()
     plan["checkpoint_provenance"] = provenance
     plan["chips_in_split"] = len(dataset)
     plan["device"] = device
