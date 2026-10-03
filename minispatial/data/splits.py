@@ -26,20 +26,30 @@ import numpy as np
 
 from minispatial.data.bands import BandSpec, load_band_spec
 
-__all__ = ["SPLITS", "Sen1Floods11Splits", "iter_split"]
+__all__ = ["SPLITS", "Sen1Floods11Splits", "Sen1Floods11WithBolivia", "iter_split"]
 
 #: The four hand-labelled split files shipped in ``v1.1/splits/flood_handlabeled/``.
 SPLITS = ("train", "val", "test", "bolivia")
 
 
-def Sen1Floods11Splits():  # noqa: N802 - factory that returns a class, keeps terratorch import lazy
-    """Return a ``Sen1Floods11NonGeo`` subclass that also knows the ``bolivia`` split."""
-    from terratorch.datasets import Sen1Floods11NonGeo
+try:  # terratorch is the `train` extra; this module must still import without it
+    from terratorch.datasets import Sen1Floods11NonGeo as _Sen1Floods11NonGeo
+except ImportError:  # pragma: no cover - environment-dependent
+    _Sen1Floods11NonGeo = None
 
-    class _WithBolivia(Sen1Floods11NonGeo):
-        splits = {**Sen1Floods11NonGeo.splits, "bolivia": "bolivia"}
+if _Sen1Floods11NonGeo is not None:
 
-    return _WithBolivia
+    class Sen1Floods11WithBolivia(_Sen1Floods11NonGeo):
+        """``Sen1Floods11NonGeo`` plus the ``bolivia`` split. Module-level so DataLoader workers can pickle it."""
+
+        splits = {**_Sen1Floods11NonGeo.splits, "bolivia": "bolivia"}
+
+
+def Sen1Floods11Splits():  # noqa: N802 - kept as a factory for callers written against the lazy version
+    """Return the ``Sen1Floods11NonGeo`` subclass that also knows the ``bolivia`` split."""
+    if _Sen1Floods11NonGeo is None:
+        raise ImportError("terratorch is required for Sen1Floods11 split loading (install the 'train' extra)")
+    return Sen1Floods11WithBolivia
 
 
 def iter_split(

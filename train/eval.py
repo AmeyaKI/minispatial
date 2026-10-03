@@ -31,6 +31,20 @@ These are three different quantities. ``resize`` is the one to reproduce a
 published figure with, because it is what the published recipe did. The choice
 must then be identical for the teacher row and every deployed-runtime row, or the
 frontier compares aggregation strategy rather than runtime. See context/STATE.md.
+
+R1 ADDITIONS (2026-10-03):
+
+* ``--ckpt PATH`` evaluates a *local* Lightning checkpoint produced by ``train/train.py``
+  (e.g. the Kaggle runs in ``results/runs/checkpoints_manifest.json``) instead of the Hub
+  teacher. The task is rebuilt from the checkpoint's saved ``model_args`` with
+  ``backbone_pretrained: False`` and the state dict is loaded strictly.
+* ``--split val|test|bolivia`` now actually selects the split. Before this fix the flag was
+  accepted but the test loader was always used (noted in STATE.md 2026-09-27). The dataset is
+  built with the datamodule's own composed transform, so ``test`` is byte-for-byte the same
+  pipeline as before; ``bolivia`` uses the split file terratorch lacks
+  (``minispatial.data.splits``).
+* Per-chip confusion matrices are saved, so event-level uncertainty can be computed later
+  without re-running (EXPERIMENT_PROTOCOL.md section 4).
 """
 
 from __future__ import annotations
@@ -51,6 +65,7 @@ import torch
 import yaml
 
 from minispatial.data.bands import REFERENCE_CONFIG_PATH, load_band_spec
+from minispatial.data.splits import SPLITS, Sen1Floods11Splits
 from minispatial.data.tiling import extract_tiles, stitch_tiles
 from minispatial.metrics import confusion_matrix, f1_per_class, iou_per_class, miou
 
@@ -183,6 +198,71 @@ def load_model(checkpoint: str, device: str = "cpu"):
     return task.to(device), provenance
 
 
+def load_local_checkpoint(path: Path, device: str = "cpu"):
+    """Load a Lightning checkpoint written by ``train/train.py`` (terratorch ``SemanticSegmentationTask``).
+
+    The task is rebuilt from the checkpoint's own ``hyper_parameters.model_args`` (so the
+    architecture is whatever was trained, not whatever the current YAML says) with
+    ``backbone_pretrained`` forced off -- the weights come from the checkpoint -- and the
+    state dict is loaded with ``strict=True`` so any architecture drift is an error, not a
+    silent partial load. Returns ``(task, provenance)``.
+    """
+    import hashlib
+
+    from terratorch.tasks import SemanticSegmentationTask
+
+    state = torch.load(path, map_location="cpu", weights_only=False)
+    hp = state["hyper_parameters"]
+    model_args = dict(hp["model_args"])
+    model_args["backbone_pretrained"] = False
+    if hp.get("model_factory") == "UNetSmallFactory":
+        from minispatial.models.unet_small import register_factory
+
+        register_factory()
+    task = SemanticSegmentationTask(
+        model_args=model_args, model_factory=hp["model_factory"], loss=hp.get("loss", "ce"),
+        ignore_index=hp.get("ignore_index", -1),
+    )
+    task.load_state_dict(state["state_dict"], strict=True)
+    sha = hashlib.sha256(path.read_bytes()).hexdigest()
+    manifest_entry = None
+    manifest_path = REPO_ROOT / "results" / "runs" / "checkpoints_manifest.json"
+    if manifest_path.exists():
+        for entry in json.loads(manifest_path.read_text()).get("checkpoints", []):
+            if entry.get("selected_checkpoint", {}).get("sha256") == sha:
+                manifest_entry = {k: entry[k] for k in ("run_name", "model_id", "seed", "config", "commit", "kernel")}
+    provenance = {
+        "local_checkpoint": str(path),
+        "sha256": sha,
+        "checkpoint_epoch": state.get("epoch"),
+        "checkpoint_global_step": state.get("global_step"),
+        "model_factory": hp["model_factory"],
+        "backbone": model_args.get("backbone"),
+        "necks": [n["name"] for n in model_args.get("necks", [])],
+        "checkpoints_manifest_entry": manifest_entry,
+    }
+    return task.to(device), provenance
+
+
+def build_split_dataset(datamodule, data_root: Path, split: str):
+    """The datamodule's dataset for ``split`` -- including ``bolivia``, which terratorch lacks.
+
+    Uses the datamodule's already-composed ``test_transform`` and the same constructor
+    arguments ``Sen1Floods11NonGeoDataModule.setup`` passes, so for ``test`` this is the same
+    pipeline as ``datamodule.test_dataloader()`` and for ``val`` / ``bolivia`` it differs only
+    in which split file is read. Standardisation still happens via ``standardize`` (D020).
+    """
+    if split not in SPLITS:
+        raise ValueError(f"split must be one of {SPLITS}, got {split!r}")
+    spec = load_band_spec()
+    dataset_cls = Sen1Floods11Splits()
+    return dataset_cls(
+        data_root=str(data_root), split=split, bands=list(spec.band_names),
+        transform=datamodule.test_transform, constant_scale=spec.constant_scale,
+        no_data_replace=0, no_label_replace=spec.ignore_index, use_metadata=False,
+    )
+
+
 def standardize(datamodule, images: torch.Tensor) -> torch.Tensor:
     """Apply the datamodule's per-band standardization to a batch of images.
 
@@ -229,7 +309,13 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--data-root", type=Path, required=False,
                         help="Sen1Floods11 v1.1 root (required unless --dry-run)")
-    parser.add_argument("--checkpoint", default=DEFAULT_CHECKPOINT)
+    parser.add_argument("--checkpoint", default=DEFAULT_CHECKPOINT,
+                        help="Hugging Face repo of the published teacher (ignored when --ckpt is given)")
+    parser.add_argument("--ckpt", type=Path, default=None,
+                        help="local Lightning checkpoint from train/train.py (R1); overrides --checkpoint")
+    parser.add_argument("--model-id", default=None,
+                        help="SCHEMA.md model_id for the record (default: from the checkpoints manifest, "
+                             "or prithvi_300m_tl_sen1floods11 for the Hub teacher)")
     parser.add_argument("--split", default="test", choices=["test", "val", "bolivia"])
     parser.add_argument("--inference", default="resize",
                         choices=["resize", "native", "tile"],
@@ -246,10 +332,12 @@ def main(argv: list[str] | None = None) -> int:
 
     spec = load_band_spec()
     plan: dict[str, Any] = {
-        "kind": "teacher_eval",
-        "checkpoint": args.checkpoint,
+        "kind": "teacher_eval" if args.ckpt is None else "model_eval",
+        "checkpoint": str(args.ckpt) if args.ckpt is not None else args.checkpoint,
+        "model_id": args.model_id,
         "split": args.split,
         "inference_mode": args.inference,
+        "protocol": {"resize": f"resize{args.resize or 224}", "native": "native512", "tile": "tile224s144"}[args.inference],
         "bands": list(spec.band_names),
         "constant_scale": spec.constant_scale,
         "ignore_index": spec.ignore_index,
@@ -272,28 +360,39 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.data_root is None:
         parser.error("--data-root is required unless --dry-run")
+    if args.ckpt is not None and args.out == DEFAULT_OUT:
+        args.out = REPO_ROOT / "results" / "runs" / f"eval_{args.ckpt.parent.name}_{args.split}_{plan['protocol']}.json"
 
     datamodule = build_datamodule(args.data_root, args.inference, resize=args.resize)
-    datamodule.setup("test")
-    loader = datamodule.test_dataloader()
+    dataset = build_split_dataset(datamodule, args.data_root, args.split)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=False, num_workers=2)
+    chip_ids = [Path(f).name.replace("_S2Hand.tif", "") for f in dataset.image_files]
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    model, provenance = load_model(args.checkpoint, device)
+    if args.ckpt is not None:
+        model, provenance = load_local_checkpoint(args.ckpt, device)
+        if plan["model_id"] is None and provenance["checkpoints_manifest_entry"]:
+            plan["model_id"] = provenance["checkpoints_manifest_entry"]["model_id"]
+    else:
+        model, provenance = load_model(args.checkpoint, device)
+        plan["model_id"] = plan["model_id"] or "prithvi_300m_tl_sen1floods11"
     model.eval()
     plan["checkpoint_provenance"] = provenance
+    plan["chips_in_split"] = len(dataset)
     plan["device"] = device
     if device == "cuda":
         plan["gpu"] = torch.cuda.get_device_name(0)
 
     accumulator = np.zeros((NUM_CLASSES, NUM_CLASSES), dtype=np.int64)
+    per_chip: list[dict[str, Any]] = []
     chips = 0
     for batch in loader:
         images, masks = standardize(datamodule, batch["image"]), batch["mask"]
         for i in range(images.shape[0]):
             logits = predict_logits(model, images[i], args.inference)
             prediction = logits.argmax(0).numpy()
-            accumulator += confusion_matrix(
-                prediction, masks[i].numpy(), NUM_CLASSES, spec.ignore_index
-            )
+            cm = confusion_matrix(prediction, masks[i].numpy(), NUM_CLASSES, spec.ignore_index)
+            accumulator += cm
+            per_chip.append({"chip": chip_ids[chips], "confusion_matrix": cm.tolist()})
             chips += 1
             if args.limit and chips >= args.limit:
                 break
@@ -310,6 +409,7 @@ def main(argv: list[str] | None = None) -> int:
         "iou_per_class": [None if np.isnan(v) else float(v) for v in per_class_iou],
         "iou_water": float(per_class_iou[WATER_CLASS]),
         "f1_water": float(per_class_f1[WATER_CLASS]),
+        "per_chip": per_chip,
         "versions": {p: version(p) for p in ("torch", "terratorch", "numpy")},
         "published_comparison": (
             "Compare against the Prithvi-EO-2.0 paper (arXiv 2412.02732) and the "
