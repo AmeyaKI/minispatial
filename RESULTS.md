@@ -68,6 +68,38 @@ lr 1e-3 random run scored lower on test but higher on Bolivia than the lr 5e-5 o
 chosen, and that ordering is not a reason to revisit the validation-only rule. These are PyTorch
 reference rows, not deployed-artifact rows (rule 3); the Core ML rows follow in R1.
 
+## R1 — the first deployed artifact: tiny pretrained, Core ML FP16, native 512 (seed 0, exploratory)
+
+Exported 2026-10-03 on the Mac from the run-1 checkpoint (`scripts/export_coreml.py`; record
+`results/runs/export_tiny_tl_fp16.json`). Encoder + neck + decoder + head in one ML Program; the
+Conv3d patch embedding rewritten as Conv2d (exact) and the positional table frozen for 512 (exact,
+`tests/test_segmentation_export.py`). Artifact 26.623 MB, 1067 MIL ops.
+
+**Implementation parity** against fp32 PyTorch on the 10 committed validation chips, same
+standardised input: pixel disagreement 0.0082 %, max |Δlogit| 0.083,
+mean |Δlogit| 0.00334. `parity_status` is `[unmeasured]` because the fp16 tier in
+`thresholds.yaml` is still null (rule 2); these numbers are what Ameya sets it against.
+
+**Accuracy from the artifact's own outputs** (rule 3), requested compute units `CPU_AND_NE`:
+
+| Row | Test mIoU | Test IoU_water | Bolivia mIoU | Bolivia IoU_water | Source |
+| --- | --- | --- | --- | --- | --- |
+| tiny pretrained, fp32 PyTorch reference | 87.18 | 77.75 | 80.65 | 67.29 | `results/runs/eval_tiny_tl_{test,bolivia}_native512.json` |
+| tiny pretrained, **Core ML FP16 artifact** | 87.19 | 77.76 | 80.64 | 67.26 | `results/runs/eval_tiny_tl_coreml_fp16_CPU_AND_NE_{test,bolivia}_native512.json` |
+
+Δ mIoU artifact − reference: test +0.005 pp, Bolivia -0.014 pp.
+
+**Placement.** `CPU_AND_NE` was *requested*. The Core ML runtime reported
+`MILCompilerForANE error: failed to compile ANE model` at load (captured under a pseudo-terminal,
+stored verbatim in the export record) and fell back. **This artifact did not run on the Neural
+Engine.** Any latency measured under this request is CPU/GPU latency and the frontier row says so
+(`placement_observed`). Which op blocks ANE compilation is `[unmeasured]`; it is a candidate R3
+question, not a claim.
+
+Timing from one fresh process on a zeros input (not the benchmark protocol): load 2573 ms,
+first call 22 ms, second call 16 ms. Proper latency/memory rows come
+from the benchmark runner (R1, next).
+
 ## The questions, and their answers
 
 The revised ROADMAP defines the questions below. Answers require adequate controls; an
