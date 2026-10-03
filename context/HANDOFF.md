@@ -438,3 +438,37 @@ Nothing blocking. Optional: delete the backup branch; delete the stale `~/.kaggl
 
 ### Exact next step
 Poll the two running kernels; pull outputs; submit 2b, 3, 4 as slots free (STATE.md §Next actions).
+
+---
+
+## 2026-10-03 — R1 nearly complete: full Core ML artifact, parity, artifact accuracy, runner, profile
+
+**Kaggle.** Runs 2 (tiny_random) and 2b (tiny_random_lr1e-3) complete and verified (checksums); runs 3 and 4
+(U-Nets) submitted after the quota reset; run 4 complete and verified (val mIoU 0.893 at its min-val/loss
+checkpoint — higher than tiny pretrained's 0.874 on validation; test evaluation waits for run 3 so the U-Net
+recipe is chosen on validation first); run 3 still RUNNING at close. Random-init recipe chosen on val: run 2
+(0.851 vs 0.840). Kaggle python moved to 3.13.15 between the smoke run and the real runs.
+
+**R1 done.** `eval.py` fixed (`--split` honoured, Bolivia added, local `--ckpt`, per-chip CMs). fp32 reference
+rows for tiny_tl / tiny_random / tiny_random_lr1e-3 on test and Bolivia (RESULTS.md). Full-network Core ML
+FP16 export at 512: two exact graph rewrites (Conv2d patch embed; positional table frozen for 512 because
+coremltools lacks `upsample_bicubic2d`), 26.6 MB, 1067 ops, parity on the 10 committed val chips 0.0082 %
+pixel disagreement / max |Δlogit| 0.083; artifact-own accuracy within 0.02 pp of the reference on both
+splits. **ANE compile fails** for the full artifact under `CPU_AND_NE` (the runtime prints it to the TTY,
+not stderr; captured under a pty and stored). Benchmark runner implemented and smoke-tested (not a row:
+battery). Component profile: decoder ≈ 80 % of CPU stage time; the encoder sub-artifact fails ANE compile
+while the decoder sub-artifact compiles.
+
+**R1 not done.** The three frontier rows: the Mac was on battery all session (protocol §7 requires AC).
+
+**Numbers.** Every new number traces to a `results/runs/*.json` produced this session; RESULTS.md labels
+all of them seed-0 exploratory and the profile indicative. 109 tests pass.
+
+### Needs Ameya
+1. **Plug the Mac into AC** and keep it on AC for the frontier rows (three rows × 3 processes × ~2 min).
+2. **Thresholds** (rule 2): after the fp16 rows exist, approve the parity tiers and stability bound I propose.
+3. Optional: delete `backup-pre-rewrite-2026-10-02`; delete the stale `~/.kaggle/kaggle.json`.
+
+### Exact next step
+On AC: the three `minispatial.bench.run` rows for `tiny_tl_fp16.mlpackage`. Then pull run 3, finish the
+U-Net selection/evaluation/export, evaluate MNDWI on test/Bolivia, and write the R2 comparison table.

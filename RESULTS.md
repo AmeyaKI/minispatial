@@ -100,6 +100,25 @@ Timing from one fresh process on a zeros input (not the benchmark protocol): loa
 first call 22 ms, second call 16 ms. Proper latency/memory rows come
 from the benchmark runner (R1, next).
 
+## R1 — component profile of the deployed tiny model (indicative, not a frontier row)
+
+`scripts/profile_components.py`, 2026-10-03, one real standardised chip, in-process timing, **on
+battery** (`results/runs/profile_tiny_tl_CPU_AND_NE.json`). Numbers are medians of 30 calls.
+
+| Stage (PyTorch fp32, CPU) | median ms | share of stage sum |
+| --- | --- | --- |
+| encoder | 24.6 | 18.7 % |
+| neck | 1.6 | 1.2 % |
+| decoder (UperNet) | 104.7 | 79.5 % |
+| head + rescale | 0.7 | 0.5 % |
+
+Core ML FP16 sub-artifacts, `CPU_AND_NE` requested: encoder+neck 9.8 ms with **ANE compile
+failed**; decoder+head 7.1 ms with **ANE compile succeeded**; full artifact
+16.2 ms. Observed, not interpreted: the decoder holds 55 % of parameters and most of the CPU
+time, while the encoder is what prevents the whole artifact from compiling for the Neural Engine.
+Both are candidate R3 directions (compact decoder; encoder op compatibility); neither is chosen
+here, and the AC-power frontier rows come first.
+
 ## The questions, and their answers
 
 The revised ROADMAP defines the questions below. Answers require adequate controls; an
