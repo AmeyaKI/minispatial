@@ -1,0 +1,234 @@
+{
+  "kind": "component_profile",
+  "run_name": "tiny_tl",
+  "checkpoint": "artifacts/checkpoints/tiny_tl/epoch45-valloss0.0809.ckpt",
+  "checkpoint_sha256": "1017cff3116d9dcdc827c88fda577a99d704ea71a59f258e821eea006930f76a",
+  "input_chip": "Ghana_1033830",
+  "size": 512,
+  "warmup": 5,
+  "timed": 30,
+  "torch_cpu_fp32": {
+    "stages_ms": {
+      "encoder": {
+        "n": 30,
+        "median_ms": 24.623229000000002,
+        "p95_ms": 25.36275,
+        "iqr_ms": 0.3544797499999959,
+        "min_ms": 24.293334,
+        "max_ms": 26.484125
+      },
+      "neck": {
+        "n": 30,
+        "median_ms": 1.6011250000000001,
+        "p95_ms": 2.036041,
+        "iqr_ms": 0.06596849999999987,
+        "min_ms": 1.5415,
+        "max_ms": 2.124792
+      },
+      "decoder": {
+        "n": 30,
+        "median_ms": 104.66535400000001,
+        "p95_ms": 107.269,
+        "iqr_ms": 1.3842815000000002,
+        "min_ms": 102.836959,
+        "max_ms": 108.981042
+      },
+      "head": {
+        "n": 30,
+        "median_ms": 0.5323755,
+        "p95_ms": 0.591583,
+        "iqr_ms": 0.03946875000000005,
+        "min_ms": 0.499,
+        "max_ms": 0.6085
+      },
+      "rescale": {
+        "n": 30,
+        "median_ms": 0.189833,
+        "p95_ms": 0.205125,
+        "iqr_ms": 0.006343249999999995,
+        "min_ms": 0.181958,
+        "max_ms": 0.247
+      },
+      "full_forward": {
+        "n": 30,
+        "median_ms": 140.522208,
+        "p95_ms": 143.973708,
+        "iqr_ms": 2.7430412500000045,
+        "min_ms": 135.070167,
+        "max_ms": 144.12225
+      }
+    },
+    "stage_share_pct": {
+      "encoder": 18.7,
+      "neck": 1.2,
+      "decoder": 79.5,
+      "head": 0.4,
+      "rescale": 0.1
+    },
+    "stage_sum_median_ms": 131.6119165,
+    "threads": 6,
+    "shapes": {
+      "encoder_out": [
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ],
+        [
+          1,
+          1025,
+          192
+        ]
+      ],
+      "neck_out": [
+        [
+          1,
+          48,
+          128,
+          128
+        ],
+        [
+          1,
+          96,
+          64,
+          64
+        ],
+        [
+          1,
+          192,
+          32,
+          32
+        ],
+        [
+          1,
+          192,
+          16,
+          16
+        ]
+      ],
+      "decoder_out": [
+        1,
+        256,
+        128,
+        128
+      ],
+      "head_out": [
+        1,
+        2,
+        128,
+        128
+      ]
+    }
+  },
+  "params_ref": "results/runs/param_manifest.json",
+  "environment": {
+    "chip": "Apple M5 Max",
+    "ram_GB": 128,
+    "macos_version": "26.6.2",
+    "coremltools_version": "9.0",
+    "mlx_version": "0.32.2",
+    "torch_version": "2.14.0",
+    "power_state": "battery",
+    "date": "2026-10-03",
+    "low_power_mode": "unknown",
+    "timestamp_utc": "2026-10-03T22:31:15+00:00"
+  },
+  "git_commit": "3582c5e",
+  "note": "Profile for choosing an R3 direction; in-process timing, not a frontier row.",
+  "coreml_fp16": {
+    "compute_units_requested": "CPU_AND_NE",
+    "encoder_neck": {
+      "load_ms": 2243.8555,
+      "first_ms": 12.920041,
+      "latency": {
+        "n": 30,
+        "median_ms": 9.797896,
+        "p95_ms": 10.738209,
+        "iqr_ms": 0.08761475000000019,
+        "min_ms": 9.647792,
+        "max_ms": 11.143417
+      },
+      "ane_compile_failed": true,
+      "artifact": "/Users/ameyakiwalkar/Documents/minispatial/artifacts/coreml/profile/tiny_tl_encoder_neck_fp16.mlpackage"
+    },
+    "decoder_head": {
+      "load_ms": 394.850416,
+      "first_ms": 14.749917,
+      "latency": {
+        "n": 30,
+        "median_ms": 7.0647705,
+        "p95_ms": 7.156333,
+        "iqr_ms": 0.0920102500000004,
+        "min_ms": 6.972084,
+        "max_ms": 7.189959
+      },
+      "ane_compile_failed": false,
+      "artifact": "/Users/ameyakiwalkar/Documents/minispatial/artifacts/coreml/profile/tiny_tl_decoder_head_fp16.mlpackage"
+    },
+    "full": {
+      "load_ms": 2883.516583,
+      "first_ms": 18.615916,
+      "latency": {
+        "n": 30,
+        "median_ms": 16.247958,
+        "p95_ms": 16.46175,
+        "iqr_ms": 0.26465624999999804,
+        "min_ms": 16.029167,
+        "max_ms": 16.547958
+      },
+      "ane_compile_failed": true,
+      "artifact": "/Users/ameyakiwalkar/Documents/minispatial/artifacts/coreml/tiny_tl_fp16.mlpackage"
+    },
+    "note": "sub-artifacts cut at the neck/decoder boundary; sums need not equal the full artifact (fusion, output copies). ANE compile status captured per sub-artifact."
+  }
+}

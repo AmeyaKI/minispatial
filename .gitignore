@@ -28,6 +28,8 @@
 !/results/runs/checkpoints_manifest.json
 !/results/runs/eval_*.json
 !/results/runs/export_*.json
+!/results/runs/profile_*.json
+!/results/runs/bench_*.json
 
 # Model artifacts
 *.mlpackage
