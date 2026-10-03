@@ -45,6 +45,29 @@ ROADMAP §11's kill condition is the teacher failing to load or evaluate, and it
 D023 accepted proceeding with the miss recorded. The revised ROADMAP R0–R4 governs further
 work; it does not change this historical verdict.
 
+## R1/R2 — fp32 PyTorch reference rows at native 512 (seed 0, **exploratory**)
+
+Measured 2026-10-03 on the Mac (CPU, fp32, torch 2.14.0, terratorch 1.2.13) with `train/eval.py
+--ckpt`, from checkpoints trained on Kaggle (one T4, `16-mixed`, 50 epochs, D024 recipe; provenance
+and SHA-256 in `results/runs/checkpoints_manifest.json`). Checkpoints were selected by minimum
+validation loss; the random-init recipe (run 2 vs 2b) was chosen on validation mIoU before test or
+Bolivia were read (EXPERIMENT_PROTOCOL.md §5). Metrics from `minispatial.metrics`, per-chip
+confusion matrices saved in each JSON. **One seed each: these are exploratory and no claim about
+pretraining is made from them until the three-seed repeat exists.**
+
+| Model | Test mIoU | Test IoU_water | Test F1_water | Bolivia mIoU | Bolivia IoU_water | Source |
+| --- | --- | --- | --- | --- | --- | --- |
+| tiny pretrained (run 1) | 87.18 | 77.75 | 87.48 | 80.65 | 67.29 | `results/runs/eval_tiny_tl_{test,bolivia}_native512.json` |
+| tiny random-init, lr 5e-5 (run 2; chosen on val) | 86.37 | 76.38 | 86.61 | 72.86 | 54.00 | `results/runs/eval_tiny_random_{test,bolivia}_native512.json` |
+| tiny random-init, lr 1e-3 (run 2b) | 84.93 | 73.83 | 84.95 | 75.01 | 57.59 | `results/runs/eval_tiny_random_lr1e-3_{test,bolivia}_native512.json` |
+| 300M teacher, native 512 (M0 record above) | 89.46 | 81.68 | 89.91 | [unmeasured] | [unmeasured] | `results/runs/teacher_eval_native.json` |
+
+Observed, not interpreted: on the test split the pretrained and the validation-chosen random-init
+tiny differ by under one mIoU point; on the held-out Bolivia split they differ by about eight. The
+lr 1e-3 random run scored lower on test but higher on Bolivia than the lr 5e-5 one; it was not
+chosen, and that ordering is not a reason to revisit the validation-only rule. These are PyTorch
+reference rows, not deployed-artifact rows (rule 3); the Core ML rows follow in R1.
+
 ## The questions, and their answers
 
 The revised ROADMAP defines the questions below. Answers require adequate controls; an
