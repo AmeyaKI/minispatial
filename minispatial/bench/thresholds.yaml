@@ -17,10 +17,10 @@ meta:
   # and stability thresholds are still null: they judge quantized measurements,
   # none of which exist yet, and rule 2 requires them to be set before the first
   # one is taken -- not now, and not after.
-  status: reproduction_approved__parity_and_stability_pending
+  status: reproduction_approved__parity_and_stability_PROPOSED_2026-10-04_pending_Ameya
   reproduction_set_by: Ameya Kiwalkar
   reproduction_set_on: 2026-09-08
-  parity_set_by: null
+  parity_set_by: null   # PROPOSED by the agent 2026-10-04 from the fp16 reference rows; Ameya has NOT yet approved
   parity_set_on: null
   # Must be a commit that precedes every quantized measurement in results/.
   committed_before_first_quantized_measurement: true
@@ -72,30 +72,41 @@ reproduction:
 # --------------------------------------------------------------------------
 parity:
   fp16:
-    pixel_disagreement_pct: null
-    max_abs_logit_diff: null
-    delta_miou_pp: null
+    pixel_disagreement_pct: 0.1
+    max_abs_logit_diff: 0.5
+    delta_miou_pp: 0.1
     justification: |
-      NOT SET. fp16 is a precision change with no quantization; a large
+      PROPOSED 2026-10-04 (pending Ameya). Anchored to the measured fp16 artifact: pixel disagreement 0.0082 %, max |dlogit| 0.083,
+      |dmIoU| <= 0.015 pp across three compute-unit settings (results/frontier.csv, 2026-10-04).
+      The bounds are ~10x, ~6x and ~7x those values: wide enough for another checkpoint or the
+      U-Net, far below what a wrong export produces (whole percents of pixels).
+      Original rationale follows. fp16 is a precision change with no quantization; a large
       disagreement here means the export is wrong, not that compression cost
       something. ROADMAP section 11 makes this a KILL condition: if no tiny
       artifact meets the fp16 parity threshold after 8 hours, the project stops
       and reports. That makes this the single most consequential number in the
       file and it must be set deliberately, before any artifact is measured.
   int8:
-    pixel_disagreement_pct: null
-    max_abs_logit_diff: null
-    delta_miou_pp: null
+    pixel_disagreement_pct: 1.0
+    max_abs_logit_diff: 2.0
+    delta_miou_pp: 1.0
     justification: |
-      NOT SET. Unlike fp16, some disagreement here is the phenomenon under
+      PROPOSED 2026-10-04 (pending Ameya). Per-channel INT8 of a 13 M-param model is expected to land well inside these; the tier
+      asks only whether the artifact is the intended quantization and nothing else. Exceeding it
+      sets parity_fail=1 and triggers an export investigation; compression_delta_pp is still
+      reported either way (EXPERIMENT_PROTOCOL.md section 8).
+      Original rationale follows. Unlike fp16, some disagreement here is the phenomenon under
       study rather than a defect. The threshold marks where an artifact stops
       being a faithful deployment of the model and becomes a different model.
   int4:
-    pixel_disagreement_pct: null
-    max_abs_logit_diff: null
-    delta_miou_pp: null
+    pixel_disagreement_pct: 5.0
+    max_abs_logit_diff: 5.0
+    delta_miou_pp: 5.0
     justification: |
-      NOT SET. Expected to be the loosest tier. A row that exceeds it is still
+      PROPOSED 2026-10-04 (pending Ameya). Loosest tier: 4-bit weight error on this model is the phenomenon under study, so the gate is
+      only for gross implementation faults. A correctly exported INT4 artifact that loses more
+      than this is kept as a valid, dominated point with parity_fail=1 explained in RESULTS.md.
+      Original rationale follows. Expected to be the loosest tier. A row that exceeds it is still
       kept and reported -- "int4 breaks this model" is a result, and per
       ROADMAP section 11 reconstruction PTQ failing to beat vendor PTQ is a
       null result, not a kill.
@@ -105,7 +116,7 @@ parity:
 # excluded from the frontier line, never deleted or re-run until it passes.
 # --------------------------------------------------------------------------
 stability:
-  run_spread_pct: null
+  run_spread_pct: 10.0   # PROPOSED 2026-10-04 (pending Ameya): observed spreads on the fp16 rows were 0.26 % (CPU_AND_NE), 1.72 % (CPU_AND_GPU), 6.70 % (CPU_ONLY); 10 % keeps all three stable with headroom for the slowest, noisiest CPU path while still flagging a run that doubled.
   justification: |
     NOT SET. Computed across 3 fresh-process runs as
     (max - min) / median * 100 of per-run median latency. ROADMAP section 11
@@ -116,4 +127,4 @@ stability:
     measuring an fp16 cell's spread first and setting the threshold from the
     *reference* row before any quantized cell is measured.
   min_runs: 3
-  power_state_required: null   # e.g. "ac" -- decide before measuring, not after
+  power_state_required: ac   # fixed by EXPERIMENT_PROTOCOL.md section 7 (D031); all 2026-10-04 rows are AC

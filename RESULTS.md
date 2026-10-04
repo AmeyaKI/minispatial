@@ -100,6 +100,29 @@ Timing from one fresh process on a zeros input (not the benchmark protocol): loa
 first call 22 ms, second call 16 ms. Proper latency/memory rows come
 from the benchmark runner (R1, next).
 
+## R1 — first frontier rows: tiny pretrained, Core ML FP16, native 512, Apple M5 Max on AC (seed 0)
+
+Measured 2026-10-04 with `python -m minispatial.bench.run` (EXPERIMENT_PROTOCOL.md §7: batch 1, one real
+standardised chip, 10 warm-up + 100 timed, 60 s sustained, RSS at 5 ms, **3 fresh processes**, row =
+median of per-run medians). Rows in `results/frontier.csv`; full detail per row in
+`results/runs/bench_tiny_tl_fp16_<units>.json`; accuracy per row from that row's own outputs
+(`eval_tiny_tl_coreml_fp16_<units>_*`). Artifact 26.623 MB. `parity_status`, `unstable` and
+`acceptable` await the thresholds (rule 2).
+
+| Requested units | Placement observed | Latency median ms | p95 | Sustained ratio | Run spread % | Load ms | First call ms | Peak RSS Δ MB | Test mIoU | Bolivia mIoU | Δ vs fp32 ref pp |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `CPU_AND_NE` | ANE compile FAILED at load | 16.01 | 16.23 | 1.000 | 0.26 | 2659.3 | 21.3 | 54.1 | 0.8719 | 0.8064 | +0.005 |
+| `CPU_AND_GPU` | not_observed | 4.46 | 4.77 | 1.127 | 1.72 | 205.4 | 73.9 | 91.9 | 0.8719 | 0.8066 | +0.001 |
+| `CPU_ONLY` | not_observed | 52.74 | 57.02 | 0.993 | 6.70 | 213.5 | 75.4 | 126.0 | 0.8720 | 0.8058 | +0.015 |
+
+Observed, not interpreted: the three requested settings give three different latency regimes. Under
+`CPU_AND_NE` the runtime reported an ANE compile failure yet the latency is neither the `CPU_ONLY`
+figure nor the `CPU_AND_GPU` one, so *what actually executed where* is `not_observed` for every
+row; the compile-failure message is the only placement evidence we have. `CPU_AND_NE` also pays a
+~2.6 s load (the failed compile attempt) against ~0.2 s for the other two. Accuracy is identical to
+the third decimal across settings. Which encoder op blocks ANE compilation, and whether part of
+the graph still ran there, is an R3 question and is `[unmeasured]`.
+
 ## R1 — component profile of the deployed tiny model (indicative, not a frontier row)
 
 `scripts/profile_components.py`, 2026-10-03, one real standardised chip, in-process timing, **on
