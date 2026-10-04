@@ -260,9 +260,30 @@ def assemble_row(bench: dict[str, Any], run_name: str, export_record: dict[str, 
         agg = export_record["parity"]["aggregate"]
         row["pixel_disagreement_pct"] = f"{agg['pixel_disagreement_pct']:.4f}"
         row["max_abs_logit_diff"] = f"{agg['max_abs_logit_diff']:.4f}"
+    _judge(row)
     if fp16_records and fp16_records.get("test") and t and row["compression_delta_pp"] == UNMEASURED:
         row["compression_delta_pp"] = f"{100 * (t['miou'] - fp16_records['test']['miou']):+.3f}"
     return {c: str(row[c]) for c in cols}
+
+
+def _judge(row: dict[str, Any]) -> None:
+    """Apply the pre-registered tiers in thresholds.yaml (rule 2) when they are set; else leave [unmeasured]."""
+    import yaml
+
+    th_path = REPO_ROOT / "minispatial" / "bench" / "thresholds.yaml"
+    if not th_path.exists():
+        return
+    th = yaml.safe_load(th_path.read_text())
+    tier = (th.get("parity") or {}).get(row.get("weight_precision"))
+    have = all(row.get(k) not in (None, UNMEASURED) for k in ("pixel_disagreement_pct", "max_abs_logit_diff", "delta_miou_vs_fp32_ref_pp"))
+    if tier and all(tier.get(k) is not None for k in ("pixel_disagreement_pct", "max_abs_logit_diff", "delta_miou_pp")) and have:
+        ok = (float(row["pixel_disagreement_pct"]) <= tier["pixel_disagreement_pct"]
+              and float(row["max_abs_logit_diff"]) <= tier["max_abs_logit_diff"]
+              and abs(float(row["delta_miou_vs_fp32_ref_pp"])) <= tier["delta_miou_pp"])
+        row["parity_status"], row["parity_fail"] = ("pass", "0") if ok else ("fail", "1")
+    spread = (th.get("stability") or {}).get("run_spread_pct")
+    if spread is not None and row.get("run_spread_pct") not in (None, UNMEASURED):
+        row["unstable"] = "0" if float(row["run_spread_pct"]) <= spread else "1"
 
 
 def append_row(row: dict[str, str], csv_path: Path = FRONTIER_CSV) -> None:

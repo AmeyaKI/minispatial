@@ -72,10 +72,17 @@ class SegmentationExportModule(nn.Module):
 
     def __init__(self, pixelwise_model: nn.Module, size: int = 512) -> None:
         super().__init__()
-        if not hasattr(pixelwise_model, "encoder") or not hasattr(pixelwise_model.encoder, "patch_embed"):
-            raise TypeError("expected a terratorch PixelWiseModel with a Prithvi encoder")
-        reparameterize_patch_embed(pixelwise_model.encoder)
-        freeze_pos_embed(pixelwise_model.encoder, size)
+        encoder = getattr(pixelwise_model, "encoder", None)
+        if encoder is not None and hasattr(encoder, "patch_embed"):
+            # Prithvi: two exact graph rewrites (see module docstring)
+            reparameterize_patch_embed(encoder)
+            freeze_pos_embed(encoder, size)
+            self.family = "prithvi"
+        elif hasattr(pixelwise_model, "net"):
+            # our U-Net control (_Wrapped(UNetSmall)): plain Conv2d/BatchNorm/ReLU/bilinear, nothing to rewrite
+            self.family = "unet_small"
+        else:
+            raise TypeError("expected a terratorch PixelWiseModel with a Prithvi encoder, or the UNetSmall wrapper")
         self.size = size
         self.model = pixelwise_model.eval()
 
@@ -177,8 +184,9 @@ def export_segmentation(
         "mil_ops_total": sum(op_counts.values()),
         "rank5_intermediates": high_rank_tensors(mlmodel),
         "coremltools_shim": COREML_SHIM_REASON,
-        "patch_embed": "Conv3d(1,16,16) -> Conv2d(16,16) exact reparameterisation",
-        "pos_embed": f"bicubic resampling to the {size // 16}x{size // 16} token grid precomputed once in fp32 PyTorch and frozen as a constant (coremltools lacks upsample_bicubic2d)",
+        "model_family": module.family,
+        "patch_embed": "Conv3d(1,16,16) -> Conv2d(16,16) exact reparameterisation" if module.family == "prithvi" else "n/a (U-Net)",
+        "pos_embed": ("n/a (U-Net)" if module.family != "prithvi" else f"bicubic resampling to the {size // 16}x{size // 16} token grid precomputed once in fp32 PyTorch and frozen as a constant (coremltools lacks upsample_bicubic2d)"),
     }
     return mlmodel, record
 

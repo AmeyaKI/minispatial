@@ -1,0 +1,200 @@
+{
+  "kind": "coreml_export",
+  "name": "unet_small_lr1e-3",
+  "checkpoint": "artifacts/checkpoints/unet_small_lr1e-3/epoch47-valloss0.0709.ckpt",
+  "artifact": "/Users/ameyakiwalkar/Documents/minispatial/artifacts/coreml/unet_small_lr1e-3_fp16.mlpackage",
+  "protocol": "native512",
+  "parity_chips": [
+    "Ghana_1033830",
+    "Ghana_868803",
+    "India_533192",
+    "Mekong_293769",
+    "Pakistan_210595",
+    "Paraguay_252217",
+    "Paraguay_934240",
+    "Spain_7604243",
+    "Sri-Lanka_612594",
+    "USA_308150"
+  ],
+  "parity_split": "val",
+  "compute_units_requested": "CPU_AND_NE",
+  "record": "results/runs/export_unet_small_lr1e-3_fp16.json",
+  "checkpoint_provenance": {
+    "local_checkpoint": "artifacts/checkpoints/unet_small_lr1e-3/epoch47-valloss0.0709.ckpt",
+    "sha256": "8f00d280b4f8b82751d2fb7124e027ce1258a9618b98eb17dca84e599b508f2f",
+    "checkpoint_epoch": 47,
+    "checkpoint_global_step": 720,
+    "model_factory": "UNetSmallFactory",
+    "backbone": null,
+    "necks": [],
+    "checkpoints_manifest_entry": {
+      "run_name": "unet_small_lr1e-3",
+      "model_id": "unet_small_sen1floods11",
+      "seed": 0,
+      "config": "train/configs/unet_small_lr1e-3.yaml",
+      "commit": "9231c39958d4e76da0c6f320f236515124db37ea",
+      "kernel": "ameyakiwalkar/minispatial-unet-small-lr1e-3"
+    }
+  },
+  "artifact_size_bytes": 3964271,
+  "input": {
+    "name": "standardized_chip",
+    "shape": [
+      1,
+      6,
+      512,
+      512
+    ],
+    "dtype": "float32",
+    "semantics": "standardised reflectance, (raw*1e-4 - mean)/std per band, bands in BandSpec order"
+  },
+  "output": {
+    "name": "logits",
+    "shape": [
+      1,
+      2,
+      512,
+      512
+    ],
+    "dtype": "float32",
+    "semantics": "logits; class 1 = water"
+  },
+  "weight_precision": "fp16",
+  "activation_precision": "fp16",
+  "quant_method": "none",
+  "placement_observed": "not_observed",
+  "minimum_deployment_target": "macOS15",
+  "trace_ms": 144.1,
+  "convert_ms": 568.4,
+  "mil_op_counts": {
+    "const": 172,
+    "conv": 19,
+    "relu": 18,
+    "max_pool": 4,
+    "upsample_bilinear": 4,
+    "concat": 4,
+    "cast": 2
+  },
+  "mil_ops_total": 223,
+  "rank5_intermediates": [],
+  "coremltools_shim": "coremltools 9.0 cannot convert traced graphs under numpy>=2 (aten::Int on a size-1 const array); a graph-construction shim is installed. No effect on quantization numerics.",
+  "model_family": "unet_small",
+  "patch_embed": "n/a (U-Net)",
+  "pos_embed": "n/a (U-Net)",
+  "artifact_sha256": "b7511bd03e5250c27baef55f894166bb40daed28114b59ed23fdd0d43d171164",
+  "artifact_size_MB": 3.964,
+  "load_time_ms": 197.8,
+  "first_call_ms": 9.3,
+  "second_call_ms": 4.0,
+  "timing_note": "single fresh child process, zeros input; the bench runner measures properly",
+  "ane_compile_failed": false,
+  "runtime_stderr": "scikit-learn version 1.9.0 is not supported. Minimum required version: 0.17. Maximum required version: 1.5.1. Disabling scikit-learn conversion API.\nTorch version 2.14.0 has not been tested with coremltools. You may run into unexpected errors. Torch 2.7.0 is the most recent version that has been tested.",
+  "parity": {
+    "reference": "fp32 PyTorch, same standardised input, same checkpoint",
+    "aggregate": {
+      "pixel_disagreement_pct": 0.0027182788188007696,
+      "max_abs_logit_diff": 0.03578782081604004,
+      "mean_abs_logit_diff": 0.0008598569605965167,
+      "chips": 10,
+      "parity_status": "[unmeasured]",
+      "note": "thresholds.yaml parity tiers are null; status is set only after Ameya pre-registers them"
+    },
+    "per_chip": [
+      {
+        "chip": "Ghana_1033830",
+        "pixel_disagreement_pct": 0.007288973498149887,
+        "max_abs_logit_diff": 0.03482389450073242,
+        "mean_abs_logit_diff": 0.0011941761476919055,
+        "valid_pixels": 233229,
+        "ref_water_pct": 41.304468998280655
+      },
+      {
+        "chip": "Ghana_868803",
+        "pixel_disagreement_pct": 0.002288818359375,
+        "max_abs_logit_diff": 0.008836984634399414,
+        "mean_abs_logit_diff": 0.0012147610541433096,
+        "valid_pixels": 262144,
+        "ref_water_pct": 55.341339111328125
+      },
+      {
+        "chip": "India_533192",
+        "pixel_disagreement_pct": 0.011829332308124534,
+        "max_abs_logit_diff": 0.03578782081604004,
+        "mean_abs_logit_diff": 0.0011153060477226973,
+        "valid_pixels": 135257,
+        "ref_water_pct": 36.116430203242714
+      },
+      {
+        "chip": "Mekong_293769",
+        "pixel_disagreement_pct": 0.0008655760408551892,
+        "max_abs_logit_diff": 0.01962113380432129,
+        "mean_abs_logit_diff": 0.0008049600291997194,
+        "valid_pixels": 231060,
+        "ref_water_pct": 12.919155197784123
+      },
+      {
+        "chip": "Pakistan_210595",
+        "pixel_disagreement_pct": 0.0,
+        "max_abs_logit_diff": 0.0023729801177978516,
+        "mean_abs_logit_diff": 0.0004890362033620477,
+        "valid_pixels": 262144,
+        "ref_water_pct": 0.0
+      },
+      {
+        "chip": "Paraguay_252217",
+        "pixel_disagreement_pct": 0.0,
+        "max_abs_logit_diff": 0.019073009490966797,
+        "mean_abs_logit_diff": 0.0005817825440317392,
+        "valid_pixels": 255778,
+        "ref_water_pct": 0.0
+      },
+      {
+        "chip": "Paraguay_934240",
+        "pixel_disagreement_pct": 0.0072479248046875,
+        "max_abs_logit_diff": 0.007649421691894531,
+        "mean_abs_logit_diff": 0.0009485213668085635,
+        "valid_pixels": 262144,
+        "ref_water_pct": 0.6622314453125
+      },
+      {
+        "chip": "Spain_7604243",
+        "pixel_disagreement_pct": 0.00038156288156288156,
+        "max_abs_logit_diff": 0.00978231430053711,
+        "mean_abs_logit_diff": 0.0007051833672448993,
+        "valid_pixels": 262080,
+        "ref_water_pct": 7.904838217338217
+      },
+      {
+        "chip": "Sri-Lanka_612594",
+        "pixel_disagreement_pct": 0.000762939453125,
+        "max_abs_logit_diff": 0.008400559425354004,
+        "mean_abs_logit_diff": 0.0010006364900618792,
+        "valid_pixels": 262144,
+        "ref_water_pct": 16.266632080078125
+      },
+      {
+        "chip": "USA_308150",
+        "pixel_disagreement_pct": 0.0011449201799814523,
+        "max_abs_logit_diff": 0.006589293479919434,
+        "mean_abs_logit_diff": 0.0005442063556984067,
+        "valid_pixels": 262027,
+        "ref_water_pct": 1.1109542146420026
+      }
+    ]
+  },
+  "environment": {
+    "chip": "Apple M5 Max",
+    "ram_GB": 128,
+    "macos_version": "26.6.2",
+    "python": "3.12.12",
+    "versions": {
+      "torch": "2.14.0",
+      "coremltools": "9.0",
+      "terratorch": "1.2.13",
+      "numpy": "2.5.3"
+    },
+    "power_state": "Now drawing from 'AC Power'",
+    "git_commit": "fc08409",
+    "date": "2026-10-04T00:45:31+00:00"
+  }
+}
