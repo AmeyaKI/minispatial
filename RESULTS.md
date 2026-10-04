@@ -68,6 +68,33 @@ lr 1e-3 random run scored lower on test but higher on Bolivia than the lr 5e-5 o
 chosen, and that ordering is not a reason to revisit the validation-only rule. These are PyTorch
 reference rows, not deployed-artifact rows (rule 3); the Core ML rows follow in R1.
 
+## R2 — candidates on the held-out splits (fp32 PyTorch, native 512, seed 0, **exploratory**)
+
+Measured 2026-10-03/04 on the Mac from the Kaggle checkpoints (`results/runs/checkpoints_manifest.json`;
+recipes chosen on validation before any held-out read). Same pixels, same ignore index, same
+confusion-matrix code for every row, including the spectral baseline. **One seed per model: no
+claim about pretraining, architecture or the spectral rule is made until the three-seed repeat.**
+
+| Candidate | Params (M) | Test mIoU | Test IoU_water | Bolivia mIoU | Bolivia IoU_water | Source (`results/runs/`) |
+| --- | --- | --- | --- | --- | --- | --- |
+| U-Net, lr 1e-3 (run 4; **chosen on val**, 0.893) | 1.965 | 91.23 | 84.72 | 85.75 | 76.04 | `eval_unet_small_lr1e-3_*` |
+| U-Net, lr 5e-5 (run 3; val 0.860) | 1.965 | 88.14 | 79.55 | 86.37 | 77.45 | `eval_unet_small_*` |
+| tiny pretrained (run 1; val 0.874) | 13.020 | 87.18 | 77.75 | 80.65 | 67.29 | `eval_tiny_tl_*` |
+| tiny random-init, lr 5e-5 (run 2; chosen on val, 0.851) | 13.020 | 86.37 | 76.38 | 72.86 | 54.00 | `eval_tiny_random_*` |
+| tiny random-init, lr 1e-3 (run 2b; val 0.840) | 13.020 | 84.93 | 73.83 | 75.01 | 57.59 | `eval_tiny_random_lr1e-3_*` |
+| MNDWI ≥ 0.14 (threshold chosen on val; no learning) | 0 | 86.77 | 77.21 | 80.99 | 69.52 | `mndwi_eval_{test,bolivia}.json` |
+| 300M teacher, native 512 (M0 record) | 98.3 (manifest: 300M-TL backbone not counted here) | 89.46 | 81.68 | [unmeasured] | [unmeasured] | `teacher_eval_native.json` |
+
+Observed, not interpreted (seed 0): the validation-chosen 1.965 M-parameter U-Net scores higher than
+the 13.0 M pretrained tiny on both held-out splits, and higher than the 300M teacher on the test
+split; the MNDWI threshold is within half a point of pretrained tiny on test and above it on
+Bolivia; pretrained tiny beats its random-init twin by 0.8 pp on test and 7.8 pp on Bolivia. The
+matched-rate U-Net (5e-5) is undertrained as D025 anticipated (val loss 0.33 vs 0.07) yet still
+scores above tiny on both splits. No run triggered early stopping; all ran 50 epochs with validation
+loss still decreasing slowly, so every learned row is a fixed-budget result. ROADMAP §1: "Prithvi is
+allowed to lose." Whether it does is a three-seed question (approval pending) and a deployment
+question (latency/memory rows for the U-Net artifact, next).
+
 ## R1 — the first deployed artifact: tiny pretrained, Core ML FP16, native 512 (seed 0, exploratory)
 
 Exported 2026-10-03 on the Mac from the run-1 checkpoint (`scripts/export_coreml.py`; record

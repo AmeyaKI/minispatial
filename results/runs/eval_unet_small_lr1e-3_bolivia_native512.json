@@ -1,0 +1,267 @@
+{
+  "kind": "model_eval",
+  "runtime": "torch_cpu",
+  "mlpackage": null,
+  "compute_units_requested": "n/a",
+  "checkpoint": "artifacts/checkpoints/unet_small_lr1e-3/epoch47-valloss0.0709.ckpt",
+  "model_id": "unet_small_sen1floods11",
+  "split": "bolivia",
+  "inference_mode": "native",
+  "protocol": "native512",
+  "bands": [
+    "BLUE",
+    "GREEN",
+    "RED",
+    "NIR_NARROW",
+    "SWIR_1",
+    "SWIR_2"
+  ],
+  "constant_scale": 0.0001,
+  "ignore_index": -1,
+  "metrics_source": "minispatial.metrics (cross-checked against torchmetrics)",
+  "metric_resolution": 512,
+  "metric_definition": "mIoU = macro mean of per-class IoU over classes present; IoU_water = class 1. RECORD WHICH DEFINITION THE PUBLISHED SOURCE USES before comparing -- macro mIoU, IoU_water alone and micro-averaged IoU differ by more than the proposed tolerance on a 2-class problem with this much class imbalance.",
+  "num_classes": 2,
+  "water_class_index": 1,
+  "checkpoint_provenance": {
+    "local_checkpoint": "artifacts/checkpoints/unet_small_lr1e-3/epoch47-valloss0.0709.ckpt",
+    "sha256": "8f00d280b4f8b82751d2fb7124e027ce1258a9618b98eb17dca84e599b508f2f",
+    "checkpoint_epoch": 47,
+    "checkpoint_global_step": 720,
+    "model_factory": "UNetSmallFactory",
+    "backbone": null,
+    "necks": [],
+    "checkpoints_manifest_entry": {
+      "run_name": "unet_small_lr1e-3",
+      "model_id": "unet_small_sen1floods11",
+      "seed": 0,
+      "config": "train/configs/unet_small_lr1e-3.yaml",
+      "commit": "9231c39958d4e76da0c6f320f236515124db37ea",
+      "kernel": "ameyakiwalkar/minispatial-unet-small-lr1e-3"
+    }
+  },
+  "chips_in_split": 15,
+  "device": "cpu",
+  "timestamp_utc": "2026-10-04T00:43:51+00:00",
+  "chips_evaluated": 15,
+  "confusion_matrix": [
+    [
+      2393582,
+      19369
+    ],
+    [
+      94256,
+      360608
+    ]
+  ],
+  "miou": 0.8575416167729586,
+  "iou_per_class": [
+    0.9546806466318896,
+    0.7604025869140275
+  ],
+  "iou_water": 0.7604025869140275,
+  "f1_water": 0.8638962389245377,
+  "per_chip": [
+    {
+      "chip": "Bolivia_103757",
+      "confusion_matrix": [
+        [
+          50594,
+          2121
+        ],
+        [
+          4540,
+          30822
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_129334",
+      "confusion_matrix": [
+        [
+          79835,
+          1336
+        ],
+        [
+          14281,
+          142362
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_195474",
+      "confusion_matrix": [
+        [
+          259773,
+          11
+        ],
+        [
+          1551,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_23014",
+      "confusion_matrix": [
+        [
+          201616,
+          83
+        ],
+        [
+          293,
+          7487
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_233925",
+      "confusion_matrix": [
+        [
+          150535,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_242570",
+      "confusion_matrix": [
+        [
+          147169,
+          992
+        ],
+        [
+          11376,
+          15970
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_290290",
+      "confusion_matrix": [
+        [
+          184907,
+          27
+        ],
+        [
+          14291,
+          5408
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_294583",
+      "confusion_matrix": [
+        [
+          114977,
+          487
+        ],
+        [
+          3451,
+          11557
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_312675",
+      "confusion_matrix": [
+        [
+          146380,
+          2053
+        ],
+        [
+          5519,
+          4056
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_314919",
+      "confusion_matrix": [
+        [
+          102951,
+          2216
+        ],
+        [
+          13476,
+          70202
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_360519",
+      "confusion_matrix": [
+        [
+          250740,
+          550
+        ],
+        [
+          384,
+          2417
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_379434",
+      "confusion_matrix": [
+        [
+          251009,
+          345
+        ],
+        [
+          8497,
+          2293
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_432776",
+      "confusion_matrix": [
+        [
+          78665,
+          6079
+        ],
+        [
+          11089,
+          61056
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_60373",
+      "confusion_matrix": [
+        [
+          183475,
+          3064
+        ],
+        [
+          5502,
+          6978
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_76104",
+      "confusion_matrix": [
+        [
+          190956,
+          4
+        ],
+        [
+          5,
+          0
+        ]
+      ]
+    }
+  ],
+  "versions": {
+    "torch": "2.14.0",
+    "terratorch": "1.2.13",
+    "numpy": "2.5.3"
+  },
+  "published_comparison": "Compare against the Prithvi-EO-2.0 paper (arXiv 2412.02732) and the model card for this checkpoint. Read the figure at the source; do not transcribe it from memory. Tolerance: minispatial/bench/thresholds.yaml."
+}

@@ -1,0 +1,247 @@
+{
+  "kind": "mndwi_eval",
+  "split": "bolivia",
+  "selection_file": "results/runs/mndwi_threshold.json",
+  "index": "MNDWI = (GREEN - SWIR_1) / (GREEN + SWIR_1) on reflectance * constant_scale, before per-band standardisation",
+  "bands": [
+    "BLUE",
+    "GREEN",
+    "RED",
+    "NIR_NARROW",
+    "SWIR_1",
+    "SWIR_2"
+  ],
+  "constant_scale": 0.0001,
+  "ignore_index": -1,
+  "zero_denominator": "not water (index undefined; nodata rasters are 0 in every band)",
+  "decision_rule": "water where MNDWI >= threshold",
+  "geometry": "native 512, no resize, no tiling (D023)",
+  "metrics_source": "minispatial.metrics; mIoU = macro mean over present classes, IoU_water = class 1",
+  "timestamp_utc": "2026-10-04T00:44:04+00:00",
+  "git_commit": "2a20acf",
+  "host": "Ameyas-MacBook-Pro-MaxCTO-2052.local",
+  "platform": "macOS-26.6.2-arm64-arm-64bit",
+  "python": "3.12.12",
+  "versions": {
+    "numpy": "2.5.3",
+    "terratorch": "1.2.13",
+    "rasterio": "1.5.1"
+  },
+  "threshold": 0.14,
+  "threshold_selected_on": "val",
+  "chips_evaluated": 15,
+  "confusion_matrix": [
+    [
+      2261579,
+      151372
+    ],
+    [
+      33392,
+      421472
+    ]
+  ],
+  "miou": 0.8098504942758699,
+  "iou_per_class": [
+    0.9244733874195074,
+    0.6952276011322324
+  ],
+  "iou_water": 0.6952276011322324,
+  "f1_water": 0.8202174158418539,
+  "per_chip": [
+    {
+      "chip": "Bolivia_103757",
+      "confusion_matrix": [
+        [
+          45209,
+          7506
+        ],
+        [
+          1673,
+          33689
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_129334",
+      "confusion_matrix": [
+        [
+          70544,
+          10627
+        ],
+        [
+          4087,
+          152556
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_195474",
+      "confusion_matrix": [
+        [
+          257312,
+          2472
+        ],
+        [
+          863,
+          688
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_23014",
+      "confusion_matrix": [
+        [
+          199321,
+          2378
+        ],
+        [
+          122,
+          7658
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_233925",
+      "confusion_matrix": [
+        [
+          150529,
+          7
+        ],
+        [
+          1,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_242570",
+      "confusion_matrix": [
+        [
+          116340,
+          31821
+        ],
+        [
+          2896,
+          24450
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_290290",
+      "confusion_matrix": [
+        [
+          180031,
+          4903
+        ],
+        [
+          4387,
+          15312
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_294583",
+      "confusion_matrix": [
+        [
+          111126,
+          4338
+        ],
+        [
+          2265,
+          12743
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_312675",
+      "confusion_matrix": [
+        [
+          134350,
+          14083
+        ],
+        [
+          495,
+          9080
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_314919",
+      "confusion_matrix": [
+        [
+          89332,
+          15835
+        ],
+        [
+          5889,
+          77789
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_360519",
+      "confusion_matrix": [
+        [
+          242671,
+          8619
+        ],
+        [
+          112,
+          2689
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_379434",
+      "confusion_matrix": [
+        [
+          233771,
+          17583
+        ],
+        [
+          3100,
+          7690
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_432776",
+      "confusion_matrix": [
+        [
+          63313,
+          21431
+        ],
+        [
+          5330,
+          66815
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_60373",
+      "confusion_matrix": [
+        [
+          176790,
+          9749
+        ],
+        [
+          2167,
+          10313
+        ]
+      ]
+    },
+    {
+      "chip": "Bolivia_76104",
+      "confusion_matrix": [
+        [
+          190940,
+          20
+        ],
+        [
+          5,
+          0
+        ]
+      ]
+    }
+  ]
+}

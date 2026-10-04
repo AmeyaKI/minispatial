@@ -124,6 +124,88 @@
       "last_checkpoint_sha256": "8585bd489082a8f2eabb415b05a8832ad03b8419e6ccb4374815068d9291ea3d",
       "kaggle_output_manifest_verified": true,
       "note": "Selection numbers (Lightning torchmetrics on the validation split), not results."
+    },
+    {
+      "run_name": "unet_small",
+      "run_request_id": 3,
+      "model_id": "unet_small_sen1floods11",
+      "seed": 0,
+      "config": "train/configs/unet_small.yaml",
+      "config_sha256": "d27c40bebcc2ca6c67ee3a415d90cb349092b6eb33fc414c6040f48f69866fce",
+      "commit": "9231c39958d4e76da0c6f320f236515124db37ea",
+      "kernel": "ameyakiwalkar/minispatial-unet-small",
+      "kernel_version": 1,
+      "date": "2026-10-03",
+      "host": "kaggle",
+      "gpu_used": "1x Tesla T4",
+      "python": "3.13.15",
+      "versions": {
+        "torch": "2.14.1",
+        "terratorch": "1.2.13",
+        "lightning": "2.6.5",
+        "numpy": "2.5.3",
+        "albumentations": "2.0.8",
+        "rasterio": "1.5.1"
+      },
+      "wall_seconds_kernel": 2414.2,
+      "epochs_completed": 50,
+      "total_steps": 750,
+      "early_stopped": false,
+      "selected_checkpoint": {
+        "file": "artifacts/checkpoints/unet_small/epoch47-valloss0.3257.ckpt",
+        "selected_on": "val",
+        "criterion": "min val/loss (ModelCheckpoint)",
+        "epoch": 47,
+        "val_loss": 0.3256910741329193,
+        "val_mIoU_lightning": 0.8597770929336548,
+        "val_IoU_1_lightning": 0.7548717260360718,
+        "sha256": "f07fc716140ea1974dcabc75a4bc904f69158f998310e8cae721221b903620dc",
+        "bytes": 23677583
+      },
+      "last_checkpoint_sha256": "f07fc716140ea1974dcabc75a4bc904f69158f998310e8cae721221b903620dc",
+      "kaggle_output_manifest_verified": true,
+      "note": "Selection numbers (Lightning torchmetrics on the validation split), not results."
+    },
+    {
+      "run_name": "unet_small_lr1e-3",
+      "run_request_id": 4,
+      "model_id": "unet_small_sen1floods11",
+      "seed": 0,
+      "config": "train/configs/unet_small_lr1e-3.yaml",
+      "config_sha256": "89faea4f2c131671db8d6999c60c95705bd457e462f604d7200c6d8f1bbebe8e",
+      "commit": "9231c39958d4e76da0c6f320f236515124db37ea",
+      "kernel": "ameyakiwalkar/minispatial-unet-small-lr1e-3",
+      "kernel_version": 1,
+      "date": "2026-10-03",
+      "host": "kaggle",
+      "gpu_used": "1x Tesla T4",
+      "python": "3.13.15",
+      "versions": {
+        "torch": "2.14.1",
+        "terratorch": "1.2.13",
+        "lightning": "2.6.5",
+        "numpy": "2.5.3",
+        "albumentations": "2.0.8",
+        "rasterio": "1.5.1"
+      },
+      "wall_seconds_kernel": 1208.8,
+      "epochs_completed": 50,
+      "total_steps": 750,
+      "early_stopped": false,
+      "selected_checkpoint": {
+        "file": "artifacts/checkpoints/unet_small_lr1e-3/epoch47-valloss0.0709.ckpt",
+        "selected_on": "val",
+        "criterion": "min val/loss (ModelCheckpoint)",
+        "epoch": 47,
+        "val_loss": 0.07086347788572311,
+        "val_mIoU_lightning": 0.8927706480026245,
+        "val_IoU_1_lightning": 0.8099257946014404,
+        "sha256": "8f00d280b4f8b82751d2fb7124e027ce1258a9618b98eb17dca84e599b508f2f",
+        "bytes": 23677583
+      },
+      "last_checkpoint_sha256": "8f00d280b4f8b82751d2fb7124e027ce1258a9618b98eb17dca84e599b508f2f",
+      "kaggle_output_manifest_verified": true,
+      "note": "Selection numbers (Lightning torchmetrics on the validation split), not results."
     }
   ],
   "recipe_selections": {
@@ -136,6 +218,15 @@
       "chosen": "tiny_random",
       "date": "2026-10-03",
       "note": "Both are reported in R2. Values are val_mIoU_lightning of each run's min-val/loss checkpoint; see entries above."
+    },
+    "unet": {
+      "rule": "D025 / EXPERIMENT_PROTOCOL.md section 5: higher validation mIoU of the selected checkpoint; both reported; test/Bolivia never consulted",
+      "candidates": {
+        "unet_small (lr 5e-5)": 0.8597770929336548,
+        "unet_small_lr1e-3 (lr 1e-3)": 0.8927706480026245
+      },
+      "chosen": "unet_small_lr1e-3",
+      "date": "2026-10-04"
     }
   }
 }
