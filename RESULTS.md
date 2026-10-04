@@ -83,7 +83,7 @@ claim about pretraining, architecture or the spectral rule is made until the thr
 | tiny random-init, lr 5e-5 (run 2; chosen on val, 0.851) | 13.020 | 86.37 | 76.38 | 72.86 | 54.00 | `eval_tiny_random_*` |
 | tiny random-init, lr 1e-3 (run 2b; val 0.840) | 13.020 | 84.93 | 73.83 | 75.01 | 57.59 | `eval_tiny_random_lr1e-3_*` |
 | MNDWI ≥ 0.14 (threshold chosen on val; no learning) | 0 | 86.77 | 77.21 | 80.99 | 69.52 | `mndwi_eval_{test,bolivia}.json` |
-| 300M teacher, native 512 (M0 record) | 98.3 (manifest: 300M-TL backbone not counted here) | 89.46 | 81.68 | [unmeasured] | [unmeasured] | `teacher_eval_native.json` |
+| 300M teacher, native 512 (M0 record) | [unmeasured] (not in `param_manifest.json`) | 89.46 | 81.68 | [unmeasured] | [unmeasured] | `teacher_eval_native.json` |
 
 Observed, not interpreted (seed 0): the validation-chosen 1.965 M-parameter U-Net scores higher than
 the 13.0 M pretrained tiny on both held-out splits, and higher than the 300M teacher on the test
