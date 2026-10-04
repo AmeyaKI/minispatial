@@ -731,3 +731,23 @@ from the two old commits.
 
 **Consequence.** Thresholds in `thresholds.yaml` remain null: they are set after the fp16
 reference row's spread is measured (EXPERIMENT_PROTOCOL.md §8), not by this approval.
+
+---
+
+## 2026-10-04 — D032: Parity tiers and stability bound pre-registered (rule 2)
+
+**Decision (Ameya, 2026-10-04, "approve the thresholds").** `minispatial/bench/thresholds.yaml`:
+fp16 parity ≤ 0.10 % pixel disagreement / 0.50 max |Δlogit| / 0.10 pp |ΔmIoU|; int8 ≤ 1.0 / 2.0 / 1.0;
+int4 ≤ 5.0 / 5.0 / 5.0; stability `run_spread_pct` ≤ 10 %; `power_state_required: ac`. Anchored to the
+three fp16 reference rows measured 2026-10-04 (`results/frontier.csv`: 0.0082 % / 0.083 / ≤ 0.015 pp;
+spreads 0.26 / 1.72 / 6.70 %). Committed before any quantized measurement exists.
+
+**What this does and does not test.** The fp16 tier was set after the fp16 artifact's numbers were
+seen (the file's own justification required anchoring to the reference row), so it is not a test of
+that artifact; it is pre-registered for every later artifact: the U-Net fp16 export and all compressed
+rows. A row exceeding its tier gets `parity_fail = 1`, is kept, is excluded from the frontier plot,
+and is investigated as an export fault; `compression_delta_pp` is reported regardless.
+
+**Consequence.** `parity_status`, `unstable` and `acceptable` on the three existing rows are now
+judged against these values (all pass: `parity_status = pass`, `unstable = 0`). The acceptability
+floor (`acceptable`) is NOT set by this decision and stays `[unmeasured]` until proposed separately.

@@ -17,11 +17,11 @@ meta:
   # and stability thresholds are still null: they judge quantized measurements,
   # none of which exist yet, and rule 2 requires them to be set before the first
   # one is taken -- not now, and not after.
-  status: reproduction_approved__parity_and_stability_PROPOSED_2026-10-04_pending_Ameya
+  status: all_approved
   reproduction_set_by: Ameya Kiwalkar
   reproduction_set_on: 2026-09-08
-  parity_set_by: null   # PROPOSED by the agent 2026-10-04 from the fp16 reference rows; Ameya has NOT yet approved
-  parity_set_on: null
+  parity_set_by: Ameya Kiwalkar   # proposed by the agent 2026-10-04 from the fp16 reference rows; approved in chat 2026-10-04
+  parity_set_on: 2026-10-04
   # Must be a commit that precedes every quantized measurement in results/.
   committed_before_first_quantized_measurement: true
 
@@ -76,7 +76,7 @@ parity:
     max_abs_logit_diff: 0.5
     delta_miou_pp: 0.1
     justification: |
-      PROPOSED 2026-10-04 (pending Ameya). Anchored to the measured fp16 artifact: pixel disagreement 0.0082 %, max |dlogit| 0.083,
+      APPROVED by Ameya 2026-10-04 (proposed from the fp16 reference rows). Anchored to the measured fp16 artifact: pixel disagreement 0.0082 %, max |dlogit| 0.083,
       |dmIoU| <= 0.015 pp across three compute-unit settings (results/frontier.csv, 2026-10-04).
       The bounds are ~10x, ~6x and ~7x those values: wide enough for another checkpoint or the
       U-Net, far below what a wrong export produces (whole percents of pixels).
@@ -91,7 +91,7 @@ parity:
     max_abs_logit_diff: 2.0
     delta_miou_pp: 1.0
     justification: |
-      PROPOSED 2026-10-04 (pending Ameya). Per-channel INT8 of a 13 M-param model is expected to land well inside these; the tier
+      APPROVED by Ameya 2026-10-04 (proposed from the fp16 reference rows). Per-channel INT8 of a 13 M-param model is expected to land well inside these; the tier
       asks only whether the artifact is the intended quantization and nothing else. Exceeding it
       sets parity_fail=1 and triggers an export investigation; compression_delta_pp is still
       reported either way (EXPERIMENT_PROTOCOL.md section 8).
@@ -103,7 +103,7 @@ parity:
     max_abs_logit_diff: 5.0
     delta_miou_pp: 5.0
     justification: |
-      PROPOSED 2026-10-04 (pending Ameya). Loosest tier: 4-bit weight error on this model is the phenomenon under study, so the gate is
+      APPROVED by Ameya 2026-10-04 (proposed from the fp16 reference rows). Loosest tier: 4-bit weight error on this model is the phenomenon under study, so the gate is
       only for gross implementation faults. A correctly exported INT4 artifact that loses more
       than this is kept as a valid, dominated point with parity_fail=1 explained in RESULTS.md.
       Original rationale follows. Expected to be the loosest tier. A row that exceeds it is still
@@ -116,7 +116,7 @@ parity:
 # excluded from the frontier line, never deleted or re-run until it passes.
 # --------------------------------------------------------------------------
 stability:
-  run_spread_pct: 10.0   # PROPOSED 2026-10-04 (pending Ameya): observed spreads on the fp16 rows were 0.26 % (CPU_AND_NE), 1.72 % (CPU_AND_GPU), 6.70 % (CPU_ONLY); 10 % keeps all three stable with headroom for the slowest, noisiest CPU path while still flagging a run that doubled.
+  run_spread_pct: 10.0   # APPROVED by Ameya 2026-10-04: observed spreads on the fp16 rows were 0.26 % (CPU_AND_NE), 1.72 % (CPU_AND_GPU), 6.70 % (CPU_ONLY); 10 % keeps all three stable with headroom for the slowest, noisiest CPU path while still flagging a run that doubled.
   justification: |
     NOT SET. Computed across 3 fresh-process runs as
     (max - min) / median * 100 of per-run median latency. ROADMAP section 11
