@@ -472,3 +472,37 @@ all of them seed-0 exploratory and the profile indicative. 109 tests pass.
 ### Exact next step
 On AC: the three `minispatial.bench.run` rows for `tiny_tl_fp16.mlpackage`. Then pull run 3, finish the
 U-Net selection/evaluation/export, evaluate MNDWI on test/Bolivia, and write the R2 comparison table.
+
+---
+
+## 2026-10-04 — R1 gate met; R2 controls measured; thresholds pre-registered; U-Net dominates tiny at seed 0
+
+**Frontier rows (AC, M5 Max).** tiny pretrained FP16: 16.01 ms under `CPU_AND_NE` (ANE compile failed →
+fallback; what executed is not observed), 4.46 ms under `CPU_AND_GPU`, 52.74 ms `CPU_ONLY`; 26.6 MB.
+U-Net (lr 1e-3) FP16: 2.46 / 1.62 / 14.75 ms; 3.96 MB; no ANE compile failure. Accuracy per row from the
+artifact's own outputs. `results/frontier.csv` has 6 validated rows.
+
+**Thresholds (D032).** Proposed from the fp16 reference rows, approved by Ameya in chat, committed before
+any quantized measurement. All six rows pass their fp16 tier; none unstable. The U-Net rows are the first
+artifacts the tiers were set before.
+
+**R2 held-out results (seed 0, exploratory; RESULTS.md).** Test / Bolivia mIoU: U-Net lr 1e-3 0.9123 / 0.8575;
+U-Net lr 5e-5 0.8814 / 0.8637; tiny pretrained 0.8718 / 0.8065; MNDWI 0.8677 / 0.8099; tiny random-init
+(chosen) 0.8637 / 0.7286. The U-Net dominates tiny on accuracy, size, latency and memory. Pretraining helps
+tiny most on Bolivia (+7.8 pp vs random-init). No early stopping fired in any run (fixed 50-epoch budget).
+
+**Corrections made in-session.** A RESULTS.md cell briefly showed the 100M parameter count in the teacher
+row; fixed to `[unmeasured]` in the next commit. The fp16 tier was set after seeing the tiny fp16 numbers
+(by design; documented in D032 as not a test of that artifact).
+
+**Numbers audit.** All figures trace to `results/frontier.csv` or `results/runs/*.json` from this session.
+
+### Needs Ameya
+1. Approve the three-seed repeat (recommended: yes; ~2 GPU h).
+2. Decide the compression sweep scope (recommended: run the roadmap's sweep on tiny, and add the U-Net as a
+   logged scope addition, since it is now the stronger deployment candidate).
+3. Acceptability floor: to be proposed with the first compressed rows' context; nothing needed yet.
+
+### Exact next step
+On approval: seed kernels for runs 1, 2, 4 (seeds 1 and 2). Independently: vendor data-free compression of
+`artifacts/coreml/tiny_tl_fp16.mlpackage`.

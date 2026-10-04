@@ -68,6 +68,34 @@ lr 1e-3 random run scored lower on test but higher on Bolivia than the lr 5e-5 o
 chosen, and that ordering is not a reason to revisit the validation-only rule. These are PyTorch
 reference rows, not deployed-artifact rows (rule 3); the Core ML rows follow in R1.
 
+## R2 — deployment comparison: tiny pretrained vs the validation-chosen U-Net, Core ML FP16, native 512 (seed 0, exploratory)
+
+All six rows from `results/frontier.csv`, measured 2026-10-04 on the M5 Max on AC with the same
+protocol and the same input chip; accuracy from each artifact's own outputs under that row's
+requested units. Parity judged against the tiers pre-registered in D032 (the U-Net rows are the
+first artifacts those tiers were set *before*: 0.0027 % pixel disagreement, max |Δlogit| 0.036).
+
+| Model | Params (M) | Artifact MB | Requested units | Latency median ms | Sustained ratio | Run spread % | Load ms | Peak RSS Δ MB | Test mIoU | Bolivia mIoU | Parity | Placement |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| tiny pretrained | 13.020 | 26.623 | `CPU_AND_NE` | 16.01 | 1.000 | 0.26 | 2659.3 | 54.1 | 0.8719 | 0.8064 | pass | ANE compile failed |
+| tiny pretrained | 13.020 | 26.623 | `CPU_AND_GPU` | 4.46 | 1.127 | 1.72 | 205.4 | 91.9 | 0.8719 | 0.8066 | pass | not observed |
+| tiny pretrained | 13.020 | 26.623 | `CPU_ONLY` | 52.74 | 0.993 | 6.70 | 213.5 | 126.0 | 0.8720 | 0.8058 | pass | not observed |
+| U-Net (lr 1e-3) | [unmeasured] | 3.964 | `CPU_AND_NE` | 2.46 | 1.009 | 3.33 | 236.4 | 34.3 | 0.9123 | 0.8577 | pass | not observed |
+| U-Net (lr 1e-3) | [unmeasured] | 3.964 | `CPU_AND_GPU` | 1.62 | 1.313 | 0.49 | 92.4 | 46.3 | 0.9123 | 0.8577 | pass | not observed |
+| U-Net (lr 1e-3) | [unmeasured] | 3.964 | `CPU_ONLY` | 14.75 | 0.963 | 5.03 | 86.3 | 75.1 | 0.9123 | 0.8577 | pass | not observed |
+
+Observed, not interpreted: at seed 0 the U-Net artifact is smaller, faster under every requested
+setting, lighter in resident memory, and more accurate on both held-out splits than the tiny
+pretrained artifact. On these rows the tiny model is dominated on every measured axis. The U-Net
+loads without an ANE compile failure; where it executed is still `not_observed`. Under `CPU_AND_GPU`
+both models slow down over 60 s (sustained ratio 1.13 and 1.31).
+
+What this does **not** yet establish: (a) the ordering across seeds — three-seed repeat pending
+approval; (b) anything about other regions or sensors — Bolivia is 15 chips from one event;
+(c) anything about compression — a weight-compressed tiny can become smaller and possibly faster
+but compression does not add accuracy, so on these numbers it would need the U-Net's accuracy lead
+to vanish across seeds to change the picture. No energy claim. No phone claim.
+
 ## R2 — candidates on the held-out splits (fp32 PyTorch, native 512, seed 0, **exploratory**)
 
 Measured 2026-10-03/04 on the Mac from the Kaggle checkpoints (`results/runs/checkpoints_manifest.json`;
@@ -177,9 +205,9 @@ unfinished experiment is not a null result. No new measurement was made by the S
 | Question | Answer |
 | --- | --- |
 | Was M0 reproduced at the pre-registered paper protocol? | No; see the recorded comparison above. D023 permits proceeding. |
-| Does pretrained tiny beat identical random initialization under a stated budget? | `[unanswered]`; requires same-architecture control. |
-| Which of tiny, practical U-Net and spectral baseline should be deployed? | `[unanswered]`; choose candidates on validation, then evaluate held-out data. |
-| What is the full segmentation artifact's float accuracy, latency and memory? | `[unmeasured]`; encoder smoke output is insufficient. |
+| Does pretrained tiny beat identical random initialization under a stated budget? | Seed 0, 50-epoch budget: yes by 0.8 pp mIoU on test and 7.8 pp on Bolivia (exploratory; three seeds pending). |
+| Which of tiny, practical U-Net and spectral baseline should be deployed? | Seed 0: the U-Net dominates tiny on accuracy, size, latency and memory; MNDWI roughly ties tiny on accuracy at zero model cost (exploratory; three seeds pending). |
+| What is the full segmentation artifact's float accuracy, latency and memory? | Measured: six rows in `results/frontier.csv` (tiny and U-Net, three requested compute-unit settings each). |
 | Which supported vendor compression method offers the best trade-off? | `[unanswered]`; include calibrated baseline or documented incompatibility. |
 | What bottleneck motivates a compact decoder, reconstruction PTQ or QAT? | `[unanswered]`; select a targeted experiment after profiling. |
 | Does compression affect geographic subsets differently? | `[unanswered]`; per-event evidence and uncertainty needed. |

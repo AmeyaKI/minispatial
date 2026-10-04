@@ -1,14 +1,14 @@
 # STATE.md — current snapshot
 
-**Updated:** 2026-10-03 (session closed). **Session goal:** check Kaggle, proceed with R1. R1 is
-mostly done: run 1 evaluated (fp32 reference), the FULL segmentation network exported to Core ML
-FP16 at native 512, parity measured on the committed chips, the artifact evaluated from its own
-outputs, the benchmark runner implemented and smoke-tested, components profiled. **Open in R1:** the
-three AC-power frontier rows (`CPU_AND_NE`, `CPU_AND_GPU`, `CPU_ONLY`) — the Mac was on battery
-all session, so no row was written. **R2 progress:** runs 2, 2b, 4 complete and verified; run 3
-(`minispatial-unet-small`) still RUNNING on Kaggle; random-init recipe chosen on val (run 2);
-random-init rows evaluated on test/Bolivia.
-**Active stage:** R1 closing / R2 open.
+**Updated:** 2026-10-04 (session closed). **R1 gate MET**: one complete float artifact (tiny pretrained,
+Core ML FP16, native 512) with real-input parity, artifact-own accuracy, and measured latency/memory on AC.
+**R2 is well advanced**: all five seed-0 training runs done and verified; recipes chosen on validation;
+every candidate (tiny pretrained, tiny random-init ×2, U-Net ×2, MNDWI) evaluated on test and Bolivia; the
+chosen U-Net exported and measured; thresholds pre-registered (D032) and six frontier rows judged (all pass).
+**Headline at seed 0 (exploratory): the 1.965 M U-Net dominates the 13.0 M pretrained tiny on accuracy,
+size, latency and memory; MNDWI roughly ties tiny on accuracy.**
+**Open in R2:** three-seed repeat (needs approval); vendor compression sweep (data-free, then calibrated);
+the acceptability floor. **Active stage:** R2.
 
 ## Read first
 
@@ -33,7 +33,8 @@ random-init rows evaluated on test/Bolivia.
   fails ANE compile, decoder sub-artifact succeeds.
 - **eval.py** now honours `--split` (Bolivia included), loads local checkpoints strictly, saves per-chip CMs.
 - Kaggle: `KAGGLE_CONFIG_DIR=$PWD/artifacts/kaggle/.cfg` (R005). Quota reset 2026-10-03; ~1.4 h used this week so far.
-- Tests: **109 passed** on 2026-10-03.
+- `results/frontier.csv`: 6 validated rows (tiny and U-Net × 3 requested compute-unit settings), all parity pass, none unstable.
+- Tests: **109 passed** on 2026-10-04.
 
 ## Known issues logged, not fixed
 
@@ -50,23 +51,22 @@ not placement; weight quantization is not compute speed; hosts per D028.
 
 ## Next actions
 
-1. **On AC power** (Ameya plugs in; `capture_env.py --check` must say `power ac`): run the three frontier rows,
-   `python -m minispatial.bench.run --artifact artifacts/coreml/tiny_tl_fp16.mlpackage --compute-units {CPU_AND_NE,CPU_AND_GPU,CPU_ONLY}`
-   (3 fresh processes, 100 timed, 60 s sustained each). Measure the fp16 reference row's `run_spread_pct` first;
-   then bring Ameya the threshold proposal for `thresholds.yaml` (rule 2) before any quantized cell.
-2. Kaggle: pull run 3 (`minispatial-unet-small`) when complete; add runs 3 and 4 to the checkpoint manifest;
-   choose the U-Net recipe on validation mIoU; evaluate both on test/Bolivia (PyTorch); export the chosen U-Net to
-   Core ML FP16 (needs a U-Net export wrapper: no Prithvi patch-embed/pos-embed steps) and evaluate the artifact.
-3. R2: evaluate MNDWI on test/Bolivia (`scripts/mndwi_baseline.py evaluate`); write the comparison table.
-4. R2 compression: after thresholds are set, vendor data-free INT8/INT4/palettized rows from the same tiny
-   artifact, then the calibrated path on `calibration_chips.txt`.
-5. Request the three-seed repeat (runs 1, 2, chosen U-Net; ~15–20 min of T4 each).
+1. **Decision for Ameya:** three-seed repeat (seeds 1, 2 for tiny_tl, tiny_random, unet_small_lr1e-3: six
+   runs, ~20 min of T4 each, ~2 GPU h of 30). Without it every comparison stays exploratory.
+2. **Decision for Ameya:** scope of the compression sweep now that tiny is dominated at seed 0 — run it on
+   tiny as ROADMAP R2 says (measures what compression costs; cannot make tiny non-dominated unless seeds
+   overturn the accuracy gap), and/or also on the U-Net (not in the roadmap; would be a scope addition).
+3. If approved: generate seed kernels (config override `--seed_everything N`, own output paths), submit two
+   at a time, pull/verify/evaluate; paired per-chip uncertainty across seeds.
+4. Vendor data-free compression of the tiny FP16 artifact (INT8 per-channel, INT4 per-block, 4-bit
+   palettization) → parity vs tiers, artifact-own accuracy, three timing rows each; then the calibrated path
+   on `calibration_chips.txt` or a documented incompatibility (rule 4).
+5. Propose the acceptability floor. Investigate what executes under `CPU_AND_NE` for tiny (R3 candidate).
 
 ## Authorization boundaries
 
 Approved 2026-09-28 (D031): standing pushes to `main` during R0–R2 with the scan each time; the
 Kaggle CLI (installed); the smoke submission; runs 1, 2, 2b, 3, 4 at seed 0; the fixed protocol
 parameters (parity chips, calibration chips, timing defaults); the history rewrite (to be run by
-Ameya, B004). **Still not approved / not set:** the three-seed repeat (deferred until seed-0
-results and per-run cost exist); every threshold in `thresholds.yaml` (set after the fp16 reference
-row's spread is measured); any paid host; any upload.
+Ameya, B004). Thresholds approved 2026-10-04 (D032). **Still not approved / not set:** the three-seed repeat; the
+acceptability floor; any compression of the U-Net (not in ROADMAP); any paid host; any upload.
