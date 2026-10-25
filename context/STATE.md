@@ -1,14 +1,10 @@
 # STATE.md — current snapshot
 
-**Updated:** 2026-10-04 (session closed). **R1 gate MET**: one complete float artifact (tiny pretrained,
-Core ML FP16, native 512) with real-input parity, artifact-own accuracy, and measured latency/memory on AC.
-**R2 is well advanced**: all five seed-0 training runs done and verified; recipes chosen on validation;
-every candidate (tiny pretrained, tiny random-init ×2, U-Net ×2, MNDWI) evaluated on test and Bolivia; the
-chosen U-Net exported and measured; thresholds pre-registered (D032) and six frontier rows judged (all pass).
-**Headline at seed 0 (exploratory): the 1.965 M U-Net dominates the 13.0 M pretrained tiny on accuracy,
-size, latency and memory; MNDWI roughly ties tiny on accuracy.**
-**Open in R2:** three-seed repeat (needs approval); vendor compression sweep (data-free, then calibrated);
-the acceptability floor. **Active stage:** R2.
+**Updated:** 2026-10-25. **Session goal:** start the approved three-seed repeat (D033). Six seed configs
+(`train/configs/*_s{1,2}.yaml`, test-pinned) and six kernels generated (pin `6eaab4c`). **Submitted:**
+`minispatial-tiny-tl-s1`, `minispatial-tiny-tl-s2`. **Queued for submission as slots free (Kaggle limit 2):**
+`minispatial-tiny-random-s1/-s2`, `minispatial-unet-small-lr1e-3-s1/-s2`. **Not started:** the compression
+sweep (Prithvi tiny per ROADMAP; the U-Net addition still awaits Ameya's yes). **Active stage:** R2.
 
 ## Read first
 
@@ -51,8 +47,10 @@ not placement; weight quantization is not compute speed; hosts per D028.
 
 ## Next actions
 
-1. **Decision for Ameya:** three-seed repeat (seeds 1, 2 for tiny_tl, tiny_random, unet_small_lr1e-3: six
-   runs, ~20 min of T4 each, ~2 GPU h of 30). Without it every comparison stays exploratory.
+1. Seed repeat (approved, D033): poll the two running kernels; as each finishes, pull/verify, copy the best
+   checkpoint, extend `checkpoints_manifest.json`, evaluate on test/Bolivia (PyTorch), and submit the next
+   kernel. Order: tiny_random_s1, tiny_random_s2, unet_small_lr1e-3_s1, unet_small_lr1e-3_s2. Then the
+   three-seed table with paired per-chip differences replaces the "exploratory" label in RESULTS.md.
 2. **Decision for Ameya:** scope of the compression sweep now that tiny is dominated at seed 0 — run it on
    tiny as ROADMAP R2 says (measures what compression costs; cannot make tiny non-dominated unless seeds
    overturn the accuracy gap), and/or also on the U-Net (not in the roadmap; would be a scope addition).
