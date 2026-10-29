@@ -1,0 +1,1246 @@
+{
+  "kind": "model_eval",
+  "runtime": "torch_cpu",
+  "mlpackage": null,
+  "compute_units_requested": "n/a",
+  "checkpoint": "artifacts/checkpoints/tiny_random_s2/epoch45-valloss0.0908.ckpt",
+  "model_id": "prithvi_tiny_random_sen1floods11",
+  "split": "test",
+  "inference_mode": "native",
+  "protocol": "native512",
+  "bands": [
+    "BLUE",
+    "GREEN",
+    "RED",
+    "NIR_NARROW",
+    "SWIR_1",
+    "SWIR_2"
+  ],
+  "constant_scale": 0.0001,
+  "ignore_index": -1,
+  "metrics_source": "minispatial.metrics (cross-checked against torchmetrics)",
+  "metric_resolution": 512,
+  "metric_definition": "mIoU = macro mean of per-class IoU over classes present; IoU_water = class 1. RECORD WHICH DEFINITION THE PUBLISHED SOURCE USES before comparing -- macro mIoU, IoU_water alone and micro-averaged IoU differ by more than the proposed tolerance on a 2-class problem with this much class imbalance.",
+  "num_classes": 2,
+  "water_class_index": 1,
+  "checkpoint_provenance": {
+    "local_checkpoint": "artifacts/checkpoints/tiny_random_s2/epoch45-valloss0.0908.ckpt",
+    "sha256": "fe78219992b0aa350802742e78cca0cf519fef76112c195bac055d10dfa1b4b0",
+    "checkpoint_epoch": 45,
+    "checkpoint_global_step": 690,
+    "model_factory": "EncoderDecoderFactory",
+    "backbone": "prithvi_eo_v2_tiny_tl",
+    "necks": [
+      "SelectIndices",
+      "ReshapeTokensToImage",
+      "LearnedInterpolateToPyramidal"
+    ],
+    "checkpoints_manifest_entry": {
+      "run_name": "tiny_random_s2",
+      "model_id": "prithvi_tiny_random_sen1floods11",
+      "seed": 2,
+      "config": "train/configs/tiny_random_s2.yaml",
+      "commit": "6eaab4c62074c4e23576f30e26953d4b2e0d9225",
+      "kernel": "ameyakiwalkar/minispatial-tiny-random-s2"
+    }
+  },
+  "chips_in_split": 90,
+  "device": "cpu",
+  "timestamp_utc": "2026-10-29T03:35:12+00:00",
+  "chips_evaluated": 90,
+  "confusion_matrix": [
+    [
+      17733253,
+      218013
+    ],
+    [
+      425209,
+      2140892
+    ]
+  ],
+  "miou": 0.8669823030764563,
+  "iou_per_class": [
+    0.9649975308104519,
+    0.7689670753424608
+  ],
+  "iou_water": 0.7689670753424608,
+  "f1_water": 0.8693967073339606,
+  "per_chip": [
+    {
+      "chip": "Ghana_1078550",
+      "confusion_matrix": [
+        [
+          260731,
+          6
+        ],
+        [
+          1372,
+          35
+        ]
+      ]
+    },
+    {
+      "chip": "Ghana_141271",
+      "confusion_matrix": [
+        [
+          260508,
+          0
+        ],
+        [
+          1636,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Ghana_167233",
+      "confusion_matrix": [
+        [
+          262144,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Ghana_313799",
+      "confusion_matrix": [
+        [
+          228451,
+          1080
+        ],
+        [
+          8728,
+          6205
+        ]
+      ]
+    },
+    {
+      "chip": "Ghana_319168",
+      "confusion_matrix": [
+        [
+          129433,
+          2670
+        ],
+        [
+          10973,
+          28548
+        ]
+      ]
+    },
+    {
+      "chip": "Ghana_359826",
+      "confusion_matrix": [
+        [
+          258092,
+          556
+        ],
+        [
+          1713,
+          1783
+        ]
+      ]
+    },
+    {
+      "chip": "Ghana_406026",
+      "confusion_matrix": [
+        [
+          257609,
+          230
+        ],
+        [
+          1359,
+          2946
+        ]
+      ]
+    },
+    {
+      "chip": "Ghana_53713",
+      "confusion_matrix": [
+        [
+          262144,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Ghana_83483",
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Ghana_866994",
+      "confusion_matrix": [
+        [
+          1069,
+          10471
+        ],
+        [
+          43436,
+          62535
+        ]
+      ]
+    },
+    {
+      "chip": "Ghana_97059",
+      "confusion_matrix": [
+        [
+          27394,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "India_1018327",
+      "confusion_matrix": [
+        [
+          219776,
+          5717
+        ],
+        [
+          10510,
+          26139
+        ]
+      ]
+    },
+    {
+      "chip": "India_399883",
+      "confusion_matrix": [
+        [
+          116776,
+          9051
+        ],
+        [
+          8876,
+          127416
+        ]
+      ]
+    },
+    {
+      "chip": "India_44475",
+      "confusion_matrix": [
+        [
+          260158,
+          17
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "India_570384",
+      "confusion_matrix": [
+        [
+          225518,
+          1934
+        ],
+        [
+          6373,
+          8175
+        ]
+      ]
+    },
+    {
+      "chip": "India_591317",
+      "confusion_matrix": [
+        [
+          126296,
+          5714
+        ],
+        [
+          6162,
+          107877
+        ]
+      ]
+    },
+    {
+      "chip": "India_592446",
+      "confusion_matrix": [
+        [
+          215177,
+          134
+        ],
+        [
+          6464,
+          2580
+        ]
+      ]
+    },
+    {
+      "chip": "India_631692",
+      "confusion_matrix": [
+        [
+          261342,
+          0
+        ],
+        [
+          802,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "India_747992",
+      "confusion_matrix": [
+        [
+          128700,
+          16065
+        ],
+        [
+          11863,
+          105459
+        ]
+      ]
+    },
+    {
+      "chip": "India_772630",
+      "confusion_matrix": [
+        [
+          153866,
+          121
+        ],
+        [
+          1345,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "India_79637",
+      "confusion_matrix": [
+        [
+          256963,
+          16
+        ],
+        [
+          4934,
+          231
+        ]
+      ]
+    },
+    {
+      "chip": "India_80221",
+      "confusion_matrix": [
+        [
+          31192,
+          6095
+        ],
+        [
+          2049,
+          112457
+        ]
+      ]
+    },
+    {
+      "chip": "India_828067",
+      "confusion_matrix": [
+        [
+          175365,
+          761
+        ],
+        [
+          6976,
+          18
+        ]
+      ]
+    },
+    {
+      "chip": "India_900498",
+      "confusion_matrix": [
+        [
+          125842,
+          12197
+        ],
+        [
+          9628,
+          114325
+        ]
+      ]
+    },
+    {
+      "chip": "India_952728",
+      "confusion_matrix": [
+        [
+          181168,
+          1700
+        ],
+        [
+          4991,
+          857
+        ]
+      ]
+    },
+    {
+      "chip": "Mekong_1443339",
+      "confusion_matrix": [
+        [
+          59542,
+          9810
+        ],
+        [
+          13473,
+          179310
+        ]
+      ]
+    },
+    {
+      "chip": "Mekong_254910",
+      "confusion_matrix": [
+        [
+          205079,
+          281
+        ],
+        [
+          135,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Mekong_333434",
+      "confusion_matrix": [
+        [
+          199614,
+          235
+        ],
+        [
+          3115,
+          169
+        ]
+      ]
+    },
+    {
+      "chip": "Mekong_382276",
+      "confusion_matrix": [
+        [
+          251696,
+          607
+        ],
+        [
+          335,
+          9473
+        ]
+      ]
+    },
+    {
+      "chip": "Mekong_424793",
+      "confusion_matrix": [
+        [
+          254293,
+          191
+        ],
+        [
+          3306,
+          697
+        ]
+      ]
+    },
+    {
+      "chip": "Mekong_45934",
+      "confusion_matrix": [
+        [
+          261523,
+          40
+        ],
+        [
+          296,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Nigeria_22088",
+      "confusion_matrix": [
+        [
+          221947,
+          70
+        ],
+        [
+          565,
+          64
+        ]
+      ]
+    },
+    {
+      "chip": "Nigeria_225131",
+      "confusion_matrix": [
+        [
+          239656,
+          468
+        ],
+        [
+          950,
+          181
+        ]
+      ]
+    },
+    {
+      "chip": "Nigeria_417184",
+      "confusion_matrix": [
+        [
+          57435,
+          250
+        ],
+        [
+          1384,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Nigeria_812045",
+      "confusion_matrix": [
+        [
+          110189,
+          6827
+        ],
+        [
+          2662,
+          117456
+        ]
+      ]
+    },
+    {
+      "chip": "Pakistan_167553",
+      "confusion_matrix": [
+        [
+          245647,
+          0
+        ],
+        [
+          1458,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Pakistan_528249",
+      "confusion_matrix": [
+        [
+          76960,
+          22
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Pakistan_664885",
+      "confusion_matrix": [
+        [
+          69878,
+          749
+        ],
+        [
+          1003,
+          1380
+        ]
+      ]
+    },
+    {
+      "chip": "Pakistan_694942",
+      "confusion_matrix": [
+        [
+          172916,
+          47
+        ],
+        [
+          1264,
+          17217
+        ]
+      ]
+    },
+    {
+      "chip": "Pakistan_70625",
+      "confusion_matrix": [
+        [
+          257008,
+          469
+        ],
+        [
+          3405,
+          1262
+        ]
+      ]
+    },
+    {
+      "chip": "Pakistan_849790",
+      "confusion_matrix": [
+        [
+          66892,
+          18439
+        ],
+        [
+          29407,
+          142501
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_1029191",
+      "confusion_matrix": [
+        [
+          202090,
+          1511
+        ],
+        [
+          5424,
+          44912
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_232281",
+      "confusion_matrix": [
+        [
+          214257,
+          18410
+        ],
+        [
+          3266,
+          26211
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_271769",
+      "confusion_matrix": [
+        [
+          259531,
+          0
+        ],
+        [
+          2613,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_280900",
+      "confusion_matrix": [
+        [
+          255082,
+          475
+        ],
+        [
+          5304,
+          1281
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_34417",
+      "confusion_matrix": [
+        [
+          0,
+          0
+        ],
+        [
+          0,
+          50026
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_40936",
+      "confusion_matrix": [
+        [
+          215331,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_511199",
+      "confusion_matrix": [
+        [
+          248150,
+          2450
+        ],
+        [
+          6439,
+          5105
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_59731",
+      "confusion_matrix": [
+        [
+          252726,
+          160
+        ],
+        [
+          910,
+          1860
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_651904",
+      "confusion_matrix": [
+        [
+          233543,
+          1445
+        ],
+        [
+          6213,
+          20943
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_683296",
+      "confusion_matrix": [
+        [
+          251791,
+          378
+        ],
+        [
+          2393,
+          5016
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_790830",
+      "confusion_matrix": [
+        [
+          228228,
+          1024
+        ],
+        [
+          2008,
+          29939
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_80102",
+      "confusion_matrix": [
+        [
+          262121,
+          0
+        ],
+        [
+          22,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_868895",
+      "confusion_matrix": [
+        [
+          155137,
+          4541
+        ],
+        [
+          9200,
+          6587
+        ]
+      ]
+    },
+    {
+      "chip": "Paraguay_913449",
+      "confusion_matrix": [
+        [
+          256627,
+          0
+        ],
+        [
+          5517,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Somalia_166342",
+      "confusion_matrix": [
+        [
+          220463,
+          102
+        ],
+        [
+          12,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Somalia_322855",
+      "confusion_matrix": [
+        [
+          201218,
+          9089
+        ],
+        [
+          5770,
+          38967
+        ]
+      ]
+    },
+    {
+      "chip": "Somalia_60129",
+      "confusion_matrix": [
+        [
+          221606,
+          33
+        ],
+        [
+          677,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Somalia_685158",
+      "confusion_matrix": [
+        [
+          155223,
+          3695
+        ],
+        [
+          7752,
+          17502
+        ]
+      ]
+    },
+    {
+      "chip": "Somalia_699062",
+      "confusion_matrix": [
+        [
+          198678,
+          1241
+        ],
+        [
+          1290,
+          2000
+        ]
+      ]
+    },
+    {
+      "chip": "Somalia_94102",
+      "confusion_matrix": [
+        [
+          227150,
+          1516
+        ],
+        [
+          589,
+          12105
+        ]
+      ]
+    },
+    {
+      "chip": "Spain_5650136",
+      "confusion_matrix": [
+        [
+          61291,
+          6098
+        ],
+        [
+          9507,
+          94700
+        ]
+      ]
+    },
+    {
+      "chip": "Spain_6095801",
+      "confusion_matrix": [
+        [
+          233401,
+          5925
+        ],
+        [
+          8897,
+          13839
+        ]
+      ]
+    },
+    {
+      "chip": "Spain_6860600",
+      "confusion_matrix": [
+        [
+          261723,
+          0
+        ],
+        [
+          246,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Spain_7370579",
+      "confusion_matrix": [
+        [
+          177518,
+          14492
+        ],
+        [
+          16179,
+          53856
+        ]
+      ]
+    },
+    {
+      "chip": "Spain_7387658",
+      "confusion_matrix": [
+        [
+          98735,
+          10316
+        ],
+        [
+          40379,
+          112627
+        ]
+      ]
+    },
+    {
+      "chip": "Spain_7558720",
+      "confusion_matrix": [
+        [
+          259320,
+          527
+        ],
+        [
+          1862,
+          275
+        ]
+      ]
+    },
+    {
+      "chip": "Sri-Lanka_1049830",
+      "confusion_matrix": [
+        [
+          184784,
+          2872
+        ],
+        [
+          2016,
+          561
+        ]
+      ]
+    },
+    {
+      "chip": "Sri-Lanka_117737",
+      "confusion_matrix": [
+        [
+          254747,
+          666
+        ],
+        [
+          5963,
+          768
+        ]
+      ]
+    },
+    {
+      "chip": "Sri-Lanka_377277",
+      "confusion_matrix": [
+        [
+          250785,
+          0
+        ],
+        [
+          7150,
+          1453
+        ]
+      ]
+    },
+    {
+      "chip": "Sri-Lanka_450918",
+      "confusion_matrix": [
+        [
+          94802,
+          47
+        ],
+        [
+          4277,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "Sri-Lanka_534068",
+      "confusion_matrix": [
+        [
+          3551,
+          1325
+        ],
+        [
+          19,
+          257249
+        ]
+      ]
+    },
+    {
+      "chip": "Sri-Lanka_649970",
+      "confusion_matrix": [
+        [
+          242813,
+          699
+        ],
+        [
+          13544,
+          3799
+        ]
+      ]
+    },
+    {
+      "chip": "Sri-Lanka_713926",
+      "confusion_matrix": [
+        [
+          180826,
+          772
+        ],
+        [
+          2262,
+          78244
+        ]
+      ]
+    },
+    {
+      "chip": "Sri-Lanka_849649",
+      "confusion_matrix": [
+        [
+          216314,
+          1
+        ],
+        [
+          1644,
+          248
+        ]
+      ]
+    },
+    {
+      "chip": "Sri-Lanka_922192",
+      "confusion_matrix": [
+        [
+          238736,
+          17
+        ],
+        [
+          862,
+          168
+        ]
+      ]
+    },
+    {
+      "chip": "USA_1049586",
+      "confusion_matrix": [
+        [
+          259806,
+          133
+        ],
+        [
+          982,
+          1140
+        ]
+      ]
+    },
+    {
+      "chip": "USA_350244",
+      "confusion_matrix": [
+        [
+          260457,
+          378
+        ],
+        [
+          1205,
+          80
+        ]
+      ]
+    },
+    {
+      "chip": "USA_430764",
+      "confusion_matrix": [
+        [
+          243225,
+          3473
+        ],
+        [
+          6218,
+          9221
+        ]
+      ]
+    },
+    {
+      "chip": "USA_504150",
+      "confusion_matrix": [
+        [
+          257446,
+          1418
+        ],
+        [
+          1689,
+          1573
+        ]
+      ]
+    },
+    {
+      "chip": "USA_519181",
+      "confusion_matrix": [
+        [
+          257885,
+          2090
+        ],
+        [
+          1570,
+          582
+        ]
+      ]
+    },
+    {
+      "chip": "USA_527077",
+      "confusion_matrix": [
+        [
+          260401,
+          80
+        ],
+        [
+          1207,
+          439
+        ]
+      ]
+    },
+    {
+      "chip": "USA_595451",
+      "confusion_matrix": [
+        [
+          237482,
+          4123
+        ],
+        [
+          6788,
+          13743
+        ]
+      ]
+    },
+    {
+      "chip": "USA_66511",
+      "confusion_matrix": [
+        [
+          259409,
+          0
+        ],
+        [
+          2727,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "USA_670826",
+      "confusion_matrix": [
+        [
+          259122,
+          0
+        ],
+        [
+          3010,
+          0
+        ]
+      ]
+    },
+    {
+      "chip": "USA_67102",
+      "confusion_matrix": [
+        [
+          251941,
+          659
+        ],
+        [
+          1189,
+          8302
+        ]
+      ]
+    },
+    {
+      "chip": "USA_758178",
+      "confusion_matrix": [
+        [
+          260264,
+          252
+        ],
+        [
+          1187,
+          430
+        ]
+      ]
+    },
+    {
+      "chip": "USA_778194",
+      "confusion_matrix": [
+        [
+          257942,
+          290
+        ],
+        [
+          1474,
+          2364
+        ]
+      ]
+    },
+    {
+      "chip": "USA_905409",
+      "confusion_matrix": [
+        [
+          215660,
+          1972
+        ],
+        [
+          1408,
+          43059
+        ]
+      ]
+    },
+    {
+      "chip": "USA_933610",
+      "confusion_matrix": [
+        [
+          257926,
+          278
+        ],
+        [
+          1401,
+          2422
+        ]
+      ]
+    }
+  ],
+  "versions": {
+    "torch": "2.14.0",
+    "terratorch": "1.2.13",
+    "numpy": "2.5.3"
+  },
+  "published_comparison": "Compare against the Prithvi-EO-2.0 paper (arXiv 2412.02732) and the model card for this checkpoint. Read the figure at the source; do not transcribe it from memory. Tolerance: minispatial/bench/thresholds.yaml."
+}
